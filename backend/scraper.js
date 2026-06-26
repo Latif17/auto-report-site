@@ -19,9 +19,19 @@ async function clickLabel(page, text) {
 }
 
 async function goNext(page) {
+    // Find the actual Continue or Start button, ignoring cookie banners
+    const btnHandle = await page.evaluateHandle(() => {
+        const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
+        const targetBtn = btns.find(b => {
+            const text = b.textContent.trim().toLowerCase();
+            return text.includes('continue') || text.includes('start now') || text.includes('send report');
+        });
+        return targetBtn || btns[btns.length - 1]; // fallback to the last button
+    });
+
     await Promise.all([
         page.waitForNavigation({ waitUntil: 'networkidle0' }),
-        page.click('button.govuk-button, a.govuk-button--start, button[type="submit"]')
+        btnHandle.click()
     ]);
 }
 
@@ -29,7 +39,17 @@ async function submitGovForm(userData, incidentData) {
     let browser;
     try {
         console.log(`Starting GOV.UK submission for ${userData.email || 'Anonymous'}`);
-        const launchArgs = { headless: "new", args: ['--no-sandbox', '--disable-setuid-sandbox'] };
+        const isTestMode = process.env.TEST_MODE === 'true';
+        
+        const launchArgs = { 
+            headless: isTestMode ? false : "new", 
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        };
+        
+        if (isTestMode) {
+            launchArgs.slowMo = 50; // Slow down so you can watch it
+        }
+        
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchArgs.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
         }
@@ -146,9 +166,14 @@ async function submitGovForm(userData, incidentData) {
         }, incidentData.description);
         
         // Final submit
-        await goNext(page);
+        if (isTestMode) {
+            console.log('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 seconds...');
+            await new Promise(r => setTimeout(r, 5000));
+        } else {
+            await goNext(page);
+            console.log(`Successfully submitted form for ${userData.email}`);
+        }
         
-        console.log(`Successfully submitted form for ${userData.email}`);
         return true;
     } catch (e) {
         console.error("Puppeteer automation error:", e.message);
