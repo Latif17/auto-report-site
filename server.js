@@ -22,13 +22,15 @@ const supabase = process.env.SUPABASE_URL
                     throwOnError: () => chain,
                     gte: () => chain,
                     order: () => chain,
+                    limit: () => chain,
                     then: (resolve) => {
                         if (table === 'incidents') {
-                            const mockTime = new Date(Date.now() - 2 * 60 * 60 * 1000);
+                            const mockTime = new Date();
                             return resolve({
                                 count: 1,
                                 data: [{
                                     id: 9999,
+                                    date_of_smell: mockTime.toISOString().split('T')[0],
                                     time_of_smell: mockTime.toTimeString().slice(0, 5),
                                     smell_type: 'Industrial Stench',
                                     business_location: 'Multiple (ReFood, Veolia, BioGas)',
@@ -77,12 +79,11 @@ app.get('/api/stats', async (req, res) => {
         const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError();
         const { data: sysData } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single().throwOnError();
         
-        // Fetch recent incidents
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        // Fetch only the absolute latest incident
         const { data: recentIncidents } = await supabase.from('incidents')
             .select('*')
-            .gte('created_at', twentyFourHoursAgo)
             .order('created_at', { ascending: false })
+            .limit(1)
             .throwOnError();
 
         let reportedIncidentIds = [];
@@ -97,34 +98,12 @@ app.get('/api/stats', async (req, res) => {
             }
         }
 
-        // Group incidents
-        const grouped = [];
-        if (recentIncidents) {
-            recentIncidents.forEach(inc => {
-                const existing = grouped.find(g => 
-                    g.time_of_smell === inc.time_of_smell && 
-                    g.smell_type === inc.smell_type && 
-                    g.business_location === inc.business_location
-                );
-                if (existing) {
-                    existing.report_count++;
-                    if (reportedIncidentIds.includes(inc.id)) {
-                        existing.alreadyReported = true;
-                    }
-                } else {
-                    grouped.push({
-                        id: inc.id,
-                        time_of_smell: inc.time_of_smell,
-                        smell_type: inc.smell_type,
-                        business_location: inc.business_location,
-                        report_count: 1,
-                        alreadyReported: reportedIncidentIds.includes(inc.id)
-                    });
-                }
-            });
-        }
+        const formattedIncident = recentIncidents && recentIncidents.length > 0 ? {
+            ...recentIncidents[0],
+            alreadyReported: reportedIncidentIds.includes(recentIncidents[0].id)
+        } : null;
 
-        res.json({ count: count || 0, lastReport: sysData?.last_report_time, recentIncidents: grouped.slice(0, 5) });
+        res.json({ count: count || 0, lastReport: sysData?.last_report_time, recentIncidents: formattedIncident ? [formattedIncident] : [] });
     } catch (error) {
         console.error('Stats error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -146,32 +125,25 @@ app.post('/api/opt-in', async (req, res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-    const { email, fullName, postcode, phone, address, timeOfSmell, smellType, businessLocation, shareData } = req.body;
+    let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
 
     try {
         await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
 
-        // Check for existing incident in last hour
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-        let { data: existingIncidents } = await supabase.from('incidents')
-            .select('id')
-            .eq('time_of_smell', timeOfSmell)
-            .eq('smell_type', smellType)
-            .eq('business_location', businessLocation)
-            .gte('created_at', oneHourAgo)
-            .throwOnError();
-
-        let incidentId;
-        if (existingIncidents && existingIncidents.length > 0) {
-            incidentId = existingIncidents[0].id;
-        } else {
-            const { data: newIncident } = await supabase.from('incidents')
-                .insert({ time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation, status: 'pending' })
-                .select()
-                .single()
-                .throwOnError();
-            incidentId = newIncident.id;
+        if (!timeOfSmell) {
+            timeOfSmell = new Date().toTimeString().slice(0, 5);
         }
+        if (!dateOfSmell) {
+            dateOfSmell = new Date().toISOString().split('T')[0];
+        }
+
+        const { data: newIncident } = await supabase.from('incidents')
+            .insert({ date_of_smell: dateOfSmell, time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation, status: 'pending' })
+            .select()
+            .single()
+            .throwOnError();
+        
+        const incidentId = newIncident.id;
 
         if (shareData) {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
