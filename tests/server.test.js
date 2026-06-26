@@ -35,9 +35,6 @@ describe('API Endpoints', () => {
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.3')
             .send({ 
-                email: 'test@example.com', 
-                fullName: 'Test User', 
-                shareData: false,
                 timeOfSmell: '00:00',
                 smellType: 'Waste',
                 businessLocation: 'ReFoods'

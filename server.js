@@ -183,14 +183,20 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Check for duplicates
-        const { data: existingIncidents } = await supabase.from('incidents')
+        let query = supabase.from('incidents')
             .select('id')
             .eq('date_of_smell', dateOfSmell)
-            .eq('time_of_smell', timeOfSmell)
-            .eq('business_location', businessLocation)
-            .throwOnError();
+            .eq('time_of_smell', timeOfSmell);
+            
+        if (businessLocation == null) {
+            query = query.is('business_location', null);
+        } else {
+            query = query.eq('business_location', businessLocation);
+        }
 
-        if (existingIncidents && existingIncidents.length > 0) {
+        const { data: existingIncidents } = await query.throwOnError();
+
+        if (existingIncidents && existingIncidents.length > 0 && email) {
             const incidentIds = existingIncidents.map(i => i.id);
             const { data: userLink } = await supabase.from('opted_in_user_reports')
                 .select('id')
@@ -216,8 +222,10 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Even if they don't share data with community, we still track they reported it so the script runs for them
-        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
-        if (error && error.code !== '23505') throw error;
+        if (email) {
+            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+            if (error && error.code !== '23505') throw error;
+        }
 
         res.json({ success: true, message: "Report triggered", incidentId });
 

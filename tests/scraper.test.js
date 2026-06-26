@@ -22,6 +22,10 @@ jest.mock('puppeteer', () => {
     };
 });
 
+jest.mock('../utils', () => ({
+    randomDelay: jest.fn().mockResolvedValue()
+}));
+
 describe('scraper configuration', () => {
     const originalEnv = process.env;
 

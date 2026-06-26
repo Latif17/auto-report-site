@@ -1,8 +1,7 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 const { submitGovForm } = require('./scraper');
-
-const delay = ms => new Promise(r => setTimeout(r, ms));
+const { randomDelay } = require('./utils');
 
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
@@ -96,9 +95,8 @@ async function run() {
                     }
                     
                     // Add a small delay between submissions to avoid rate limits
-                    const delayMs = Math.floor(Math.random() * (15000 - 5000 + 1) + 5000);
-                    console.log(`Waiting ${Math.round(delayMs/1000)}s before next submission...`);
-                    await delay(delayMs);
+                    console.log(`Waiting 5-15s before next submission...`);
+                    await randomDelay(5000, 15000);
                 }
             }
         }

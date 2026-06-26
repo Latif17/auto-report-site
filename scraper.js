@@ -1,8 +1,7 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { randomDelay } = require('./utils');
 puppeteer.use(StealthPlugin());
-
-const randomDelay = (min, max) => new Promise(r => setTimeout(r, Math.floor(Math.random() * (max - min + 1) + min)));
 
 function getConfig(userData) {
     const isTestMode = Boolean(process.env.TEST_MODE === 'true' || 
