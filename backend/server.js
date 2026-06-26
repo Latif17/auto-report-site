@@ -81,7 +81,8 @@ app.post('/api/submit', async (req, res) => {
             .eq('time_of_smell', timeOfSmell)
             .eq('smell_type', smellType)
             .eq('business_location', businessLocation)
-            .gte('created_at', oneHourAgo);
+            .gte('created_at', oneHourAgo)
+            .throwOnError();
 
         let incidentId;
         if (existingIncidents && existingIncidents.length > 0) {
@@ -90,13 +91,14 @@ app.post('/api/submit', async (req, res) => {
             const { data: newIncident } = await supabase.from('incidents')
                 .insert({ time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation })
                 .select()
-                .single();
+                .single()
+                .throwOnError();
             incidentId = newIncident.id;
         }
 
         if (shareData) {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
-            await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+            await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).throwOnError();
         }
 
         res.json({ success: true, message: "Report triggered", incidentId });
@@ -129,7 +131,7 @@ async function triggerMassReporting(incidentData, excludeEmail, incidentId) {
             address: user.address
         };
         await submitGovForm(userData, incidentData);
-        await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email });
+        await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email }).throwOnError();
     }
 }
 
