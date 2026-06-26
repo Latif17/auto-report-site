@@ -1,27 +1,50 @@
 const puppeteer = require('puppeteer');
 
+function formatTime(timeStr) {
+    if (!timeStr) return '11:00am';
+    if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) return timeStr;
+    const [h, m] = timeStr.split(':');
+    let hour = parseInt(h, 10);
+    const suffix = hour >= 12 ? 'pm' : 'am';
+    hour = hour % 12 || 12;
+    return `${hour}:${m || '00'}${suffix}`;
+}
+
 async function clickLabel(page, text) {
-    await page.evaluate((textToFind) => {
+    const success = await page.evaluate((textToFind) => {
         const labels = Array.from(document.querySelectorAll('label'));
-        const target = labels.find(l => l.textContent.includes(textToFind));
+        const target = labels.find(l => l.textContent.toLowerCase().includes(textToFind.toLowerCase()));
         if (target) {
             const inputId = target.getAttribute('for');
             if (inputId) {
                 const el = document.getElementById(inputId);
-                if (el) el.click();
+                if (el) { el.click(); return true; }
             } else {
                 target.click();
+                return true;
             }
-        } else {
-            console.warn("Could not find label for:", textToFind);
         }
+        return false;
     }, text);
+    if (!success) {
+        console.error(`❌ FAILED to find/click label containing: "${text}"`);
+    } else {
+        console.log(`✅ Clicked label: "${text}"`);
+    }
 }
 
 async function goNext(page) {
+    console.log(`➡️  Clicking Continue...`);
     await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
         page.evaluate(() => {
+            const errorSummary = document.querySelector('.govuk-error-summary');
+            if (errorSummary) {
+                console.error("VALIDATION ERROR BEFORE CLICK: " + errorSummary.textContent.trim().replace(/\s+/g, ' '));
+            }
+            const errorMessages = document.querySelectorAll('.govuk-error-message');
+            errorMessages.forEach(e => console.error("FIELD ERROR: " + e.textContent.trim().replace(/\s+/g, ' ')));
+
             const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
             // Ignore buttons inside the cookie banner
             const formBtns = btns.filter(b => !b.closest('.govuk-cookie-banner'));
@@ -33,9 +56,12 @@ async function goNext(page) {
                 targetBtn.click();
             } else if (formBtns.length > 0) {
                 formBtns[formBtns.length - 1].click();
+            } else {
+                console.error("No continue button found on page!");
             }
         })
     ]);
+    console.log(`✅ Arrived at: ${page.url()}`);
 }
 
 async function submitGovForm(userData, incidentData) {
@@ -58,13 +84,19 @@ async function submitGovForm(userData, incidentData) {
         }
         browser = await puppeteer.launch(launchArgs);
         const page = await browser.newPage();
+        
+        // Route page console logs to our terminal
+        page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
 
         // Page 1: Where is smell coming from?
+        console.log('\n--- Step 1: Start ---');
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source', { waitUntil: 'networkidle0' });
+        console.log(`Loaded: ${page.url()}`);
         await clickLabel(page, 'industrial site');
         await goNext(page);
 
         // Page 2: Can you give details?
+        console.log('\n--- Step 2: Site details ---');
         await clickLabel(page, 'Yes');
         await page.type('input[name="site_name"]', 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham').catch(()=>{});
         await page.type('input[name="site_street"]', 'Choats Rd Dagenham').catch(()=>{});
@@ -81,21 +113,26 @@ async function submitGovForm(userData, incidentData) {
         await clickLabel(page, 'Yes');
         await goNext(page);
 
-        // Page 4: Find your address (skip lookup)
+        // Page 4 & 5: Find your address (skip lookup, enter manually)
         await page.evaluate(() => {
             const manualLink = Array.from(document.querySelectorAll('a')).find(a => a.textContent.includes('Enter address manually'));
             if (manualLink) manualLink.click();
         });
-        await page.waitForNavigation({ waitUntil: 'networkidle0' }).catch(()=>{});
+        // Wait a tiny bit for the DOM to update (unhide fields)
+        await new Promise(r => setTimeout(r, 1000));
 
-        // Page 5: Enter address
-        // Try to fill standard address fields, fallback to eval
-        await page.evaluate((userData) => {
+        // Try to fill standard address fields
+        const addrFields = await page.evaluate(() => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
-            if(inputs[0]) inputs[0].value = userData.address || '11 Kentfield Street';
-            if(inputs[1]) inputs[1].value = 'Barking Riverside'; // Town
-            if(inputs[inputs.length-1]) inputs[inputs.length-1].value = userData.postcode || 'IG11 0ZA';
-        }, userData);
+            const a = document.querySelector('input[name*="line_1"], input[name*="address1"]') || inputs[0];
+            const t = document.querySelector('input[name*="town"], input[name*="city"]') || inputs[1];
+            const p = document.querySelector('input[name*="postcode"]') || inputs[inputs.length-1];
+            return { aId: a ? a.id : null, tId: t ? t.id : null, pId: p ? p.id : null };
+        });
+        if (addrFields.aId) await page.type('#' + addrFields.aId, userData.address || '11 Kentfield Street');
+        if (addrFields.tId) await page.type('#' + addrFields.tId, 'Barking Riverside');
+        if (addrFields.pId) await page.type('#' + addrFields.pId, userData.postcode || 'IG11 0ZA');
+        
         await goNext(page);
 
         // Page 6: Describe smell
@@ -111,10 +148,16 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 9: What time?
-        await page.evaluate((time) => {
+        const timeId = await page.evaluate(() => {
             const input = document.querySelector('input[type="text"], input[type="time"]');
-            if (input) input.value = time || '11:00pm';
-        }, incidentData.timeOfSmell);
+            return input ? input.id : null;
+        });
+        const timeFormatted = formatTime(incidentData.timeOfSmell);
+        if (timeId) {
+            // clear the input just in case
+            await page.evaluate((id) => document.getElementById(id).value = '', timeId);
+            await page.type('#' + timeId, timeFormatted);
+        }
         await goNext(page);
 
         // Page 10: Still there?
