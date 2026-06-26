@@ -1,17 +1,25 @@
 const { getConfig, submitGovForm } = require('../scraper');
 const puppeteer = require('puppeteer');
 
-jest.mock('puppeteer', () => ({
-    launch: jest.fn().mockResolvedValue({
-        newPage: jest.fn().mockResolvedValue({
-            goto: jest.fn().mockResolvedValue(),
-            evaluate: jest.fn().mockResolvedValue({}),
-            type: jest.fn().mockResolvedValue(),
-            waitForNavigation: jest.fn().mockResolvedValue(),
+jest.mock('puppeteer', () => {
+    const mockPage = {
+        goto: jest.fn().mockResolvedValue(),
+        evaluate: jest.fn().mockImplementation((fn) => {
+            const str = fn.toString();
+            if (str.includes('aId: a')) return Promise.resolve({ aId: 'addr1', tId: 'town1', pId: 'post1' });
+            if (str.includes('input[type="time"]')) return Promise.resolve('time1');
+            return Promise.resolve({});
         }),
-        close: jest.fn()
-    })
-}));
+        type: jest.fn().mockResolvedValue(),
+        waitForNavigation: jest.fn().mockResolvedValue(),
+    };
+    return {
+        launch: jest.fn().mockResolvedValue({
+            newPage: jest.fn().mockResolvedValue(mockPage),
+            close: jest.fn()
+        })
+    };
+});
 
 describe('scraper configuration', () => {
     const originalEnv = process.env;
@@ -66,7 +74,16 @@ describe('submitGovForm', () => {
     });
 
     it('logs verbose test debug messages when in test mode', async () => {
-        await submitGovForm({ email: 'test@example.com' }, {});
+        const result = await submitGovForm({ email: 'test@example.com' }, {});
+        expect(result).toBe(true);
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[TEST_DEBUG]'));
+        
+        // Retrieve the mocked instances that were created during submitGovForm
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+
+        expect(mockPage.goto).toHaveBeenCalledTimes(1);
+        expect(mockPage.goto).toHaveBeenCalledWith('https://report-an-environmental-problem.service.gov.uk/smell/source', expect.any(Object));
+        expect(mockPage.evaluate.mock.calls.length).toBeGreaterThan(10);
     }, 10000);
 });
