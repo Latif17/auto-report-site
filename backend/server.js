@@ -2,13 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { submitGovForm } = require('./scraper');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Mock supabase client for test if env vars are missing

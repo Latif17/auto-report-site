@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Failed to parse local storage data for stats', e);
                 }
             }
-            const res = await fetch('http://localhost:3000/api/stats' + emailQuery);
+            const res = await fetch('/api/stats' + emailQuery);
             if (!res.ok) throw new Error('HTTP error');
             const data = await res.json();
             document.getElementById('opted-in-count').innerText = data.count;
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Simulate network request
     async function simulateSubmission(data) {
-        const response = await fetch('http://localhost:3000/api/submit', {
+        const response = await fetch('/api/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
