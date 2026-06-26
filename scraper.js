@@ -34,7 +34,7 @@ function getGovUkDateCategory(dateStr) {
     const today = new Date();
     today.setHours(0,0,0,0);
     const diffTime = Math.abs(today - target);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) return 'Earlier today';
     if (diffDays === 1) return 'Yesterday';

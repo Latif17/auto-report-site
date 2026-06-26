@@ -144,6 +144,11 @@ app.post('/api/submit', async (req, res) => {
             dateOfSmell = dateFormatter.format(now);
         }
 
+        const todayDate = dateFormatter.format(now);
+        if (dateOfSmell > todayDate || (dateOfSmell === todayDate && timeOfSmell > timeFormatter.format(now))) {
+            return res.status(400).json({ error: 'Cannot report an event in the future.' });
+        }
+
         const { data: newIncident } = await supabase.from('incidents')
             .insert({ date_of_smell: dateOfSmell, time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation, status: 'pending' })
             .select()
