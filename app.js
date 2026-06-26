@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchStats() {
         try {
             const res = await fetch('http://localhost:3000/api/stats');
+            if (!res.ok) throw new Error('HTTP error');
             const data = await res.json();
             document.getElementById('opted-in-count').innerText = data.count;
             document.getElementById('submit-btn-text').innerText = `Submit & Trigger ${data.count} Community Reports`;
