@@ -10,6 +10,7 @@ app.use(cors());
 // Mock supabase client for test if env vars are missing
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+    : { 
         from: () => ({ 
             select: () => {
                 const chain = {
