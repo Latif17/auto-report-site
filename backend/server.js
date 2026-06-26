@@ -98,7 +98,8 @@ app.post('/api/submit', async (req, res) => {
 
         if (shareData) {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
-            await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+            if (error && error.code !== '23505') throw error;
         }
 
         res.json({ success: true, message: "Report triggered", incidentId });
@@ -131,7 +132,8 @@ async function triggerMassReporting(incidentData, excludeEmail, incidentId) {
             address: user.address
         };
         await submitGovForm(userData, incidentData);
-        await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email });
+        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email });
+        if (error && error.code !== '23505') throw error;
     }
 }
 
