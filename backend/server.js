@@ -18,12 +18,20 @@ const supabase = process.env.SUPABASE_URL
                     eq: () => chain,
                     single: () => chain,
                     throwOnError: () => chain,
-                    then: (resolve) => resolve({ count: 0, data: {} })
+                    then: (resolve) => resolve({ count: 0, data: [] })
                 };
                 return chain;
             }, 
             upsert: () => {
                 const chain = {
+                    throwOnError: () => chain,
+                    then: (resolve) => resolve({})
+                };
+                return chain;
+            },
+            update: () => {
+                const chain = {
+                    eq: () => chain,
                     throwOnError: () => chain,
                     then: (resolve) => resolve({})
                 };
@@ -63,21 +71,25 @@ app.post('/api/submit', async (req, res) => {
     const userData = { email, fullName, postcode, phone, address };
     const incidentData = { timeOfSmell, severity, impact, description };
 
-    // Update last report time
-    await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1);
+    try {
+        // Update last report time
+        await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
 
-    // If shareData is true, save them to DB via internal logic
-    if (shareData) {
-        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address });
+        // If shareData is true, save them to DB via internal logic
+        if (shareData) {
+            await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
+            // Fire off mass reporting for the community!
+            triggerMassReporting(incidentData).catch(console.error);
+        } else {
+            // Fire off the scraper for this specific user asynchronously (don't await so we can return fast)
+            submitGovForm(userData, incidentData).catch(console.error);
+        }
+
+        res.json({ success: true, message: "Report triggered" });
+    } catch (error) {
+        console.error('Submit error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-
-    // Fire off the scraper for this specific user asynchronously (don't await so we can return fast)
-    submitGovForm(userData, incidentData);
-
-    // Fire off mass reporting for the community!
-    triggerMassReporting(incidentData);
-
-    res.json({ success: true, message: "Report triggered" });
 });
 
 async function triggerMassReporting(incidentData) {

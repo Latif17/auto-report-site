@@ -1,9 +1,10 @@
 const puppeteer = require('puppeteer');
 
 async function submitGovForm(userData, incidentData) {
-    const browser = await puppeteer.launch({ headless: "new", args: ['--no-sandbox'] });
-    const page = await browser.newPage();
+    let browser;
     try {
+        browser = await puppeteer.launch({ headless: "new", args: ['--no-sandbox'] });
+        const page = await browser.newPage();
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source');
         // Select "A large industrial site..." (radio 1602)
         await page.click('input[value="1602"]');
@@ -22,7 +23,7 @@ async function submitGovForm(userData, incidentData) {
         console.error(e);
         return false;
     } finally {
-        await browser.close();
+        if (browser) await browser.close();
     }
 }
 module.exports = { submitGovForm };
