@@ -25,6 +25,35 @@ async function replayPath(page, pathChoices) {
     }
 }
 
+async function extractPageData(page) {
+    // First, click EVERY radio button on the page sequentially to force any dynamically hidden fields to appear in the DOM.
+    // (We wrap in try/catch in case clicking causes an immediate navigation, though usually it requires 'Continue')
+    const radios = await page.$$('input[type="radio"]');
+    for (const radio of radios) {
+        try {
+            await radio.click();
+            await new Promise(resolve => setTimeout(resolve, 300)); // wait for DOM updates
+        } catch (e) { /* ignore detached elements */ }
+    }
+
+    // Now extract all visible inputs
+    return await page.evaluate(() => {
+        const results = [];
+        document.querySelectorAll('input:not([type="hidden"]), textarea, select').forEach(el => {
+            // Only grab elements that are somewhat visible (not display:none)
+            if (el.offsetParent !== null) {
+                results.push({
+                    name: el.name,
+                    type: el.type,
+                    id: el.id,
+                    value: el.value
+                });
+            }
+        });
+        return results;
+    });
+}
+
 async function startCrawler() {
     console.log('Launching browser...');
     const browser = await puppeteer.launch({ headless: "new" });
