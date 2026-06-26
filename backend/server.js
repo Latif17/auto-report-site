@@ -66,10 +66,10 @@ app.post('/api/opt-in', async (req, res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-    const { email, fullName, postcode, phone, address, timeOfSmell, severity, impact, description, shareData } = req.body;
+    const { email, fullName, postcode, phone, address, timeOfSmell, shareData } = req.body;
     
     const userData = { email, fullName, postcode, phone, address };
-    const incidentData = { timeOfSmell, severity, impact, description };
+    const incidentData = { timeOfSmell };
 
     try {
         // Update last report time

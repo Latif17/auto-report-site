@@ -11,40 +11,25 @@ function formatTime(timeStr) {
 }
 
 async function clickLabel(page, text) {
-    const success = await page.evaluate((textToFind) => {
+    await page.evaluate((textToFind) => {
         const labels = Array.from(document.querySelectorAll('label'));
         const target = labels.find(l => l.textContent.toLowerCase().includes(textToFind.toLowerCase()));
         if (target) {
             const inputId = target.getAttribute('for');
             if (inputId) {
                 const el = document.getElementById(inputId);
-                if (el) { el.click(); return true; }
+                if (el) el.click();
             } else {
                 target.click();
-                return true;
             }
         }
-        return false;
     }, text);
-    if (!success) {
-        console.error(`❌ FAILED to find/click label containing: "${text}"`);
-    } else {
-        console.log(`✅ Clicked label: "${text}"`);
-    }
 }
 
 async function goNext(page) {
-    console.log(`➡️  Clicking Continue...`);
     await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
         page.evaluate(() => {
-            const errorSummary = document.querySelector('.govuk-error-summary');
-            if (errorSummary) {
-                console.error("VALIDATION ERROR BEFORE CLICK: " + errorSummary.textContent.trim().replace(/\s+/g, ' '));
-            }
-            const errorMessages = document.querySelectorAll('.govuk-error-message');
-            errorMessages.forEach(e => console.error("FIELD ERROR: " + e.textContent.trim().replace(/\s+/g, ' ')));
-
             const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
             // Ignore buttons inside the cookie banner
             const formBtns = btns.filter(b => !b.closest('.govuk-cookie-banner'));
@@ -56,12 +41,9 @@ async function goNext(page) {
                 targetBtn.click();
             } else if (formBtns.length > 0) {
                 formBtns[formBtns.length - 1].click();
-            } else {
-                console.error("No continue button found on page!");
             }
         })
     ]);
-    console.log(`✅ Arrived at: ${page.url()}`);
 }
 
 async function submitGovForm(userData, incidentData) {
@@ -84,19 +66,13 @@ async function submitGovForm(userData, incidentData) {
         }
         browser = await puppeteer.launch(launchArgs);
         const page = await browser.newPage();
-        
-        // Route page console logs to our terminal
-        page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
 
         // Page 1: Where is smell coming from?
-        console.log('\n--- Step 1: Start ---');
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source', { waitUntil: 'networkidle0' });
-        console.log(`Loaded: ${page.url()}`);
         await clickLabel(page, 'industrial site');
         await goNext(page);
 
         // Page 2: Can you give details?
-        console.log('\n--- Step 2: Site details ---');
         await clickLabel(page, 'Yes');
         await page.type('input[name="site_name"]', 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham').catch(()=>{});
         await page.type('input[name="site_street"]', 'Choats Rd Dagenham').catch(()=>{});

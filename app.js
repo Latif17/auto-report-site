@@ -44,10 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             postcode: document.getElementById('postcode').value,
             phone: document.getElementById('phone').value,
             address: document.getElementById('address').value,
-            description: document.getElementById('description').value,
             timeOfSmell: document.getElementById('timeOfSmell').value,
-            severity: document.getElementById('severity').value,
-            impact: document.getElementById('impact').value,
             storeLocally: document.getElementById('storeLocally').checked,
             shareData: document.getElementById('shareData').checked
         };
@@ -99,11 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('postcode').value = data.postcode || '';
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('address').value = data.address || '';
-                document.getElementById('description').value = data.description || '';
                 
                 if (data.timeOfSmell) document.getElementById('timeOfSmell').value = data.timeOfSmell;
-                if (data.severity) document.getElementById('severity').value = data.severity;
-                if (data.impact) document.getElementById('impact').value = data.impact;
 
                 // Set checkboxes
                 document.getElementById('storeLocally').checked = data.storeLocally !== false;
