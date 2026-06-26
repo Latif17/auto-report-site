@@ -35,7 +35,7 @@ describe('API Endpoints', () => {
                 email: 'test@example.com', 
                 fullName: 'Test User', 
                 shareData: false,
-                timeOfSmell: '12:00',
+                timeOfSmell: '00:00',
                 smellType: 'Waste',
                 businessLocation: 'ReFoods'
             });
@@ -50,11 +50,34 @@ describe('API Endpoints', () => {
                 email: 'test@example.com', 
                 fullName: 'Test User', 
                 shareData: true,
-                timeOfSmell: '12:00',
+                timeOfSmell: '00:00',
                 smellType: 'Waste',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
+    });
+});
+
+describe('Security Middlewares', () => {
+    it('should have helmet security headers', async () => {
+        const res = await request(app).get('/api/stats');
+        // Helmet sets many headers, checking a few common ones to verify it's active
+        expect(res.headers['x-dns-prefetch-control']).toEqual('off');
+        expect(res.headers['x-frame-options']).toEqual('SAMEORIGIN');
+        expect(res.headers['strict-transport-security']).toBeDefined();
+    });
+
+    it('should limit requests to 100 per 15 minutes', async () => {
+        // We will make 100 requests first.
+        // It's a mock endpoint so it's fast.
+        for (let i = 0; i < 100; i++) {
+            await request(app).get('/api/stats');
+        }
+        
+        // The 101st request should be rate-limited
+        const res = await request(app).get('/api/stats');
+        expect(res.statusCode).toEqual(429);
+        expect(res.body).toHaveProperty('error', 'Too many requests from this IP, please try again after 15 minutes');
     });
 });

@@ -91,24 +91,36 @@
                     You are securely pooling data. You will automatically be included in any ongoing community reports. You only need to use the form below if you are the first to detect a new stink event.
                 </div>
 
-                <!-- Community Stats (Moved up) -->
-                <div id="community-stats" class="stats-card" style="margin-bottom: 2rem;">
-                    <div class="stats-header">
-                        <h3>Community Activity</h3>
-                        <span class="active-count"><span id="opted-in-count">0</span> standing by</span>
+
+                <!-- Active Incident Section (Shown if there's a recent event) -->
+                <div id="active-incident-section" class="primary-action-section hidden" style="border-color: var(--accent); background: var(--error-bg); margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <h2 style="font-family: var(--font-mono); font-size: 1.25rem; text-transform: uppercase; color: var(--accent); margin: 0; text-align: left;">Smell reported nearby</h2>
+
                     </div>
-                    <div id="recent-events-container">
-                        <ul id="recent-events-list"></ul>
+                    <p style="font-size: 0.85rem; color: var(--ink); margin-bottom: 1.5rem; text-align: left;">Your neighbors just logged an odor. Is this what you're smelling right now?</p>
+                    
+                    <div style="background: var(--paper); border: 2px solid var(--border); padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+                        <div id="active-incident-time" style="font-family: var(--font-mono); font-size: 2.25rem; font-weight: 700; color: var(--accent); line-height: 1;">--:--</div>
+                        <div id="active-incident-location" style="font-size: 0.95rem; margin-top: 0.5rem; color: var(--ink-light); font-weight: 600;">Location</div>
                     </div>
-                    <p id="active-alert" class="alert-info hidden">Awaiting stink event reports.</p>
+                    
+                    <button type="button" class="btn btn-submit" id="join-incident-btn" style="background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0px var(--shadow);">
+                        I smell it too
+                    </button>
+                    
+                    <button type="button" class="btn-secondary" id="show-new-incident-btn" style="width: 100%; margin-top: 1rem; text-align: center; display: block;">
+                        Log a different smell
+                    </button>
                 </div>
 
                 <!-- The Primary Action (Option 1) -->
-                <div id="new-incident-section" class="primary-action-section">
-                    <span class="time-label">LOG NEW STINK EVENT</span>
-                    <div class="input-grid" style="margin-top: 1.5rem; margin-bottom: 2rem; text-align: left;">
+                <div id="new-incident-section" class="primary-action-section" style="text-align: left;">
+                    <h2 style="font-family: var(--font-mono); font-size: 1.25rem; text-transform: uppercase; margin-bottom: 0.25rem;">Log a new smell</h2>
+                    <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.5rem;">Don't see your detection above? Be the first to start a report.</p>
+                    <div class="input-grid" style="margin-bottom: 2rem;">
                         <div class="input-group full-width">
-                            <label for="businessLocation">Who are you reporting?</label>
+                            <label for="businessLocation">Source of smell (if known)</label>
                             <select id="businessLocation" name="businessLocation" required>
                                 <option value="Multiple (ReFood, Veolia, BioGas)">Multiple (ReFood, Veolia, BioGas)</option>
                                 <option value="ReFoods UK">ReFoods UK</option>
@@ -118,18 +130,18 @@
                         </div>
                         
                         <div class="input-group">
-                            <label for="dateOfSmell">Date of Smell</label>
+                            <label for="dateOfSmell">Date</label>
                             <input type="date" id="dateOfSmell" name="dateOfSmell" required>
                         </div>
                         
                         <div class="input-group">
-                            <label for="timeOfSmell">Time of Detection</label>
+                            <label for="timeOfSmell">Time</label>
                             <input type="time" id="timeOfSmell" name="timeOfSmell" required>
                         </div>
                     </div>
                     
                     <button type="submit" class="btn btn-submit" id="submit-btn">
-                        <span class="btn-text" id="submit-btn-text">Initiate Stink Event</span>
+                        <span class="btn-text" id="submit-btn-text">Log this smell</span>
                         <div class="loader"></div>
                     </button>
                 </div>

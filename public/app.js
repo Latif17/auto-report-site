@@ -33,62 +33,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/stats' + emailQuery);
             if (!res.ok) throw new Error('HTTP error');
             const data = await res.json();
-            document.getElementById('opted-in-count').innerText = data.count;
-            
-            const listEl = document.getElementById('recent-events-list');
-            listEl.innerHTML = '';
             
             let localReported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
 
+            const activeSection = document.getElementById('active-incident-section');
+            const newSection = document.getElementById('new-incident-section');
+            
             if (data.recentIncidents && data.recentIncidents.length > 0) {
-                document.getElementById('active-alert').classList.add('hidden');
-                
                 const topIncident = data.recentIncidents[0];
                 const isReported = topIncident.alreadyReported || localReported.includes(topIncident.id);
                 
-                const li = document.createElement('li');
-                li.className = 'event-item';
-                
-                const detailsDiv = document.createElement('div');
-                detailsDiv.className = 'event-details';
-                
-                const strongTime = document.createElement('strong');
                 const formattedDate = new Date(topIncident.date_of_smell).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                strongTime.textContent = `${formattedDate} at ${topIncident.time_of_smell}`;
+                document.getElementById('active-incident-time').textContent = `${formattedDate} - ${topIncident.time_of_smell}`;
+                document.getElementById('active-incident-location').textContent = `Reported: ${topIncident.business_location}`;
                 
-                const companyDiv = document.createElement('div');
-                companyDiv.textContent = `Reported: ${topIncident.business_location}`;
-                companyDiv.style.color = "var(--ink-light)";
-                companyDiv.style.marginTop = "0.25rem";
-                
-                detailsDiv.appendChild(strongTime);
-                detailsDiv.appendChild(companyDiv);
-                
+                const joinBtn = document.getElementById('join-incident-btn');
                 if (isReported) {
-                    const tag = document.createElement('span');
-                    tag.textContent = 'You Logged This';
-                    tag.style.fontSize = '0.7rem';
-                    tag.style.background = 'var(--success-bg)';
-                    tag.style.padding = '2px 6px';
-                    tag.style.borderRadius = '4px';
-                    tag.style.marginLeft = '10px';
-                    detailsDiv.appendChild(tag);
+                    joinBtn.textContent = 'You Logged This Event';
+                    joinBtn.disabled = true;
+                    joinBtn.style.opacity = '0.5';
+                    joinBtn.style.cursor = 'not-allowed';
+                    joinBtn.onclick = null;
                 } else {
-                    const joinBtn = document.createElement('button');
-                    joinBtn.textContent = "I smelt this too!";
-                    joinBtn.className = "btn";
-                    joinBtn.style.marginTop = "0.75rem";
-                    joinBtn.style.width = "100%";
-                    joinBtn.style.fontSize = "0.85rem";
+                    joinBtn.textContent = 'I smelt this too! (Join)';
+                    joinBtn.disabled = false;
+                    joinBtn.style.opacity = '1';
+                    joinBtn.style.cursor = 'pointer';
                     joinBtn.onclick = (e) => {
                         e.preventDefault();
                         window.joinIncident(topIncident.id);
                     };
-                    detailsDiv.appendChild(joinBtn);
                 }
-
-                li.appendChild(detailsDiv);
-                listEl.appendChild(li);
+                
+                activeSection.classList.remove('hidden');
+                newSection.classList.add('hidden');
+                
+                // Allow user to toggle to the new incident form
+                document.getElementById('show-new-incident-btn').onclick = () => {
+                    activeSection.classList.add('hidden');
+                    newSection.classList.remove('hidden');
+                };
 
                 if (isPooledUser) {
                     pooledUserStatus.classList.remove('hidden');
@@ -96,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     pooledUserStatus.classList.add('hidden');
                 }
             } else {
-                document.getElementById('active-alert').classList.remove('hidden');
+                activeSection.classList.add('hidden');
+                newSection.classList.remove('hidden');
                 
                 if (isPooledUser) {
                     pooledUserStatus.classList.remove('hidden');
@@ -105,9 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (e) {
-            console.error('Failed to fetch stats');
-            const statsEl = document.getElementById('community-stats');
-            if (statsEl) statsEl.style.display = 'none';
+            console.error('Failed to fetch stats', e);
         }
     }
     fetchStats();
@@ -187,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (joinIncidentId) {
                 statusMessage.textContent = 'Successfully joined the report. Your details have been added.';
                 document.getElementById('joinIncidentId').value = '';
-                document.getElementById('submit-btn-text').textContent = 'Initiate Stink Event';
+                document.getElementById('submit-btn-text').textContent = 'Log this smell';
             } else {
                 statusMessage.textContent = formData.shareData 
                     ? 'Stink event logged successfully. Auto-reporting is active for future events.'
@@ -271,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!hasValidData) {
             // Need to fill out form to join
             document.getElementById('joinIncidentId').value = incidentId;
-            document.getElementById('submit-btn-text').textContent = 'Join Stink Event';
+            document.getElementById('submit-btn-text').textContent = 'Join this report';
             
             // Show message and scroll
             statusMessage.textContent = 'Please fill out your personal details below to join this report.';
