@@ -19,19 +19,22 @@ async function clickLabel(page, text) {
 }
 
 async function goNext(page) {
-    // Find the actual Continue or Start button, ignoring cookie banners
-    const btnHandle = await page.evaluateHandle(() => {
-        const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
-        const targetBtn = btns.find(b => {
-            const text = b.textContent.trim().toLowerCase();
-            return text.includes('continue') || text.includes('start now') || text.includes('send report');
-        });
-        return targetBtn || btns[btns.length - 1]; // fallback to the last button
-    });
-
     await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle0' }),
-        btnHandle.click()
+        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
+        page.evaluate(() => {
+            const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
+            // Ignore buttons inside the cookie banner
+            const formBtns = btns.filter(b => !b.closest('.govuk-cookie-banner'));
+            const targetBtn = formBtns.find(b => {
+                const text = b.textContent.trim().toLowerCase();
+                return text.includes('continue') || text.includes('start now') || text.includes('send report');
+            });
+            if (targetBtn) {
+                targetBtn.click();
+            } else if (formBtns.length > 0) {
+                formBtns[formBtns.length - 1].click();
+            }
+        })
     ]);
 }
 
