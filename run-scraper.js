@@ -80,6 +80,7 @@ async function run() {
                         address: user.address
                     };
                     const incidentData = {
+                        dateOfSmell: incident.date_of_smell,
                         timeOfSmell: incident.time_of_smell,
                         smellType: incident.smell_type,
                         businessLocation: incident.business_location

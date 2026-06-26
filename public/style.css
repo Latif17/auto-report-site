@@ -162,28 +162,6 @@ h1 {
     letter-spacing: 1px;
 }
 
-input[type="time"] {
-    font-family: var(--font-mono);
-    font-size: 3rem;
-    font-weight: 700;
-    border: 2px solid var(--border);
-    background: var(--paper);
-    color: var(--ink);
-    padding: 0.5rem 1rem;
-    border-radius: 0;
-    text-align: center;
-    margin-bottom: 1.5rem;
-    width: 100%;
-    max-width: 300px;
-    color-scheme: light dark;
-}
-
-input[type="time"]:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 4px 4px 0px var(--focus);
-}
-
 .btn {
     font-family: var(--font-mono);
     font-size: 1.25rem;
@@ -269,7 +247,10 @@ input[type="time"]:focus {
 
 input[type="text"],
 input[type="email"],
-input[type="tel"] {
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--border);
@@ -533,7 +514,6 @@ footer a {
         padding: 1.5rem 1rem;
     }
 
-    input[type="time"],
     #active-incident-time {
         font-size: 2.25rem !important;
     }

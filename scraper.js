@@ -29,7 +29,8 @@ function formatTime(timeStr) {
 }
 
 function getGovUkDateCategory(dateStr) {
-    const target = new Date(dateStr);
+    const [y, m, d] = dateStr.split('-');
+    const target = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
     target.setHours(0,0,0,0);
     const today = new Date();
     today.setHours(0,0,0,0);

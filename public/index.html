@@ -93,10 +93,10 @@
                 <!-- The Primary Action (Option 1) -->
                 <div id="new-incident-section" class="primary-action-section">
                     <span class="time-label">LOG NEW STINK EVENT</span>
-                    <div class="input-grid">
-                        <div class="input-group">
+                    <div class="input-grid" style="margin-top: 1.5rem; margin-bottom: 2rem; text-align: left;">
+                        <div class="input-group full-width">
                             <label for="businessLocation">Who are you reporting?</label>
-                            <select id="businessLocation" name="businessLocation" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                            <select id="businessLocation" name="businessLocation" required>
                                 <option value="Multiple (ReFood, Veolia, BioGas)">Multiple (ReFood, Veolia, BioGas)</option>
                                 <option value="ReFoods UK">ReFoods UK</option>
                                 <option value="East London BioGas">East London BioGas</option>
@@ -106,12 +106,12 @@
                         
                         <div class="input-group">
                             <label for="dateOfSmell">Date of Smell</label>
-                            <input type="date" id="dateOfSmell" name="dateOfSmell" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                            <input type="date" id="dateOfSmell" name="dateOfSmell" required>
                         </div>
                         
                         <div class="input-group">
                             <label for="timeOfSmell">Time of Detection</label>
-                            <input type="time" id="timeOfSmell" name="timeOfSmell" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                            <input type="time" id="timeOfSmell" name="timeOfSmell" required>
                         </div>
                     </div>
                     

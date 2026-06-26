@@ -53,7 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 detailsDiv.className = 'event-details';
                 
                 const strongTime = document.createElement('strong');
-                strongTime.textContent = `${topIncident.date_of_smell} at ${topIncident.time_of_smell}`;
+                const formattedDate = new Date(topIncident.date_of_smell).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                strongTime.textContent = `${formattedDate} at ${topIncident.time_of_smell}`;
                 
                 const companyDiv = document.createElement('div');
                 companyDiv.textContent = `Reported: ${topIncident.business_location}`;
