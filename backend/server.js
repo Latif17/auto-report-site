@@ -8,6 +8,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Mock supabase client for test if env vars are missing
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
