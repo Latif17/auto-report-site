@@ -23,15 +23,40 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('opted-in-count').innerText = data.count;
             document.getElementById('submit-btn-text').innerText = `Submit & Trigger ${data.count} Community Reports`;
             
-            if (data.lastReport) {
-                const lastDate = new Date(data.lastReport);
-                document.getElementById('last-report-time').innerText = lastDate.toLocaleTimeString();
-                
-                // Check if > 2 hours
-                const diffHours = (new Date() - lastDate) / (1000 * 60 * 60);
-                if (diffHours > 2) {
-                    document.getElementById('active-alert').style.display = 'block';
-                }
+            const listEl = document.getElementById('recent-events-list');
+            listEl.innerHTML = '';
+            
+            let localReported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
+
+            if (data.recentIncidents && data.recentIncidents.length > 0) {
+                document.getElementById('active-alert').style.display = 'none';
+                data.recentIncidents.forEach(inc => {
+                    const li = document.createElement('li');
+                    li.className = 'event-item';
+                    
+                    const isReported = inc.alreadyReported || localReported.includes(inc.id);
+                    
+                    li.innerHTML = `
+                        <div class="event-details">
+                            <strong>${inc.time_of_smell}</strong> - ${inc.smell_type} at ${inc.business_location}<br>
+                            <small>${inc.report_count} report(s)</small>
+                        </div>
+                        <button class="btn-small select-event-btn" data-time="${inc.time_of_smell}" data-type="${inc.smell_type}" data-loc="${inc.business_location}" ${isReported ? 'disabled' : ''}>
+                            ${isReported ? 'Already Reported' : 'Report this too'}
+                        </button>
+                    `;
+                    listEl.appendChild(li);
+                });
+
+                document.querySelectorAll('.select-event-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.getElementById('timeOfSmell').value = e.target.dataset.time;
+                        document.getElementById('smellType').value = e.target.dataset.type;
+                        document.getElementById('businessLocation').value = e.target.dataset.loc;
+                        document.getElementById('report-form').scrollIntoView({ behavior: 'smooth' });
+                    });
+                });
             } else {
                 document.getElementById('active-alert').style.display = 'block';
             }
