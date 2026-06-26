@@ -14,10 +14,11 @@ describe('run-scraper', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
+        jest.useFakeTimers();
+
         mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
         mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
         mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-        jest.spyOn(global, 'setTimeout').mockImplementation((cb) => cb());
 
         // Setup mock Supabase client chain
         mockSupabase = {
@@ -38,6 +39,7 @@ describe('run-scraper', () => {
     });
 
     afterEach(() => {
+        jest.useRealTimers();
         mockExit.mockRestore();
         mockConsoleError.mockRestore();
         mockConsoleLog.mockRestore();
@@ -128,7 +130,18 @@ describe('run-scraper', () => {
         // Mock update to completed
         mockSupabase.eq.mockResolvedValueOnce({ error: null });
 
-        await runFunc();
+        const runPromise = runFunc();
+        // Since we have async operations before the timer, we need to let the event loop process them
+        // before advancing the timers. We can use runAllTimersAsync if available, or a simple loop.
+        if (jest.runAllTimersAsync) {
+            await jest.runAllTimersAsync();
+        } else {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+                jest.runAllTimers();
+            }
+        }
+        await runPromise;
 
         // Should try to update to processing
         expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'processing' });
