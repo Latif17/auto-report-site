@@ -8,9 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataStr = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
             let emailQuery = '';
             if (dataStr) {
-                const parsed = JSON.parse(dataStr);
-                if (parsed.email && parsed.shareData) {
-                    emailQuery = `?email=${encodeURIComponent(parsed.email)}`;
+                try {
+                    const parsed = JSON.parse(dataStr);
+                    if (parsed.email && parsed.shareData) {
+                        emailQuery = `?email=${encodeURIComponent(parsed.email)}`;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse local storage data for stats', e);
                 }
             }
             const res = await fetch('http://localhost:3000/api/stats' + emailQuery);
@@ -80,10 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await simulateSubmission(formData);
             
-            if (response.incidentId) {
-                let reported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
-                reported.push(response.incidentId);
-                localStorage.setItem('reported_incidents', JSON.stringify(reported));
+            if (response && response.incidentId) {
+                try {
+                    let reported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
+                    if (!reported.includes(response.incidentId)) {
+                        reported.push(response.incidentId);
+                        localStorage.setItem('reported_incidents', JSON.stringify(reported));
+                    }
+                } catch (e) {
+                    console.error('Failed to parse reported_incidents', e);
+                }
             }
             fetchStats(); // Refresh stats to update buttons
             
