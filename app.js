@@ -5,7 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchStats() {
         try {
-            const res = await fetch('http://localhost:3000/api/stats');
+            const dataStr = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
+            let emailQuery = '';
+            if (dataStr) {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.email && parsed.shareData) {
+                    emailQuery = `?email=${encodeURIComponent(parsed.email)}`;
+                }
+            }
+            const res = await fetch('http://localhost:3000/api/stats' + emailQuery);
             if (!res.ok) throw new Error('HTTP error');
             const data = await res.json();
             document.getElementById('opted-in-count').innerText = data.count;
@@ -45,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('phone').value,
             address: document.getElementById('address').value,
             timeOfSmell: document.getElementById('timeOfSmell').value,
+            smellType: document.getElementById('smellType').value,
+            businessLocation: document.getElementById('businessLocation').value,
             storeLocally: document.getElementById('storeLocally').checked,
             shareData: document.getElementById('shareData').checked
         };
@@ -68,7 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Simulate API call / Form submission logic
         try {
-            await simulateSubmission(formData);
+            const response = await simulateSubmission(formData);
+            
+            if (response.incidentId) {
+                let reported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
+                reported.push(response.incidentId);
+                localStorage.setItem('reported_incidents', JSON.stringify(reported));
+            }
+            fetchStats(); // Refresh stats to update buttons
             
             // Success
             statusMessage.textContent = formData.shareData 
@@ -102,6 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('postcode').value = data.postcode || '';
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('address').value = data.address || '';
+                document.getElementById('smellType').value = data.smellType || '';
+                document.getElementById('businessLocation').value = data.businessLocation || '';
 
                 // Set checkboxes
                 document.getElementById('storeLocally').checked = data.storeLocally !== false;
