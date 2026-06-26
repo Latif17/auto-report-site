@@ -66,27 +66,45 @@ app.post('/api/opt-in', async (req, res) => {
 });
 
 app.post('/api/submit', async (req, res) => {
-    const { email, fullName, postcode, phone, address, timeOfSmell, shareData } = req.body;
+    const { email, fullName, postcode, phone, address, timeOfSmell, smellType, businessLocation, shareData } = req.body;
     
     const userData = { email, fullName, postcode, phone, address };
-    const incidentData = { timeOfSmell };
+    const incidentData = { timeOfSmell, smellType, businessLocation };
 
     try {
-        // Update last report time
         await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
 
-        // If shareData is true, save them to DB via internal logic
-        if (shareData) {
-            await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
+        // Check for existing incident in last hour
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        let { data: existingIncidents } = await supabase.from('incidents')
+            .select('id')
+            .eq('time_of_smell', timeOfSmell)
+            .eq('smell_type', smellType)
+            .eq('business_location', businessLocation)
+            .gte('created_at', oneHourAgo);
+
+        let incidentId;
+        if (existingIncidents && existingIncidents.length > 0) {
+            incidentId = existingIncidents[0].id;
+        } else {
+            const { data: newIncident } = await supabase.from('incidents')
+                .insert({ time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation })
+                .select()
+                .single();
+            incidentId = newIncident.id;
         }
 
-        res.json({ success: true, message: "Report triggered" });
+        if (shareData) {
+            await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
+            await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+        }
 
-        // Background execution to prevent holding up the HTTP response
+        res.json({ success: true, message: "Report triggered", incidentId });
+
         (async () => {
             try {
                 await submitGovForm(userData, incidentData);
-                await triggerMassReporting(incidentData, email);
+                await triggerMassReporting(incidentData, email, incidentId);
             } catch (err) {
                 console.error("Background submission error:", err);
             }
@@ -97,11 +115,10 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
-async function triggerMassReporting(incidentData, excludeEmail) {
+async function triggerMassReporting(incidentData, excludeEmail, incidentId) {
     const { data: users } = await supabase.from('users').select('*');
     if (!users) return;
     
-    // Process sequentially to respect memory limits
     for (const user of users) {
         if (user.email === excludeEmail) continue;
         const userData = {
@@ -112,6 +129,7 @@ async function triggerMassReporting(incidentData, excludeEmail) {
             address: user.address
         };
         await submitGovForm(userData, incidentData);
+        await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email });
     }
 }
 
