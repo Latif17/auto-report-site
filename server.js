@@ -173,6 +173,23 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
+app.post('/api/join', async (req, res) => {
+    let { email, fullName, postcode, phone, address, incidentId } = req.body;
+    if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
+
+    try {
+        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
+        
+        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+        if (error && error.code !== '23505') throw error;
+
+        res.json({ success: true, message: "Joined report successfully" });
+    } catch (error) {
+        console.error('Join error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

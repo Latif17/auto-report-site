@@ -73,6 +73,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     tag.style.borderRadius = '4px';
                     tag.style.marginLeft = '10px';
                     detailsDiv.appendChild(tag);
+                } else {
+                    const joinBtn = document.createElement('button');
+                    joinBtn.textContent = "I smelt this too!";
+                    joinBtn.className = "btn";
+                    joinBtn.style.marginTop = "0.75rem";
+                    joinBtn.style.width = "100%";
+                    joinBtn.style.fontSize = "0.85rem";
+                    joinBtn.onclick = (e) => {
+                        e.preventDefault();
+                        window.joinIncident(topIncident.id);
+                    };
+                    detailsDiv.appendChild(joinBtn);
                 }
 
                 li.appendChild(detailsDiv);
@@ -141,13 +153,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update pooled user state internally for immediate UI feedback
         isPooledUser = formData.shareData;
 
+        const joinIncidentId = document.getElementById('joinIncidentId').value;
+        const endpoint = joinIncidentId ? '/api/join' : '/api/submit';
+        
+        if (joinIncidentId) {
+            formData.incidentId = joinIncidentId;
+            // Ensure they pool data if they are joining
+            formData.shareData = true; 
+        }
+
         // 3. UI Loading State
         submitBtn.classList.add('loading');
         statusMessage.classList.add('hidden');
         statusMessage.className = 'status-message'; // Reset classes
 
         try {
-            const response = await simulateSubmission(formData);
+            const response = await simulateSubmission(formData, endpoint);
             
             if (response && response.incidentId) {
                 try {
@@ -163,9 +184,15 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchStats(); // Refresh stats
             
             // Success
-            statusMessage.textContent = formData.shareData 
-                ? 'Stink event logged successfully. Auto-reporting is active for future events.'
-                : 'Stink event logged successfully.';
+            if (joinIncidentId) {
+                statusMessage.textContent = 'Successfully joined the report. Your details have been added.';
+                document.getElementById('joinIncidentId').value = '';
+                document.getElementById('submit-btn-text').textContent = 'Initiate Stink Event';
+            } else {
+                statusMessage.textContent = formData.shareData 
+                    ? 'Stink event logged successfully. Auto-reporting is active for future events.'
+                    : 'Stink event logged successfully.';
+            }
             statusMessage.classList.add('success');
             statusMessage.classList.remove('hidden');
 
@@ -201,8 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Simulate network request
-    async function simulateSubmission(data) {
-        const response = await fetch('/api/submit', {
+    async function simulateSubmission(data, endpoint = '/api/submit') {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -214,4 +241,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return response.json();
     }
+
+    // Join Incident Logic
+    window.joinIncident = async function(incidentId) {
+        const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
+        let hasValidData = false;
+        if (savedDataJson) {
+            try {
+                const data = JSON.parse(savedDataJson);
+                if (data.email && data.fullName && data.postcode && data.address) {
+                    hasValidData = true;
+                    // Auto join
+                    submitBtn.classList.add('loading');
+                    try {
+                        await simulateSubmission({ ...data, incidentId }, '/api/join');
+                        let reported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
+                        reported.push(incidentId);
+                        localStorage.setItem('reported_incidents', JSON.stringify(reported));
+                        fetchStats();
+                    } catch (e) {
+                        alert('Failed to join report automatically.');
+                    } finally {
+                        submitBtn.classList.remove('loading');
+                    }
+                }
+            } catch (e) {}
+        }
+        
+        if (!hasValidData) {
+            // Need to fill out form to join
+            document.getElementById('joinIncidentId').value = incidentId;
+            document.getElementById('submit-btn-text').textContent = 'Join Stink Event';
+            
+            // Show message and scroll
+            statusMessage.textContent = 'Please fill out your personal details below to join this report.';
+            statusMessage.className = 'status-message alert-info';
+            statusMessage.classList.remove('hidden');
+            
+            document.getElementById('reporter-details').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 });
