@@ -26,12 +26,14 @@ const supabase = process.env.SUPABASE_URL
                     then: (resolve) => {
                         if (table === 'incidents') {
                             const mockTime = new Date();
+                            const defaultDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(mockTime);
+                            const defaultTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false }).format(mockTime);
                             return resolve({
                                 count: 1,
                                 data: [{
                                     id: 9999,
-                                    date_of_smell: mockTime.toISOString().split('T')[0],
-                                    time_of_smell: mockTime.toTimeString().slice(0, 5),
+                                    date_of_smell: defaultDate,
+                                    time_of_smell: defaultTime,
                                     smell_type: 'Industrial Stench',
                                     business_location: 'Multiple (ReFood, Veolia, BioGas)',
                                     status: 'pending',
@@ -88,10 +90,11 @@ app.get('/api/stats', async (req, res) => {
 
         let reportedIncidentIds = [];
         const userEmail = req.query.email;
-        if (userEmail) {
+        if (userEmail && recentIncidents && recentIncidents.length > 0) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
                 .eq('user_email', userEmail)
+                .eq('incident_id', recentIncidents[0].id)
                 .throwOnError();
             if (userReports) {
                 reportedIncidentIds = userReports.map(r => r.incident_id);
@@ -130,11 +133,12 @@ app.post('/api/submit', async (req, res) => {
     try {
         await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
 
+        const now = new Date();
         if (!timeOfSmell) {
-            timeOfSmell = new Date().toTimeString().slice(0, 5);
+            timeOfSmell = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
         }
         if (!dateOfSmell) {
-            dateOfSmell = new Date().toISOString().split('T')[0];
+            dateOfSmell = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
         }
 
         const { data: newIncident } = await supabase.from('incidents')
