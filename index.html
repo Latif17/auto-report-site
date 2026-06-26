@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mass report the ongoing smell in our area. Save your details locally to easily report environmental issues with one click.">
+    <title>Fresh Air Watch | Area Smell Reporting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-gradient"></div>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="container">
+        <header class="hero">
+            <div class="hero-content">
+                <div class="badge">Barking Riverside</div>
+                <h1>The Barking Stink Ends Here.</h1>
+                <p class="subtitle">For 20 years, an industrial stench from ReFoods UK, East London BioGas, and Veolia has plagued this area.</p>
+                <div class="explanation-card">
+                    <p>Despite our pleas, Bellway and Barking Riverside London haven't fixed it. The government requires overwhelming proof (time, severity, impact) to act. One complaint isn't enough.</p>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="form-card glass">
+                <form id="report-form">
+                    <div class="form-header">
+                        <h2>Your Details</h2>
+                        <p>Fill this out once. Your data will be saved locally in your browser.</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" required placeholder="John Doe">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required placeholder="john@example.com">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="postcode">Postcode</label>
+                            <input type="text" id="postcode" name="postcode" required placeholder="AB12 3CD">
+                        </div>
+                        <div class="input-group">
+                            <label for="phone">Phone Number (Optional)</label>
+                            <input type="tel" id="phone" name="phone" placeholder="07700 900000">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="address">Full Address</label>
+                        <textarea id="address" name="address" rows="2" required placeholder="123 Example Street..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="description">Smell Description / Source</label>
+                        <textarea id="description" name="description" rows="3" required placeholder="Describe the smell and where you believe it is coming from (e.g., A large industrial site...)"></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="timeOfSmell">Time of Smell</label>
+                        <input type="time" id="timeOfSmell" name="timeOfSmell" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="severity">Severity (1-5)</label>
+                        <input type="number" id="severity" name="severity" min="1" max="5" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="impact">Impact (e.g., Feeling sick, cannot open windows)</label>
+                        <input type="text" id="impact" name="impact" required>
+                    </div>
+
+                    <div class="preferences-section">
+                        <h3>Data Preferences</h3>
+                        <p class="preferences-hint">Choose how you want to manage your data to help the cause.</p>
+                        
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="storeLocally" name="storeLocally" checked>
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <strong>Store my data locally</strong>
+                                <span>Save details on this device for 1-click submission next time. Your data never leaves your browser unless you submit.</span>
+                            </div>
+                        </label>
+
+                        <label class="checkbox-container highlight">
+                            <input type="checkbox" id="shareData" name="shareData">
+                            <span class="checkmark"></span>
+                            <div class="checkbox-content">
+                                <strong>Allow automated reporting (Recommended)</strong>
+                                <span>Share my data securely with the community pool to submit on my behalf when the smell is active. Maximum impact.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <div id="community-stats" class="stats-card">
+                            <h3>Community Stats</h3>
+                            <p><span id="opted-in-count">0</span> Barking Riverside neighbors standing by.</p>
+                            <p>Last smell reported: <span id="last-report-time">Never</span></p>
+                            <p id="active-alert" style="color: red; display: none;">No one has reported a smell recently. Be the one to trigger the mass report today!</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <span class="btn-text" id="submit-btn-text">Submit & Trigger Reports</span>
+                            <div class="loader"></div>
+                        </button>
+                    </div>
+                    
+                    <div id="status-message" class="status-message hidden"></div>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made by the community, for the community. Data is stored locally unless shared explicitly.</p>
+            <p><a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
