@@ -17,6 +17,7 @@ describe('run-scraper', () => {
         mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
         mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
         mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(global, 'setTimeout').mockImplementation((cb) => cb());
 
         // Setup mock Supabase client chain
         mockSupabase = {

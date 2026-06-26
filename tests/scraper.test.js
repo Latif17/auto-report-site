@@ -16,7 +16,8 @@ jest.mock('puppeteer', () => {
     return {
         launch: jest.fn().mockResolvedValue({
             newPage: jest.fn().mockResolvedValue(mockPage),
-            close: jest.fn()
+            close: jest.fn(),
+            on: jest.fn()
         })
     };
 });
