@@ -6,10 +6,17 @@ describe('scraper configuration', () => {
     beforeEach(() => {
         jest.resetModules();
         process.env = { ...originalEnv };
+        delete process.env.TEST_MODE;
+        delete process.env.SHOW_BROWSER;
     });
 
     afterAll(() => {
         process.env = originalEnv;
+    });
+
+    it('does not trigger test mode for normal emails', () => {
+        const config = getConfig({ email: 'normal@user.com' });
+        expect(config.isTestMode).toBe(false);
     });
 
     it('triggers test mode for @example.com emails', () => {

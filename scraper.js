@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer');
 
 function getConfig(userData) {
-    const isTestMode = process.env.TEST_MODE === 'true' || 
-                      (userData && userData.email && userData.email.toLowerCase().endsWith('@example.com'));
+    const isTestMode = Boolean(process.env.TEST_MODE === 'true' || 
+                      (userData && typeof userData.email === 'string' && userData.email.toLowerCase().endsWith('@example.com')));
     
     const showBrowser = process.env.SHOW_BROWSER === 'true';
 
