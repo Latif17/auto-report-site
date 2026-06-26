@@ -20,15 +20,12 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        working-directory: ./backend
         run: npm ci
 
       - name: Install Puppeteer browsers
-        working-directory: ./backend
         run: npx puppeteer browsers install chrome
 
       - name: Run scraper
-        working-directory: ./backend
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
