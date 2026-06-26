@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const { submitGovForm } = require('./scraper');
 require('dotenv').config();
 
 const app = express();
@@ -55,6 +56,47 @@ app.post('/api/opt-in', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+app.post('/api/submit', async (req, res) => {
+    const { email, fullName, postcode, phone, address, timeOfSmell, severity, impact, description, shareData } = req.body;
+    
+    const userData = { email, fullName, postcode, phone, address };
+    const incidentData = { timeOfSmell, severity, impact, description };
+
+    // Update last report time
+    await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1);
+
+    // If shareData is true, save them to DB via internal logic
+    if (shareData) {
+        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address });
+    }
+
+    // Fire off the scraper for this specific user asynchronously (don't await so we can return fast)
+    submitGovForm(userData, incidentData);
+
+    // Fire off mass reporting for the community!
+    triggerMassReporting(incidentData);
+
+    res.json({ success: true, message: "Report triggered" });
+});
+
+async function triggerMassReporting(incidentData) {
+    const { data: users } = await supabase.from('users').select('*');
+    if (!users) return;
+    
+    // Process sequentially to respect memory limits
+    for (const user of users) {
+        const userData = {
+            email: user.email,
+            fullName: user.full_name,
+            postcode: user.postcode,
+            phone: user.phone,
+            address: user.address
+        };
+        await submitGovForm(userData, incidentData);
+    }
+}
+
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
