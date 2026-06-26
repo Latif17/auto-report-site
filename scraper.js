@@ -1,4 +1,8 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+
+const randomDelay = (min, max) => new Promise(r => setTimeout(r, Math.floor(Math.random() * (max - min + 1) + min)));
 
 function getConfig(userData) {
     const isTestMode = Boolean(process.env.TEST_MODE === 'true' || 
@@ -59,6 +63,7 @@ async function clickLabel(page, text) {
 }
 
 async function goNext(page) {
+    await randomDelay(1000, 3000);
     await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
         page.evaluate(() => {
