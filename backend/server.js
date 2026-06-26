@@ -78,26 +78,32 @@ app.post('/api/submit', async (req, res) => {
         // If shareData is true, save them to DB via internal logic
         if (shareData) {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
-            // Fire off mass reporting for the community!
-            triggerMassReporting(incidentData).catch(console.error);
-        } else {
-            // Fire off the scraper for this specific user asynchronously (don't await so we can return fast)
-            submitGovForm(userData, incidentData).catch(console.error);
         }
 
         res.json({ success: true, message: "Report triggered" });
+
+        // Background execution to prevent holding up the HTTP response
+        (async () => {
+            try {
+                await submitGovForm(userData, incidentData);
+                await triggerMassReporting(incidentData, email);
+            } catch (err) {
+                console.error("Background submission error:", err);
+            }
+        })();
     } catch (error) {
         console.error('Submit error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-async function triggerMassReporting(incidentData) {
+async function triggerMassReporting(incidentData, excludeEmail) {
     const { data: users } = await supabase.from('users').select('*');
     if (!users) return;
     
     // Process sequentially to respect memory limits
     for (const user of users) {
+        if (user.email === excludeEmail) continue;
         const userData = {
             email: user.email,
             fullName: user.full_name,

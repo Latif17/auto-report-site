@@ -43,10 +43,11 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toEqual({ success: true, message: "Report triggered" });
+        await new Promise(r => setTimeout(r, 10)); // Allow background IIFE to run
         expect(scraper.submitGovForm).toHaveBeenCalledTimes(1);
     });
 
-    it('POST /api/submit handles shareData correctly and does not call submitGovForm directly', async () => {
+    it('POST /api/submit handles shareData correctly and calls submitGovForm directly', async () => {
         const res = await request(app)
             .post('/api/submit')
             .send({ 
@@ -56,7 +57,9 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toEqual({ success: true, message: "Report triggered" });
-        // Since supabase users is mocked to [], triggerMassReporting will result in 0 calls.
-        expect(scraper.submitGovForm).toHaveBeenCalledTimes(0);
+        await new Promise(r => setTimeout(r, 10)); // Allow background IIFE to run
+        // Expect submitGovForm to be called 1 time for the submitter
+        // Since supabase users is mocked to [], triggerMassReporting will result in 0 additional calls.
+        expect(scraper.submitGovForm).toHaveBeenCalledTimes(1);
     });
 });
