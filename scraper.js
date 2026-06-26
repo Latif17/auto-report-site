@@ -1,5 +1,23 @@
 const puppeteer = require('puppeteer');
 
+function getConfig(userData) {
+    const isTestMode = process.env.TEST_MODE === 'true' || 
+                      (userData && userData.email && userData.email.toLowerCase().endsWith('@example.com'));
+    
+    const showBrowser = process.env.SHOW_BROWSER === 'true';
+
+    const launchArgs = { 
+        headless: showBrowser ? false : "new", 
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    };
+    
+    if (showBrowser) {
+        launchArgs.slowMo = 50;
+    }
+
+    return { isTestMode, launchArgs };
+}
+
 function formatTime(timeStr) {
     if (!timeStr) return '11:00am';
     if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) return timeStr;
@@ -50,16 +68,7 @@ async function submitGovForm(userData, incidentData) {
     let browser;
     try {
         console.log(`Starting GOV.UK submission for ${userData.email || 'Anonymous'}`);
-        const isTestMode = process.env.TEST_MODE === 'true';
-        
-        const launchArgs = { 
-            headless: isTestMode ? false : "new", 
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-        };
-        
-        if (isTestMode) {
-            launchArgs.slowMo = 50; // Slow down so you can watch it
-        }
+        const { isTestMode, launchArgs } = getConfig(userData);
         
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchArgs.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -206,4 +215,4 @@ async function submitGovForm(userData, incidentData) {
     }
 }
 
-module.exports = { submitGovForm };
+module.exports = { submitGovForm, getConfig };
