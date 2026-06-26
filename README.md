@@ -1,3 +1,18 @@
+# Auto Report Site
+
+## Local Development
+
+1. **Environment Variables:**
+   - Ensure you have `SUPABASE_URL` and `SUPABASE_KEY` available if connecting to a real database, or let it run without them for mock mode.
+2. **Install and Run:**
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+3. **View the App:**
+   - Open your browser to `http://localhost:3000`.
+
 ## Deployment
 
 1. **Supabase Database Setup:**
