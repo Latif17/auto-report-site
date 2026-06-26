@@ -210,6 +210,18 @@ input[type="time"]:focus {
     box-shadow: 0px 0px 0px var(--shadow);
 }
 
+.btn-secondary {
+    background: transparent;
+    color: var(--error-text);
+    border-color: var(--error-text);
+    font-size: 1rem;
+    padding: 0.75rem;
+}
+
+.btn-secondary:hover {
+    background: rgba(153, 27, 27, 0.1);
+}
+
 /* Details Section */
 .reporter-details {
     border: 1px solid var(--border);

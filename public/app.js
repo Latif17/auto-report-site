@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Toggle logic for switching to manual entry
-    document.getElementById('log-different-time-link').addEventListener('click', (e) => {
+    document.getElementById('log-different-time-btn').addEventListener('click', (e) => {
         e.preventDefault();
         activeIncidentSection.classList.add('hidden');
         newIncidentSection.classList.remove('hidden');

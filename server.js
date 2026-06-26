@@ -10,6 +10,9 @@ app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
+
 // Mock supabase client for test if env vars are missing
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
@@ -26,8 +29,8 @@ const supabase = process.env.SUPABASE_URL
                     then: (resolve) => {
                         if (table === 'incidents') {
                             const mockTime = new Date();
-                            const defaultDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(mockTime);
-                            const defaultTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false }).format(mockTime);
+                            const defaultDate = dateFormatter.format(mockTime);
+                            const defaultTime = timeFormatter.format(mockTime);
                             return resolve({
                                 count: 1,
                                 data: [{
@@ -135,10 +138,10 @@ app.post('/api/submit', async (req, res) => {
 
         const now = new Date();
         if (!timeOfSmell) {
-            timeOfSmell = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+            timeOfSmell = timeFormatter.format(now);
         }
         if (!dateOfSmell) {
-            dateOfSmell = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+            dateOfSmell = dateFormatter.format(now);
         }
 
         const { data: newIncident } = await supabase.from('incidents')
