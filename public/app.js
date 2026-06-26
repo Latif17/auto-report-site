@@ -3,6 +3,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submit-btn');
     const statusMessage = document.getElementById('status-message');
     
+    // UI Sections
+    const pooledUserStatus = document.getElementById('pooled-user-status');
+    const activeIncidentSection = document.getElementById('active-incident-section');
+    const newIncidentSection = document.getElementById('new-incident-section');
+    
+    let isPooledUser = false;
+    let currentTopIncident = null;
+
+    // Determine if pooled user
+    const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
+    if (savedDataJson) {
+        try {
+            isPooledUser = JSON.parse(savedDataJson).shareData === true;
+        } catch (e) {}
+    }
+
+    // Toggle logic for switching to manual entry
+    document.getElementById('log-different-time-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        activeIncidentSection.classList.add('hidden');
+        newIncidentSection.classList.remove('hidden');
+    });
+
+    document.getElementById('join-incident-btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentTopIncident) {
+            document.getElementById('timeOfSmell').value = currentTopIncident.time_of_smell;
+        }
+        activeIncidentSection.classList.add('hidden');
+        newIncidentSection.classList.remove('hidden');
+        document.getElementById('report-form').scrollIntoView({ behavior: 'smooth' });
+    });
+
     async function fetchStats() {
         try {
             const dataStr = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
@@ -21,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('HTTP error');
             const data = await res.json();
             document.getElementById('opted-in-count').innerText = data.count;
-            document.getElementById('submit-btn-text').innerText = `Submit & Trigger ${data.count} Community Reports`;
             
             const listEl = document.getElementById('recent-events-list');
             listEl.innerHTML = '';
@@ -29,7 +61,31 @@ document.addEventListener('DOMContentLoaded', () => {
             let localReported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
 
             if (data.recentIncidents && data.recentIncidents.length > 0) {
-                document.getElementById('active-alert').style.display = 'none';
+                document.getElementById('active-alert').classList.add('hidden');
+                
+                // Set top incident
+                currentTopIncident = data.recentIncidents[0];
+                
+                // Show/Hide top sections based on user state
+                if (isPooledUser) {
+                    pooledUserStatus.classList.remove('hidden');
+                    activeIncidentSection.classList.add('hidden');
+                    newIncidentSection.classList.remove('hidden');
+                } else {
+                    const isReported = currentTopIncident.alreadyReported || localReported.includes(currentTopIncident.id);
+                    if (isReported) {
+                        // Already reported, just show the new incident section
+                        activeIncidentSection.classList.add('hidden');
+                        newIncidentSection.classList.remove('hidden');
+                    } else {
+                        // Show active incident to join
+                        document.getElementById('active-incident-time').textContent = currentTopIncident.time_of_smell;
+                        document.getElementById('active-incident-count').textContent = currentTopIncident.report_count;
+                        activeIncidentSection.classList.remove('hidden');
+                        newIncidentSection.classList.add('hidden');
+                    }
+                }
+
                 data.recentIncidents.forEach(inc => {
                     const li = document.createElement('li');
                     li.className = 'event-item';
@@ -43,23 +99,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     strongTime.textContent = inc.time_of_smell;
                     
                     detailsDiv.appendChild(strongTime);
-                    detailsDiv.appendChild(document.createTextNode(` - ${inc.smell_type} at ${inc.business_location}`));
-                    detailsDiv.appendChild(document.createElement('br'));
                     
-                    const smallCount = document.createElement('small');
-                    smallCount.textContent = `${inc.report_count} report(s)`;
+                    const smallCount = document.createElement('div');
+                    smallCount.textContent = `${inc.report_count} report(s) logged`;
+                    smallCount.style.color = "var(--ink-light)";
+                    smallCount.style.marginTop = "0.25rem";
                     detailsDiv.appendChild(smallCount);
 
                     const btn = document.createElement('button');
                     btn.className = 'btn-small select-event-btn';
                     btn.dataset.time = inc.time_of_smell;
-                    btn.dataset.type = inc.smell_type;
-                    btn.dataset.loc = inc.business_location;
                     if (isReported) {
                         btn.disabled = true;
-                        btn.textContent = 'Already Reported';
+                        btn.textContent = 'Already Logged';
                     } else {
-                        btn.textContent = 'Report this too';
+                        btn.textContent = 'Log This Time';
                     }
 
                     li.appendChild(detailsDiv);
@@ -71,13 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         document.getElementById('timeOfSmell').value = e.currentTarget.dataset.time;
-                        document.getElementById('smellType').value = e.currentTarget.dataset.type;
-                        document.getElementById('businessLocation').value = e.currentTarget.dataset.loc;
                         document.getElementById('report-form').scrollIntoView({ behavior: 'smooth' });
+                        // Ensure the new incident section is visible
+                        activeIncidentSection.classList.add('hidden');
+                        newIncidentSection.classList.remove('hidden');
                     });
                 });
             } else {
-                document.getElementById('active-alert').style.display = 'block';
+                document.getElementById('active-alert').classList.remove('hidden');
+                
+                // No recent incidents
+                if (isPooledUser) {
+                    pooledUserStatus.classList.remove('hidden');
+                } else {
+                    pooledUserStatus.classList.add('hidden');
+                }
+                activeIncidentSection.classList.add('hidden');
+                newIncidentSection.classList.remove('hidden');
             }
         } catch (e) {
             console.error('Failed to fetch stats');
@@ -90,6 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved data from localStorage on init
     loadSavedData();
 
+    // Set current time to default for ease of use
+    const now = new Date();
+    const timeString = now.toTimeString().slice(0,5);
+    document.getElementById('timeOfSmell').value = timeString;
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -101,30 +170,30 @@ document.addEventListener('DOMContentLoaded', () => {
             phone: document.getElementById('phone').value,
             address: document.getElementById('address').value,
             timeOfSmell: document.getElementById('timeOfSmell').value,
-            smellType: document.getElementById('smellType').value,
-            businessLocation: document.getElementById('businessLocation').value,
+            smellType: 'Industrial Stench',
+            businessLocation: 'Multiple (ReFood, Veolia, BioGas)',
             storeLocally: document.getElementById('storeLocally').checked,
             shareData: document.getElementById('shareData').checked
         };
 
         // 2. Handle Local Storage
         if (formData.storeLocally) {
-            // Exclude timeOfSmell from what gets stored
-            const { timeOfSmell, ...dataToStore } = formData;
+            const { timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
             localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
-            // Cleanup old version
             localStorage.removeItem('freshAirWatchData');
         } else {
             localStorage.removeItem('freshAirWatchData_v2');
             localStorage.removeItem('freshAirWatchData');
         }
+        
+        // Update pooled user state internally for immediate UI feedback
+        isPooledUser = formData.shareData;
 
         // 3. UI Loading State
         submitBtn.classList.add('loading');
         statusMessage.classList.add('hidden');
         statusMessage.className = 'status-message'; // Reset classes
 
-        // Simulate API call / Form submission logic
         try {
             const response = await simulateSubmission(formData);
             
@@ -139,21 +208,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Failed to parse reported_incidents', e);
                 }
             }
-            fetchStats(); // Refresh stats to update buttons
+            fetchStats(); // Refresh stats
             
             // Success
             statusMessage.textContent = formData.shareData 
-                ? 'Report successfully submitted, and your data is shared for automated reporting!'
-                : 'Report successfully submitted!';
+                ? 'Stink event logged successfully. Auto-reporting is active for future events.'
+                : 'Stink event logged successfully.';
             statusMessage.classList.add('success');
             statusMessage.classList.remove('hidden');
 
-            // Optional: Generate pre-filled URL or interact with the .gov.uk form directly
-            // In a real application we would push the payload to a backend service here.
-            
         } catch (error) {
             // Error
-            statusMessage.textContent = 'Failed to submit report. Please try again.';
+            statusMessage.textContent = 'Failed to log stink event. Please try again.';
             statusMessage.classList.add('error');
             statusMessage.classList.remove('hidden');
         } finally {
@@ -163,8 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper to load data
     function loadSavedData() {
-        // Look for new v2 data, fallback to v1 if v2 doesn't exist
         const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
+        
         if (savedDataJson) {
             try {
                 const data = JSON.parse(savedDataJson);
@@ -173,10 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('postcode').value = data.postcode || '';
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('address').value = data.address || '';
-                document.getElementById('smellType').value = data.smellType || '';
-                document.getElementById('businessLocation').value = data.businessLocation || '';
 
-                // Set checkboxes
                 document.getElementById('storeLocally').checked = data.storeLocally !== false;
                 document.getElementById('shareData').checked = data.shareData === true;
             } catch (e) {

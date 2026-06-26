@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : { 
-        from: () => ({ 
+        from: (table) => ({ 
             select: () => {
                 const chain = {
                     eq: () => chain,
@@ -22,7 +22,26 @@ const supabase = process.env.SUPABASE_URL
                     throwOnError: () => chain,
                     gte: () => chain,
                     order: () => chain,
-                    then: (resolve) => resolve({ count: 0, data: [] })
+                    then: (resolve) => {
+                        if (table === 'incidents') {
+                            const mockTime = new Date(Date.now() - 2 * 60 * 60 * 1000);
+                            return resolve({
+                                count: 1,
+                                data: [{
+                                    id: 9999,
+                                    time_of_smell: mockTime.toTimeString().slice(0, 5),
+                                    smell_type: 'Industrial Stench',
+                                    business_location: 'Multiple (ReFood, Veolia, BioGas)',
+                                    status: 'pending',
+                                    created_at: mockTime.toISOString()
+                                }]
+                            });
+                        }
+                        if (table === 'users') {
+                            return resolve({ count: 42, data: [] });
+                        }
+                        return resolve({ count: 0, data: [] });
+                    }
                 };
                 return chain;
             }, 

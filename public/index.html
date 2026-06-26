@@ -3,142 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Mass report the ongoing smell in our area. Save your details locally to easily report environmental issues with one click.">
-    <title>Fresh Air Watch | Area Smell Reporting</title>
+    <meta name="description" content="Log the industrial smell in Barking Riverside. Save your details locally to easily report environmental issues with one click.">
+    <title>Stink Log | Barking Stink</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="background-gradient"></div>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-
-    <div class="container">
-        <header class="hero">
-            <div class="hero-content">
-                <div class="badge">Barking Riverside</div>
-                <h1>The Barking Stink Ends Here.</h1>
-                <p class="subtitle">For 20 years, an industrial stench from ReFoods UK, East London BioGas, and Veolia has plagued this area.</p>
-                <div class="explanation-card">
-                    <p>Despite our pleas, Bellway and Barking Riverside London haven't fixed it. The government requires overwhelming proof (time, severity, impact) to act. One complaint isn't enough.</p>
-                </div>
+    <div class="dossier-container">
+        <header class="dossier-header">
+            <div class="header-top">
+                <span class="classification">CONFIDENTIAL // EVIDENCE LOG</span>
+                <span class="case-number">CASE: BARKING-RIVERSIDE-01</span>
+            </div>
+            <h1>Stink Log</h1>
+            <p class="subject">SUBJECT: ReFoods UK, Veolia, East London BioGas</p>
+            <div class="context-box">
+                <p>The government requires systematic proof of environmental impact to intervene. Individual complaints are dismissed. This log aggregates community detections into actionable evidence.</p>
             </div>
         </header>
 
         <main>
-            <div class="form-card glass">
-                <form id="report-form">
-                    <div class="form-header">
-                        <h2>Your Details</h2>
-                        <p>Fill this out once. Your data will be saved locally in your browser.</p>
-                    </div>
+            <form id="report-form" class="report-form">
+                
+                <!-- Personal Details (Dossier File) -->
+                <div class="reporter-details" id="reporter-details">
+                    <h2 class="section-title">Reporter Information (Required for official submission)</h2>
+                    <div class="details-content">
+                        <p class="details-instructions">The government requires individual details for a complaint to be valid. Fill this once.</p>
+                        
+                        <div class="input-grid">
+                            <div class="input-group">
+                                <label for="fullName">Full Name</label>
+                                <input type="text" id="fullName" name="fullName" required placeholder="Jane Doe">
+                            </div>
 
-                    <div class="input-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" required placeholder="John Doe">
-                    </div>
+                            <div class="input-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" required placeholder="jane@example.com">
+                            </div>
 
-                    <div class="input-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required placeholder="john@example.com">
-                    </div>
+                            <div class="input-group">
+                                <label for="postcode">Postcode</label>
+                                <input type="text" id="postcode" name="postcode" required placeholder="IG11 0YP">
+                            </div>
 
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label for="postcode">Postcode</label>
-                            <input type="text" id="postcode" name="postcode" required placeholder="AB12 3CD">
+                            <div class="input-group">
+                                <label for="phone">Phone Number (Optional)</label>
+                                <input type="tel" id="phone" name="phone" placeholder="07700 900000">
+                            </div>
+
+                            <div class="input-group full-width">
+                                <label for="address">Address Line 1</label>
+                                <input type="text" id="address" name="address" required placeholder="123 Riverside Way">
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label for="phone">Phone Number (Optional)</label>
-                            <input type="tel" id="phone" name="phone" placeholder="07700 900000">
+
+                        <div class="preferences-section">
+                            <div class="pref-header">Data Handling Preferences</div>
+                            
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="storeLocally" name="storeLocally" checked>
+                                <span class="checkmark"></span>
+                                <div class="checkbox-content">
+                                    <strong>Retain locally</strong>
+                                    <span>Saves your details in your own browser so you don't have to re-type them next time. Your info stays on your device until you actively log a stink event.</span>
+                                </div>
+                            </label>
+
+                            <label class="checkbox-container highlight">
+                                <input type="checkbox" id="shareData" name="shareData">
+                                <span class="checkmark"></span>
+                                <div class="checkbox-content">
+                                    <strong>Pool Data (Recommended)</strong>
+                                    <span>Securely shares your details with the community pool. When a stink event occurs, the system can automatically include you in mass-reports, multiplying our leverage against the council.</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
+                </div>
 
-                    <div class="input-group">
-                        <label for="address">Address Line 1</label>
-                        <input type="text" id="address" name="address" required placeholder="11 Kentfield Street">
-                    </div>
+                <!-- Auto-Reporting Status -->
+                <div id="pooled-user-status" class="status-message success hidden" style="margin-bottom: 2rem; border: 2px solid var(--success-border); text-align: left;">
+                    <strong style="font-family: var(--font-mono); text-transform: uppercase;">Auto-Reporting Active</strong><br>
+                    You are securely pooling data. You will automatically be included in any ongoing community reports. You only need to use the form below if you are the first to detect a new stink event.
+                </div>
 
-                    <div class="input-group">
-                        <label for="timeOfSmell">Time of Smell</label>
+                <!-- Active Incident (Option 2) -->
+                <div id="active-incident-section" class="primary-action-section hidden" style="margin-bottom: 2rem; border-color: var(--accent); background: var(--error-bg);">
+                    <span class="time-label" style="color: var(--error-text);">ONGOING STINK EVENT DETECTED</span>
+                    <h2 id="active-incident-time" style="font-family: var(--font-mono); font-size: 3rem; margin: 0.5rem 0; font-weight: 700; color: var(--error-text);">--:--</h2>
+                    <p style="margin-bottom: 1.5rem; color: var(--error-text);"><strong id="active-incident-count" style="font-family: var(--font-mono);">0</strong> community reports logged so far.</p>
+                    <button type="button" class="btn btn-submit" id="join-incident-btn" style="background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0px var(--shadow);">
+                        Join This Event
+                    </button>
+                    <p style="margin-top: 1rem; font-size: 0.85rem;"><a href="#" id="log-different-time-link" style="color: var(--error-text); text-decoration: underline;">Log a different time instead</a></p>
+                </div>
+
+                <!-- The Primary Action (Option 1) -->
+                <div id="new-incident-section" class="primary-action-section">
+                    <span class="time-label">LOG NEW STINK EVENT</span>
+                    <label for="timeOfSmell" class="sr-only" style="display:none;">Time of Detection</label>
+                    <div class="time-input-wrapper">
                         <input type="time" id="timeOfSmell" name="timeOfSmell" required>
                     </div>
-
-                    <div class="input-group">
-                        <label for="smellType">Type of Smell</label>
-                        <select id="smellType" name="smellType" required>
-                            <option value="" disabled selected>Select smell type</option>
-                            <option value="Rotten eggs">Rotten eggs</option>
-                            <option value="Sewage">Sewage</option>
-                            <option value="Chemical">Chemical</option>
-                            <option value="Garbage">Garbage</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="businessLocation">Business Location</label>
-                        <select id="businessLocation" name="businessLocation" required>
-                            <option value="" disabled selected>Select location</option>
-                            <option value="ReFoods UK (Dagenham)">ReFoods UK (Dagenham)</option>
-                            <option value="East London BioGas">East London BioGas</option>
-                            <option value="Veolia Dagenham">Veolia Dagenham</option>
-                        </select>
-                    </div>
-
-                    <div class="preferences-section">
-                        <h3>Data Preferences</h3>
-                        <p class="preferences-hint">Choose how you want to manage your data to help the cause.</p>
-                        
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="storeLocally" name="storeLocally" checked>
-                            <span class="checkmark"></span>
-                            <div class="checkbox-content">
-                                <strong>Store my data locally</strong>
-                                <span>Save details on this device for 1-click submission next time. Your data never leaves your browser unless you submit.</span>
-                            </div>
-                        </label>
-
-                        <label class="checkbox-container highlight">
-                            <input type="checkbox" id="shareData" name="shareData">
-                            <span class="checkmark"></span>
-                            <div class="checkbox-content">
-                                <strong>Allow automated reporting (Recommended)</strong>
-                                <span>Share my data securely with the community pool to submit on my behalf when the smell is active. Maximum impact.</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="form-actions">
-                        <div id="community-stats" class="stats-card">
-                            <h3>Community Stats</h3>
-                            <p><span id="opted-in-count">0</span> Barking Riverside neighbors standing by.</p>
-                            <div id="recent-events-container">
-                                <h4>Recent Events</h4>
-                                <ul id="recent-events-list"></ul>
-                            </div>
-                            <p id="active-alert" class="alert-danger hidden">No one has reported a smell recently. Be the one to trigger the mass report today!</p>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" id="submit-btn">
-                            <span class="btn-text" id="submit-btn-text">Submit & Trigger Reports</span>
-                            <div class="loader"></div>
-                        </button>
-                    </div>
                     
-                    <div id="status-message" class="status-message hidden"></div>
-                </form>
-            </div>
-        </main>
+                    <button type="submit" class="btn btn-submit" id="submit-btn">
+                        <span class="btn-text" id="submit-btn-text">Initiate Stink Event</span>
+                        <div class="loader"></div>
+                    </button>
+                </div>
 
+                <div id="status-message" class="status-message hidden"></div>
+                
+                <div id="community-stats" class="stats-card">
+                    <div class="stats-header">
+                        <h3>Community Activity</h3>
+                        <span class="active-count"><span id="opted-in-count">0</span> standing by</span>
+                    </div>
+                    <div id="recent-events-container">
+                        <ul id="recent-events-list"></ul>
+                    </div>
+                    <p id="active-alert" class="alert-info hidden">Awaiting stink event reports.</p>
+                </div>
+            </form>
+        </main>
+        
         <footer>
-            <p>Made by the community, for the community. Data is stored locally unless shared explicitly.</p>
-            <p><a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a></p>
+            <p>Data stored locally. <a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a></p>
         </footer>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
