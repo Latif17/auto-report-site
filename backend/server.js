@@ -51,11 +51,10 @@ app.get('/api/stats', async (req, res) => {
             .select('*')
             .gte('created_at', twentyFourHoursAgo)
             .order('created_at', { ascending: false })
-            .limit(100)
             .throwOnError();
 
         let reportedIncidentIds = [];
-        const userEmail = req.headers['x-user-email'];
+        const userEmail = req.query.email;
         if (userEmail) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
