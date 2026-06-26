@@ -2,7 +2,6 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const { submitGovForm } = require('./scraper');
 require('dotenv').config();
 
 const app = express();
@@ -129,9 +128,6 @@ app.post('/api/opt-in', async (req, res) => {
 
 app.post('/api/submit', async (req, res) => {
     const { email, fullName, postcode, phone, address, timeOfSmell, smellType, businessLocation, shareData } = req.body;
-    
-    const userData = { email, fullName, postcode, phone, address };
-    const incidentData = { timeOfSmell, smellType, businessLocation };
 
     try {
         await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
@@ -151,7 +147,7 @@ app.post('/api/submit', async (req, res) => {
             incidentId = existingIncidents[0].id;
         } else {
             const { data: newIncident } = await supabase.from('incidents')
-                .insert({ time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation })
+                .insert({ time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation, status: 'pending' })
                 .select()
                 .single()
                 .throwOnError();
@@ -160,45 +156,19 @@ app.post('/api/submit', async (req, res) => {
 
         if (shareData) {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
-            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
-            if (error && error.code !== '23505') throw error;
         }
+
+        // Even if they don't share data with community, we still track they reported it so the script runs for them
+        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
+        if (error && error.code !== '23505') throw error;
 
         res.json({ success: true, message: "Report triggered", incidentId });
 
-        (async () => {
-            try {
-                await submitGovForm(userData, incidentData);
-                await triggerMassReporting(incidentData, email, incidentId);
-            } catch (err) {
-                console.error("Background submission error:", err);
-            }
-        })();
     } catch (error) {
         console.error('Submit error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
-async function triggerMassReporting(incidentData, excludeEmail, incidentId) {
-    const { data: users } = await supabase.from('users').select('*');
-    if (!users) return;
-    
-    for (const user of users) {
-        if (user.email === excludeEmail) continue;
-        const userData = {
-            email: user.email,
-            fullName: user.full_name,
-            postcode: user.postcode,
-            phone: user.phone,
-            address: user.address
-        };
-        await submitGovForm(userData, incidentData);
-        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: user.email });
-        if (error && error.code !== '23505') throw error;
-    }
-}
-
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
