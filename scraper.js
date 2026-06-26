@@ -28,6 +28,19 @@ function formatTime(timeStr) {
     return `${hour}:${m || '00'}${suffix}`;
 }
 
+function getGovUkDateCategory(dateStr) {
+    const target = new Date(dateStr);
+    target.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const diffTime = Math.abs(today - target);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Earlier today';
+    if (diffDays === 1) return 'Yesterday';
+    return 'Before yesterday';
+}
+
 async function clickLabel(page, text) {
     await page.evaluate((textToFind) => {
         const labels = Array.from(document.querySelectorAll('label'));
@@ -96,7 +109,7 @@ async function submitGovForm(userData, incidentData) {
             if(inputs[0]) inputs[0].value = location || 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham';
             if(inputs[1]) inputs[1].value = 'Choats Rd Dagenham';
             if(inputs[2]) inputs[2].value = 'RM9 6LF';
-        }, incidentData.businessLocation);
+        }, incidentData.businessLocation || incidentData.business_location);
         await goNext(page);
 
         // Page 3: Affecting you at home?
@@ -143,8 +156,22 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 8: What date?
         debugLog('Navigating to Page 8: What date?');
-        await clickLabel(page, 'Earlier today');
+        const dateCategory = incidentData.dateOfSmell ? getGovUkDateCategory(incidentData.dateOfSmell) : 'Earlier today';
+        await clickLabel(page, dateCategory);
         await goNext(page);
+
+        // Conditional branch for Before yesterday
+        if (dateCategory === 'Before yesterday') {
+            debugLog('Navigating to Extra Page: What date did the smell start?');
+            const [y, m, d] = incidentData.dateOfSmell.split('-');
+            await page.evaluate((day, month, year) => {
+                const inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="number"]'));
+                if (inputs[0]) inputs[0].value = parseInt(day, 10).toString();
+                if (inputs[1]) inputs[1].value = parseInt(month, 10).toString();
+                if (inputs[2]) inputs[2].value = year;
+            }, d, m, y);
+            await goNext(page);
+        }
 
         // Page 9: What time?
         debugLog('Navigating to Page 9: What time?');
