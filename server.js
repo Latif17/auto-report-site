@@ -20,6 +20,14 @@ const globalLimiter = rateLimit({
     message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
 });
 
+const strictLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 3, // Limit each IP to 3 requests per `window` for sensitive endpoints
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many submissions. Please try again later.' }
+});
+
 app.use(globalLimiter);
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -130,7 +138,7 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-app.post('/api/opt-in', async (req, res) => {
+app.post('/api/opt-in', strictLimiter, async (req, res) => {
     const { email, fullName, postcode, phone, address } = req.body;
     if (!email) {
         return res.status(400).json({ error: 'Email is required' });
@@ -144,7 +152,7 @@ app.post('/api/opt-in', async (req, res) => {
     }
 });
 
-app.post('/api/submit', async (req, res) => {
+app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
 
     try {
@@ -187,7 +195,7 @@ app.post('/api/submit', async (req, res) => {
     }
 });
 
-app.post('/api/join', async (req, res) => {
+app.post('/api/join', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, incidentId } = req.body;
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
 

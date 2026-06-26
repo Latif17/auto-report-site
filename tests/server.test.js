@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../server');
 
+app.set('trust proxy', 1);
+
 describe('API Endpoints', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -15,6 +17,7 @@ describe('API Endpoints', () => {
     it('POST /api/opt-in succeeds with valid data', async () => {
         const res = await request(app)
             .post('/api/opt-in')
+            .set('X-Forwarded-For', '10.0.0.1')
             .send({ email: 'test@example.com', fullName: 'Test User' });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toEqual({ success: true });
@@ -23,6 +26,7 @@ describe('API Endpoints', () => {
     it('POST /api/opt-in fails without email', async () => {
         const res = await request(app)
             .post('/api/opt-in')
+            .set('X-Forwarded-For', '10.0.0.2')
             .send({ fullName: 'Test User' });
         expect(res.statusCode).toEqual(400);
         expect(res.body).toHaveProperty('error', 'Email is required');
@@ -31,6 +35,7 @@ describe('API Endpoints', () => {
     it('POST /api/submit when shareData is false returns success', async () => {
         const res = await request(app)
             .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.3')
             .send({ 
                 email: 'test@example.com', 
                 fullName: 'Test User', 
@@ -46,6 +51,7 @@ describe('API Endpoints', () => {
     it('POST /api/submit handles shareData correctly and returns success', async () => {
         const res = await request(app)
             .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.4')
             .send({ 
                 email: 'test@example.com', 
                 fullName: 'Test User', 
@@ -68,15 +74,46 @@ describe('Security Middlewares', () => {
         expect(res.headers['strict-transport-security']).toBeDefined();
     });
 
+    it('should strict rate limit mutation endpoints to 3 per 15 minutes', async () => {
+        // We make 3 requests to /api/submit
+        for (let i = 0; i < 3; i++) {
+            await request(app)
+                .post('/api/submit')
+                .set('X-Forwarded-For', '10.0.0.5')
+                .send({
+                    email: `test${i}@example.com`,
+                    fullName: 'Test User',
+                    timeOfSmell: '00:00',
+                    smellType: 'Waste',
+                    businessLocation: 'ReFoods'
+                });
+        }
+
+        // The 4th request should be blocked by strict limiter
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.5')
+            .send({
+                email: 'test4@example.com',
+                fullName: 'Test User',
+                timeOfSmell: '00:00',
+                smellType: 'Waste',
+                businessLocation: 'ReFoods'
+            });
+
+        expect(res.statusCode).toEqual(429);
+        expect(res.body).toHaveProperty('error', 'Too many submissions. Please try again later.');
+    });
+
     it('should limit requests to 100 per 15 minutes', async () => {
         // We will make 100 requests first.
         // It's a mock endpoint so it's fast.
         for (let i = 0; i < 100; i++) {
-            await request(app).get('/api/stats');
+            await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
         }
         
         // The 101st request should be rate-limited
-        const res = await request(app).get('/api/stats');
+        const res = await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
         expect(res.statusCode).toEqual(429);
         expect(res.body).toHaveProperty('error', 'Too many requests from this IP, please try again after 15 minutes');
     });
