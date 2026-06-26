@@ -1,8 +1,8 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const { submitGovForm } = require('./scraper');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +21,8 @@ const supabase = process.env.SUPABASE_URL
                     eq: () => chain,
                     single: () => chain,
                     throwOnError: () => chain,
+                    gte: () => chain,
+                    order: () => chain,
                     then: (resolve) => resolve({ count: 0, data: [] })
                 };
                 return chain;
@@ -37,6 +39,15 @@ const supabase = process.env.SUPABASE_URL
                     eq: () => chain,
                     throwOnError: () => chain,
                     then: (resolve) => resolve({})
+                };
+                return chain;
+            },
+            insert: () => {
+                const chain = {
+                    select: () => chain,
+                    single: () => chain,
+                    throwOnError: () => chain,
+                    then: (resolve) => resolve({ data: { id: 1 }, error: null })
                 };
                 return chain;
             }

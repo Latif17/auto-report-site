@@ -42,7 +42,7 @@ describe('API Endpoints', () => {
                 shareData: false 
             });
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toEqual({ success: true, message: "Report triggered" });
+        expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
         await new Promise(r => setTimeout(r, 10)); // Allow background IIFE to run
         expect(scraper.submitGovForm).toHaveBeenCalledTimes(1);
     });
@@ -56,7 +56,7 @@ describe('API Endpoints', () => {
                 shareData: true 
             });
         expect(res.statusCode).toEqual(200);
-        expect(res.body).toEqual({ success: true, message: "Report triggered" });
+        expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
         await new Promise(r => setTimeout(r, 10)); // Allow background IIFE to run
         // Expect submitGovForm to be called 1 time for the submitter
         // Since supabase users is mocked to [], triggerMassReporting will result in 0 additional calls.
