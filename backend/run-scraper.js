@@ -10,6 +10,7 @@ async function run() {
     if (!supabase) {
         console.error("Missing Supabase credentials.");
         process.exit(1);
+        return;
     }
 
     console.log("Checking for pending incidents...");
@@ -21,28 +22,53 @@ async function run() {
     if (fetchError) {
         console.error("Error fetching incidents:", fetchError);
         process.exit(1);
+        return;
     }
 
     if (!pendingIncidents || pendingIncidents.length === 0) {
         console.log("No pending incidents found. Exiting.");
         process.exit(0);
+        return;
     }
 
     for (const incident of pendingIncidents) {
         console.log(`Processing incident ${incident.id}...`);
         
         // Mark as processing
-        await supabase.from('incidents').update({ status: 'processing' }).eq('id', incident.id);
+        const { error: updateProcessingError } = await supabase
+            .from('incidents')
+            .update({ status: 'processing' })
+            .eq('id', incident.id);
+
+        if (updateProcessingError) {
+            console.error(`Error updating incident ${incident.id} to processing:`, updateProcessingError);
+            continue;
+        }
 
         // Fetch all opted-in users for this incident
-        const { data: userReports } = await supabase
+        const { data: userReports, error: userReportsError } = await supabase
             .from('opted_in_user_reports')
             .select('user_email')
             .eq('incident_id', incident.id);
 
+        if (userReportsError) {
+            console.error(`Error fetching user reports for incident ${incident.id}:`, userReportsError);
+            // Revert back to pending? Or just continue to next, leaving it as processing? 
+            // It's probably better to just continue or set to error. Let's just log and continue.
+            continue;
+        }
+
         if (userReports && userReports.length > 0) {
             const emails = userReports.map(r => r.user_email);
-            const { data: users } = await supabase.from('users').select('*').in('email', emails);
+            const { data: users, error: usersError } = await supabase
+                .from('users')
+                .select('*')
+                .in('email', emails);
+
+            if (usersError) {
+                console.error(`Error fetching users for incident ${incident.id}:`, usersError);
+                continue;
+            }
 
             if (users) {
                 for (const user of users) {
@@ -59,7 +85,13 @@ async function run() {
                         businessLocation: incident.business_location
                     };
                     console.log(`Submitting report for ${userData.email}...`);
-                    await submitGovForm(userData, incidentData);
+                    
+                    try {
+                        await submitGovForm(userData, incidentData);
+                    } catch (submitError) {
+                        console.error(`Error submitting form for ${userData.email}:`, submitError);
+                    }
+                    
                     // Add a small delay between submissions to avoid rate limits
                     await new Promise(r => setTimeout(r, 2000));
                 }
@@ -67,9 +99,24 @@ async function run() {
         }
 
         // Mark as completed
-        await supabase.from('incidents').update({ status: 'completed' }).eq('id', incident.id);
-        console.log(`Finished processing incident ${incident.id}.`);
+        const { error: updateCompletedError } = await supabase
+            .from('incidents')
+            .update({ status: 'completed' })
+            .eq('id', incident.id);
+
+        if (updateCompletedError) {
+            console.error(`Error updating incident ${incident.id} to completed:`, updateCompletedError);
+        } else {
+            console.log(`Finished processing incident ${incident.id}.`);
+        }
     }
 }
 
-run().catch(console.error);
+if (require.main === module) {
+    run().catch(err => {
+        console.error(err);
+        process.exit(1);
+    });
+}
+
+module.exports = { run };
