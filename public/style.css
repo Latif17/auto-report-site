@@ -511,11 +511,38 @@ footer a {
 }
 
 @media (max-width: 600px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+
     .dossier-container {
-        padding: 1.5rem;
+        padding: 1.25rem;
         box-shadow: 4px 4px 0px var(--shadow);
     }
     
+    h1 {
+        font-size: 2rem;
+    }
+
+    .header-top {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .primary-action-section {
+        padding: 1.5rem 1rem;
+    }
+
+    input[type="time"],
+    #active-incident-time {
+        font-size: 2.25rem !important;
+    }
+
+    .btn, .btn-secondary {
+        font-size: 1rem;
+        padding: 0.85rem;
+    }
+
     .input-grid {
         grid-template-columns: 1fr;
     }
@@ -528,5 +555,6 @@ footer a {
     
     .btn-small {
         width: 100%;
+        text-align: center;
     }
 }
