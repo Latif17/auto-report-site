@@ -50,14 +50,17 @@ app.get('/api/stats', async (req, res) => {
         const { data: recentIncidents } = await supabase.from('incidents')
             .select('*')
             .gte('created_at', twentyFourHoursAgo)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(100)
+            .throwOnError();
 
         let reportedIncidentIds = [];
-        const userEmail = req.query.email;
+        const userEmail = req.headers['x-user-email'];
         if (userEmail) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
-                .eq('user_email', userEmail);
+                .eq('user_email', userEmail)
+                .throwOnError();
             if (userReports) {
                 reportedIncidentIds = userReports.map(r => r.incident_id);
             }
