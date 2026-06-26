@@ -10,24 +10,30 @@ app.use(cors());
 // Mock supabase client for test if env vars are missing
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
-    : { 
         from: () => ({ 
             select: () => {
                 const chain = {
                     eq: () => chain,
-                    single: async () => ({ data: {} }),
+                    single: () => chain,
+                    throwOnError: () => chain,
                     then: (resolve) => resolve({ count: 0, data: {} })
                 };
                 return chain;
             }, 
-            upsert: async () => ({}) 
+            upsert: () => {
+                const chain = {
+                    throwOnError: () => chain,
+                    then: (resolve) => resolve({})
+                };
+                return chain;
+            }
         }) 
     };
 
 app.get('/api/stats', async (req, res) => {
     try {
-        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
-        const { data } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single();
+        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError();
+        const { data } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single().throwOnError();
         res.json({ count: count || 0, lastReport: data?.last_report_time });
     } catch (error) {
         console.error('Stats error:', error);
@@ -41,7 +47,7 @@ app.post('/api/opt-in', async (req, res) => {
         return res.status(400).json({ error: 'Email is required' });
     }
     try {
-        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address });
+        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
         res.json({ success: true });
     } catch (error) {
         console.error('Opt-in error:', error);
