@@ -1,4 +1,17 @@
-const { getConfig } = require('../scraper');
+const { getConfig, submitGovForm } = require('../scraper');
+const puppeteer = require('puppeteer');
+
+jest.mock('puppeteer', () => ({
+    launch: jest.fn().mockResolvedValue({
+        newPage: jest.fn().mockResolvedValue({
+            goto: jest.fn().mockResolvedValue(),
+            evaluate: jest.fn().mockResolvedValue({}),
+            type: jest.fn().mockResolvedValue(),
+            waitForNavigation: jest.fn().mockResolvedValue(),
+        }),
+        close: jest.fn()
+    })
+}));
 
 describe('scraper configuration', () => {
     const originalEnv = process.env;
@@ -40,4 +53,20 @@ describe('scraper configuration', () => {
         expect(config.launchArgs.headless).toBe(false);
         expect(config.launchArgs.slowMo).toBe(50);
     });
+});
+
+describe('submitGovForm', () => {
+    let consoleSpy;
+    beforeEach(() => {
+        consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+        consoleSpy.mockRestore();
+        jest.clearAllMocks();
+    });
+
+    it('logs verbose test debug messages when in test mode', async () => {
+        await submitGovForm({ email: 'test@example.com' }, {});
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[TEST_DEBUG]'));
+    }, 10000);
 });

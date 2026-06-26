@@ -70,6 +70,12 @@ async function submitGovForm(userData, incidentData) {
         console.log(`Starting GOV.UK submission for ${userData.email || 'Anonymous'}`);
         const { isTestMode, launchArgs } = getConfig(userData);
         
+        const debugLog = (msg) => {
+            if (isTestMode) console.log(`[TEST_DEBUG] ${msg}`);
+        };
+
+        debugLog('Launching browser with args: ' + JSON.stringify(launchArgs));
+        
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchArgs.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
         }
@@ -77,11 +83,13 @@ async function submitGovForm(userData, incidentData) {
         const page = await browser.newPage();
 
         // Page 1: Where is smell coming from?
+        debugLog('Navigating to Page 1: Where is smell coming from?');
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source', { waitUntil: 'networkidle0' });
         await clickLabel(page, 'industrial site');
         await goNext(page);
 
         // Page 2: Can you give details?
+        debugLog('Navigating to Page 2: Can you give details?');
         await clickLabel(page, 'Yes');
         await page.evaluate((location) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
@@ -92,10 +100,12 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 3: Affecting you at home?
+        debugLog('Navigating to Page 3: Affecting you at home?');
         await clickLabel(page, 'Yes');
         await goNext(page);
 
         // Page 4 & 5: Find your address (skip lookup, enter manually)
+        debugLog('Navigating to Page 4 & 5: Find your address');
         await page.evaluate(() => {
             const manualLink = Array.from(document.querySelectorAll('a')).find(a => a.textContent.includes('Enter address manually'));
             if (manualLink) manualLink.click();
@@ -118,6 +128,7 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 6: Describe smell
+        debugLog('Navigating to Page 6: Describe smell');
         if (incidentData.smellType && incidentData.smellType !== 'Other') {
             await clickLabel(page, incidentData.smellType);
         } else {
@@ -126,14 +137,17 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 7: Problems before?
+        debugLog('Navigating to Page 7: Problems before?');
         await clickLabel(page, 'happens often');
         await goNext(page);
 
         // Page 8: What date?
+        debugLog('Navigating to Page 8: What date?');
         await clickLabel(page, 'Earlier today');
         await goNext(page);
 
         // Page 9: What time?
+        debugLog('Navigating to Page 9: What time?');
         const timeId = await page.evaluate(() => {
             const input = document.querySelector('input[type="text"], input[type="time"]');
             return input ? input.id : null;
@@ -147,38 +161,46 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 10: Still there?
+        debugLog('Navigating to Page 10: Still there?');
         await clickLabel(page, 'Yes');
         await goNext(page);
 
         // Page 11: How strong?
+        debugLog('Navigating to Page 11: How strong?');
         await clickLabel(page, 'Extremely strong'); // or map severity
         await goNext(page);
 
         // Page 12: Noticeable indoors?
+        debugLog('Navigating to Page 12: Noticeable indoors?');
         await clickLabel(page, 'Yes');
         await goNext(page);
 
         // Page 13: Sticks to clothing?
+        debugLog('Navigating to Page 13: Sticks to clothing?');
         await clickLabel(page, 'Yes');
         await goNext(page);
 
         // Page 14: Because of the smell...
+        debugLog('Navigating to Page 14: Because of the smell...');
         await clickLabel(page, 'Leave the area');
         await clickLabel(page, 'Keep windows');
         await clickLabel(page, 'Avoid using parts');
         await goNext(page);
 
         // Page 15: Health problems
+        debugLog('Navigating to Page 15: Health problems');
         await clickLabel(page, 'Headache');
         await clickLabel(page, 'Watering eyes');
         await clickLabel(page, 'Sickness or nausea');
         await goNext(page);
 
         // Page 16: Medical help
+        debugLog('Navigating to Page 16: Medical help');
         await clickLabel(page, 'No');
         await goNext(page);
 
         // Page 17: Contact details
+        debugLog('Navigating to Page 17: Contact details');
         await page.evaluate((userData) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]'));
             if(inputs[0] && userData.fullName) inputs[0].value = userData.fullName;
@@ -188,10 +210,12 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 18: Images/videos?
+        debugLog('Navigating to Page 18: Images/videos?');
         await clickLabel(page, 'No');
         await goNext(page);
 
         // Page 19: Anything else
+        debugLog('Navigating to Page 19: Anything else');
         await page.evaluate((desc) => {
             const ta = document.querySelector('textarea');
             if (ta) ta.value = desc || '';
@@ -199,7 +223,7 @@ async function submitGovForm(userData, incidentData) {
         
         // Final submit
         if (isTestMode) {
-            console.log('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 seconds...');
+            debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 seconds...');
             await new Promise(r => setTimeout(r, 5000));
         } else {
             await goNext(page);
