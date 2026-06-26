@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error('Failed to fetch stats');
+            const statsEl = document.getElementById('community-stats');
+            if (statsEl) statsEl.style.display = 'none';
         }
     }
     fetchStats();
