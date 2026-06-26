@@ -74,15 +74,12 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 2: Can you give details?
         await clickLabel(page, 'Yes');
-        await page.type('input[name="site_name"]', 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham').catch(()=>{});
-        await page.type('input[name="site_street"]', 'Choats Rd Dagenham').catch(()=>{});
-        // We just type in whatever inputs exist on this page
-        await page.evaluate(() => {
+        await page.evaluate((location) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
-            if(inputs[0]) inputs[0].value = 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham';
+            if(inputs[0]) inputs[0].value = location || 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham';
             if(inputs[1]) inputs[1].value = 'Choats Rd Dagenham';
             if(inputs[2]) inputs[2].value = 'RM9 6LF';
-        });
+        }, incidentData.businessLocation);
         await goNext(page);
 
         // Page 3: Affecting you at home?
@@ -112,7 +109,11 @@ async function submitGovForm(userData, incidentData) {
         await goNext(page);
 
         // Page 6: Describe smell
-        await clickLabel(page, 'You cannot describe it');
+        if (incidentData.smellType && incidentData.smellType !== 'Other') {
+            await clickLabel(page, incidentData.smellType);
+        } else {
+            await clickLabel(page, 'You cannot describe it');
+        }
         await goNext(page);
 
         // Page 7: Problems before?
