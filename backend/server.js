@@ -25,15 +25,28 @@ const supabase = process.env.SUPABASE_URL
     };
 
 app.get('/api/stats', async (req, res) => {
-    const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
-    const { data } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single();
-    res.json({ count: count || 0, lastReport: data?.last_report_time });
+    try {
+        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true });
+        const { data } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single();
+        res.json({ count: count || 0, lastReport: data?.last_report_time });
+    } catch (error) {
+        console.error('Stats error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 app.post('/api/opt-in', async (req, res) => {
     const { email, fullName, postcode, phone, address } = req.body;
-    await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address });
-    res.json({ success: true });
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+    try {
+        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Opt-in error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
