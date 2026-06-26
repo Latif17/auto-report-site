@@ -1,8 +1,6 @@
 const request = require('supertest');
 const app = require('../server');
 
-app.set('trust proxy', 1);
-
 describe('API Endpoints', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -77,7 +75,7 @@ describe('Security Middlewares', () => {
     it('should strict rate limit mutation endpoints to 3 per 15 minutes', async () => {
         // We make 3 requests to /api/submit
         for (let i = 0; i < 3; i++) {
-            await request(app)
+            const res = await request(app)
                 .post('/api/submit')
                 .set('X-Forwarded-For', '10.0.0.5')
                 .send({
@@ -87,6 +85,7 @@ describe('Security Middlewares', () => {
                     smellType: 'Waste',
                     businessLocation: 'ReFoods'
                 });
+            expect(res.statusCode).toEqual(200);
         }
 
         // The 4th request should be blocked by strict limiter
@@ -103,6 +102,36 @@ describe('Security Middlewares', () => {
 
         expect(res.statusCode).toEqual(429);
         expect(res.body).toHaveProperty('error', 'Too many submissions. Please try again later.');
+    });
+
+    it('should rate limit /api/opt-in', async () => {
+        for (let i = 0; i < 3; i++) {
+            const res = await request(app)
+                .post('/api/opt-in')
+                .set('X-Forwarded-For', '10.0.0.7')
+                .send({ email: `test${i}@example.com`, fullName: 'Test User' });
+            expect(res.statusCode).toEqual(200);
+        }
+        const res = await request(app)
+            .post('/api/opt-in')
+            .set('X-Forwarded-For', '10.0.0.7')
+            .send({ email: 'test4@example.com', fullName: 'Test User' });
+        expect(res.statusCode).toEqual(429);
+    });
+
+    it('should rate limit /api/join', async () => {
+        for (let i = 0; i < 3; i++) {
+            const res = await request(app)
+                .post('/api/join')
+                .set('X-Forwarded-For', '10.0.0.8')
+                .send({ email: `test${i}@example.com`, incidentId: 9999 });
+            expect(res.statusCode).toEqual(200);
+        }
+        const res = await request(app)
+            .post('/api/join')
+            .set('X-Forwarded-For', '10.0.0.8')
+            .send({ email: 'test4@example.com', incidentId: 9999 });
+        expect(res.statusCode).toEqual(429);
     });
 
     it('should limit requests to 100 per 15 minutes', async () => {
