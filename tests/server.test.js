@@ -61,6 +61,21 @@ describe('API Endpoints', () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
     });
+
+    it('POST /api/submit prevents duplicate submissions', async () => {
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.9')
+            .send({ 
+                email: 'duplicate@example.com', 
+                fullName: 'Duplicate User', 
+                timeOfSmell: '00:00',
+                smellType: 'Waste',
+                businessLocation: 'ReFoods'
+            });
+        expect(res.statusCode).toEqual(400);
+        expect(res.body).toHaveProperty('error', 'You have already submitted a report for this exact event.');
+    });
 });
 
 describe('Security Middlewares', () => {

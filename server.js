@@ -41,66 +41,75 @@ const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Londo
 const supabase = process.env.SUPABASE_URL 
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : { 
-        from: (table) => ({ 
-            select: () => {
-                const chain = {
-                    eq: () => chain,
-                    single: () => chain,
-                    throwOnError: () => chain,
-                    gte: () => chain,
-                    order: () => chain,
-                    limit: () => chain,
-                    then: (resolve) => {
-                        if (table === 'incidents') {
-                            const mockTime = new Date();
-                            const defaultDate = dateFormatter.format(mockTime);
-                            const defaultTime = timeFormatter.format(mockTime);
-                            return resolve({
-                                count: 1,
-                                data: [{
-                                    id: 9999,
-                                    date_of_smell: defaultDate,
-                                    time_of_smell: defaultTime,
-                                    smell_type: 'Industrial Stench',
-                                    business_location: 'Multiple (ReFood, Veolia, BioGas)',
-                                    status: 'pending',
-                                    created_at: mockTime.toISOString()
-                                }]
-                            });
+        from: (table) => {
+            const mockState = {};
+            return { 
+                select: () => {
+                    const chain = {
+                        eq: (col, val) => { mockState[col] = val; return chain; },
+                        single: () => chain,
+                        throwOnError: () => chain,
+                        gte: () => chain,
+                        order: () => chain,
+                        limit: () => chain,
+                        in: () => chain,
+                        then: (resolve) => {
+                            if (table === 'incidents') {
+                                const mockTime = new Date();
+                                const defaultDate = dateFormatter.format(mockTime);
+                                const defaultTime = timeFormatter.format(mockTime);
+                                return resolve({
+                                    count: 1,
+                                    data: [{
+                                        id: 9999,
+                                        date_of_smell: defaultDate,
+                                        time_of_smell: defaultTime,
+                                        smell_type: 'Industrial Stench',
+                                        business_location: 'Multiple (ReFood, Veolia, BioGas)',
+                                        status: 'pending',
+                                        created_at: mockTime.toISOString()
+                                    }]
+                                });
+                            }
+                            if (table === 'users') {
+                                return resolve({ count: 42, data: [] });
+                            }
+                            if (table === 'opted_in_user_reports') {
+                                if (mockState.user_email === 'duplicate@example.com') {
+                                    return resolve({ count: 1, data: [{ id: 1, incident_id: 9999 }] });
+                                }
+                            }
+                            return resolve({ count: 0, data: [] });
                         }
-                        if (table === 'users') {
-                            return resolve({ count: 42, data: [] });
-                        }
-                        return resolve({ count: 0, data: [] });
-                    }
-                };
-                return chain;
-            }, 
-            upsert: () => {
-                const chain = {
-                    throwOnError: () => chain,
-                    then: (resolve) => resolve({})
-                };
-                return chain;
-            },
-            update: () => {
-                const chain = {
-                    eq: () => chain,
-                    throwOnError: () => chain,
-                    then: (resolve) => resolve({})
-                };
-                return chain;
-            },
-            insert: () => {
-                const chain = {
-                    select: () => chain,
-                    single: () => chain,
-                    throwOnError: () => chain,
-                    then: (resolve) => resolve({ data: { id: 1 }, error: null })
-                };
-                return chain;
-            }
-        }) 
+                    };
+                    return chain;
+                }, 
+                upsert: () => {
+                    const chain = {
+                        throwOnError: () => chain,
+                        then: (resolve) => resolve({})
+                    };
+                    return chain;
+                },
+                update: () => {
+                    const chain = {
+                        eq: () => chain,
+                        throwOnError: () => chain,
+                        then: (resolve) => resolve({})
+                    };
+                    return chain;
+                },
+                insert: () => {
+                    const chain = {
+                        select: () => chain,
+                        single: () => chain,
+                        throwOnError: () => chain,
+                        then: (resolve) => resolve({ data: { id: 1 }, error: null })
+                    };
+                    return chain;
+                }
+            };
+        } 
     };
 
 app.get('/api/stats', async (req, res) => {
@@ -171,6 +180,27 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         const todayDate = dateFormatter.format(now);
         if (dateOfSmell > todayDate || (dateOfSmell === todayDate && timeOfSmell > timeFormatter.format(now))) {
             return res.status(400).json({ error: 'Cannot report an event in the future.' });
+        }
+
+        // Check for duplicates
+        const { data: existingIncidents } = await supabase.from('incidents')
+            .select('id')
+            .eq('date_of_smell', dateOfSmell)
+            .eq('time_of_smell', timeOfSmell)
+            .eq('business_location', businessLocation)
+            .throwOnError();
+
+        if (existingIncidents && existingIncidents.length > 0) {
+            const incidentIds = existingIncidents.map(i => i.id);
+            const { data: userLink } = await supabase.from('opted_in_user_reports')
+                .select('id')
+                .eq('user_email', email)
+                .in('incident_id', incidentIds)
+                .throwOnError();
+
+            if (userLink && userLink.length > 0) {
+                return res.status(400).json({ error: 'You have already submitted a report for this exact event.' });
+            }
         }
 
         const { data: newIncident } = await supabase.from('incidents')
