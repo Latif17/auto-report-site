@@ -184,7 +184,7 @@ async function submitGovForm(userData, incidentData) {
         // Page 19: Anything else
         await page.evaluate((desc) => {
             const ta = document.querySelector('textarea');
-            if (ta) ta.value = desc || 'Skip this';
+            if (ta) ta.value = desc || '';
         }, incidentData.description);
         
         // Final submit

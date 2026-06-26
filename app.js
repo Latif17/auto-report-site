@@ -51,8 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Handle Local Storage
         if (formData.storeLocally) {
-            localStorage.setItem('freshAirWatchData', JSON.stringify(formData));
+            // Exclude timeOfSmell from what gets stored
+            const { timeOfSmell, ...dataToStore } = formData;
+            localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
+            // Cleanup old version
+            localStorage.removeItem('freshAirWatchData');
         } else {
+            localStorage.removeItem('freshAirWatchData_v2');
             localStorage.removeItem('freshAirWatchData');
         }
 
@@ -87,7 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper to load data
     function loadSavedData() {
-        const savedDataJson = localStorage.getItem('freshAirWatchData');
+        // Look for new v2 data, fallback to v1 if v2 doesn't exist
+        const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
         if (savedDataJson) {
             try {
                 const data = JSON.parse(savedDataJson);
@@ -96,8 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('postcode').value = data.postcode || '';
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('address').value = data.address || '';
-                
-                if (data.timeOfSmell) document.getElementById('timeOfSmell').value = data.timeOfSmell;
 
                 // Set checkboxes
                 document.getElementById('storeLocally').checked = data.storeLocally !== false;
