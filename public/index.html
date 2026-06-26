@@ -77,7 +77,7 @@
                                 <span class="checkmark"></span>
                                 <div class="checkbox-content">
                                     <strong>Pool Data (Recommended)</strong>
-                                    <span>Securely shares your details with the community pool. When a stink event occurs, the system can automatically include you in mass-reports, multiplying our leverage against the council.</span>
+                                    <span>By pooling your data, you grant permission to submit the official form on your behalf whenever other Barking Riverside residents log a smell issue. <strong>Strictly no fake data should be provided, as this could lead to the tool getting blocked.</strong></span>
                                 </div>
                             </label>
                         </div>
@@ -90,25 +90,29 @@
                     You are securely pooling data. You will automatically be included in any ongoing community reports. You only need to use the form below if you are the first to detect a new stink event.
                 </div>
 
-                <!-- Active Incident (Option 2) -->
-                <div id="active-incident-section" class="primary-action-section hidden" style="margin-bottom: 2rem; border-color: var(--accent); background: var(--error-bg);">
-                    <span class="time-label" style="color: var(--error-text);">ONGOING STINK EVENT DETECTED</span>
-                    <h2 id="active-incident-time" style="font-family: var(--font-mono); font-size: 3rem; margin: 0.5rem 0; font-weight: 700; color: var(--error-text);">--:--</h2>
-                    <p style="margin-bottom: 1.5rem; color: var(--error-text);"><strong id="active-incident-count" style="font-family: var(--font-mono);">0</strong> community reports logged so far.</p>
-                    <button type="button" class="btn btn-submit" id="join-incident-btn" style="background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0px var(--shadow);">
-                        Join This Event
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="log-different-time-btn" style="margin-top: 1rem;">
-                        Log a New Stink Event
-                    </button>
-                </div>
-
                 <!-- The Primary Action (Option 1) -->
                 <div id="new-incident-section" class="primary-action-section">
                     <span class="time-label">LOG NEW STINK EVENT</span>
-                    <label for="timeOfSmell" class="sr-only" style="display:none;">Time of Detection</label>
-                    <div class="time-input-wrapper">
-                        <input type="time" id="timeOfSmell" name="timeOfSmell" required>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label for="businessLocation">Who are you reporting?</label>
+                            <select id="businessLocation" name="businessLocation" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                                <option value="Multiple (ReFood, Veolia, BioGas)">Multiple (ReFood, Veolia, BioGas)</option>
+                                <option value="ReFoods UK">ReFoods UK</option>
+                                <option value="East London BioGas">East London BioGas</option>
+                                <option value="Veolia">Veolia</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="dateOfSmell">Date of Smell</label>
+                            <input type="date" id="dateOfSmell" name="dateOfSmell" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="timeOfSmell">Time of Detection</label>
+                            <input type="time" id="timeOfSmell" name="timeOfSmell" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border); font-family: var(--font-mono);">
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn btn-submit" id="submit-btn">

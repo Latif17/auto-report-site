@@ -5,11 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // UI Sections
     const pooledUserStatus = document.getElementById('pooled-user-status');
-    const activeIncidentSection = document.getElementById('active-incident-section');
-    const newIncidentSection = document.getElementById('new-incident-section');
     
     let isPooledUser = false;
-    let currentTopIncident = null;
 
     // Determine if pooled user
     const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
@@ -18,23 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isPooledUser = JSON.parse(savedDataJson).shareData === true;
         } catch (e) {}
     }
-
-    // Toggle logic for switching to manual entry
-    document.getElementById('log-different-time-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-        activeIncidentSection.classList.add('hidden');
-        newIncidentSection.classList.remove('hidden');
-    });
-
-    document.getElementById('join-incident-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentTopIncident) {
-            document.getElementById('timeOfSmell').value = currentTopIncident.time_of_smell;
-        }
-        activeIncidentSection.classList.add('hidden');
-        newIncidentSection.classList.remove('hidden');
-        document.getElementById('report-form').scrollIntoView({ behavior: 'smooth' });
-    });
 
     async function fetchStats() {
         try {
@@ -63,85 +43,53 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.recentIncidents && data.recentIncidents.length > 0) {
                 document.getElementById('active-alert').classList.add('hidden');
                 
-                // Set top incident
-                currentTopIncident = data.recentIncidents[0];
+                const topIncident = data.recentIncidents[0];
+                const isReported = topIncident.alreadyReported || localReported.includes(topIncident.id);
                 
-                // Show/Hide top sections based on user state
-                if (isPooledUser) {
-                    pooledUserStatus.classList.remove('hidden');
-                    activeIncidentSection.classList.add('hidden');
-                    newIncidentSection.classList.remove('hidden');
-                } else {
-                    const isReported = currentTopIncident.alreadyReported || localReported.includes(currentTopIncident.id);
-                    if (isReported) {
-                        // Already reported, just show the new incident section
-                        activeIncidentSection.classList.add('hidden');
-                        newIncidentSection.classList.remove('hidden');
-                    } else {
-                        // Show active incident to join
-                        document.getElementById('active-incident-time').textContent = currentTopIncident.time_of_smell;
-                        document.getElementById('active-incident-count').textContent = currentTopIncident.report_count;
-                        activeIncidentSection.classList.remove('hidden');
-                        newIncidentSection.classList.add('hidden');
-                    }
+                const li = document.createElement('li');
+                li.className = 'event-item';
+                
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'event-details';
+                
+                const strongTime = document.createElement('strong');
+                strongTime.textContent = `${topIncident.date_of_smell} at ${topIncident.time_of_smell}`;
+                
+                const companyDiv = document.createElement('div');
+                companyDiv.textContent = `Reported: ${topIncident.business_location}`;
+                companyDiv.style.color = "var(--ink-light)";
+                companyDiv.style.marginTop = "0.25rem";
+                
+                detailsDiv.appendChild(strongTime);
+                detailsDiv.appendChild(companyDiv);
+                
+                if (isReported) {
+                    const tag = document.createElement('span');
+                    tag.textContent = 'You Logged This';
+                    tag.style.fontSize = '0.7rem';
+                    tag.style.background = 'var(--success-bg)';
+                    tag.style.padding = '2px 6px';
+                    tag.style.borderRadius = '4px';
+                    tag.style.marginLeft = '10px';
+                    detailsDiv.appendChild(tag);
                 }
 
-                data.recentIncidents.forEach(inc => {
-                    const li = document.createElement('li');
-                    li.className = 'event-item';
-                    
-                    const isReported = inc.alreadyReported || localReported.includes(inc.id);
-                    
-                    const detailsDiv = document.createElement('div');
-                    detailsDiv.className = 'event-details';
-                    
-                    const strongTime = document.createElement('strong');
-                    strongTime.textContent = inc.time_of_smell;
-                    
-                    detailsDiv.appendChild(strongTime);
-                    
-                    const smallCount = document.createElement('div');
-                    smallCount.textContent = `${inc.report_count} report(s) logged`;
-                    smallCount.style.color = "var(--ink-light)";
-                    smallCount.style.marginTop = "0.25rem";
-                    detailsDiv.appendChild(smallCount);
+                li.appendChild(detailsDiv);
+                listEl.appendChild(li);
 
-                    const btn = document.createElement('button');
-                    btn.className = 'btn-small select-event-btn';
-                    btn.dataset.time = inc.time_of_smell;
-                    if (isReported) {
-                        btn.disabled = true;
-                        btn.textContent = 'Already Logged';
-                    } else {
-                        btn.textContent = 'Log This Time';
-                    }
-
-                    li.appendChild(detailsDiv);
-                    li.appendChild(btn);
-                    listEl.appendChild(li);
-                });
-
-                document.querySelectorAll('.select-event-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        document.getElementById('timeOfSmell').value = e.currentTarget.dataset.time;
-                        document.getElementById('report-form').scrollIntoView({ behavior: 'smooth' });
-                        // Ensure the new incident section is visible
-                        activeIncidentSection.classList.add('hidden');
-                        newIncidentSection.classList.remove('hidden');
-                    });
-                });
-            } else {
-                document.getElementById('active-alert').classList.remove('hidden');
-                
-                // No recent incidents
                 if (isPooledUser) {
                     pooledUserStatus.classList.remove('hidden');
                 } else {
                     pooledUserStatus.classList.add('hidden');
                 }
-                activeIncidentSection.classList.add('hidden');
-                newIncidentSection.classList.remove('hidden');
+            } else {
+                document.getElementById('active-alert').classList.remove('hidden');
+                
+                if (isPooledUser) {
+                    pooledUserStatus.classList.remove('hidden');
+                } else {
+                    pooledUserStatus.classList.add('hidden');
+                }
             }
         } catch (e) {
             console.error('Failed to fetch stats');
@@ -154,10 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved data from localStorage on init
     loadSavedData();
 
-    // Set current time to default for ease of use
+    // Set default date and time
     const now = new Date();
-    const timeString = now.toTimeString().slice(0,5);
-    document.getElementById('timeOfSmell').value = timeString;
+    document.getElementById('timeOfSmell').value = now.toTimeString().slice(0,5);
+    // Format YYYY-MM-DD
+    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    document.getElementById('dateOfSmell').value = localDate;
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -169,16 +119,17 @@ document.addEventListener('DOMContentLoaded', () => {
             postcode: document.getElementById('postcode').value,
             phone: document.getElementById('phone').value,
             address: document.getElementById('address').value,
+            dateOfSmell: document.getElementById('dateOfSmell').value,
             timeOfSmell: document.getElementById('timeOfSmell').value,
             smellType: 'Industrial Stench',
-            businessLocation: 'Multiple (ReFood, Veolia, BioGas)',
+            businessLocation: document.getElementById('businessLocation').value,
             storeLocally: document.getElementById('storeLocally').checked,
             shareData: document.getElementById('shareData').checked
         };
 
         // 2. Handle Local Storage
         if (formData.storeLocally) {
-            const { timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
+            const { dateOfSmell, timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
             localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
             localStorage.removeItem('freshAirWatchData');
         } else {
