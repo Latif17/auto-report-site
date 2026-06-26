@@ -1,5 +1,32 @@
 # Auto Report Site
 
+## Why this repo exists
+For over 20 years, the Barking area has been plagued by a severe and persistent stench. Residents in the newly developed Barking Riverside (located just 1 mile away from potential culprits) frequently suffer from foul, toxic smells drifting into their homes, often overnight. This environmental hazard has forced residents to keep windows shut, purchase air purifiers, and avoid going outside when the smell is bad.
+
+The main culprits are believed to be businesses operating in the London Sustainable Industries Park off Choats Road, particularly:
+- **ReFoods UK** (Dagenham)
+- **East London BioGas**
+- **Veolia** (Dagenham)
+
+Neighboring businesses have faced the same uphill challenge for two decades. The issue has been reported to Barking Riverside London and Bellway with no resolution.
+
+Previously, the only recourse for the community was organizing manual mass reporting via the [government environmental problem service](https://report-an-environmental-problem.service.gov.uk/smell/source). However, this manual process has proven ineffective, requiring constant community coordination for temporary measures.
+
+**This tool was built to automate the reporting process** for Barking Riverside residents based on these known culprits, ensuring that incidents are consistently and systematically logged to hold the responsible parties accountable.
+
+## Tech Stack & Architecture
+
+- **Frontend:** Vanilla HTML, CSS, and JavaScript. Kept simple and lightweight to ensure fast loading times and ease of use.
+- **Backend API:** Node.js with Express. Receives report submissions from the frontend and queues them in the database.
+- **Automation / Scraping:** Puppeteer. Used to run a headless browser that automates filling out and submitting the government's environmental problem form.
+- **Database:** Supabase (PostgreSQL). Stores user details, incident logs, and the reporting queue.
+
+### Deployment Choices
+
+- **Vercel (Frontend & API):** Chosen for its excellent serverless capabilities. It allows the static frontend and the Express API to be hosted with instant scaling and minimal configuration.
+- **GitHub Actions (Scraper Cron Job):** Because serverless functions (like those on Vercel) have strict timeout limits and struggle to run full headless browsers, we use GitHub Actions. It runs a scheduled job every 5 minutes (`scraper.yml`) to execute Puppeteer and reliably process the queued reports.
+- **Supabase (Database):** Provides a managed PostgreSQL database that integrates seamlessly with both our serverless API and our GitHub Actions scraper.
+
 ## Local Development
 
 1. **Environment Variables:**
