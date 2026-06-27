@@ -16,7 +16,7 @@
       "dest": "server.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/(?!_vercel/)(.*)",
       "dest": "public/$1"
     }
   ]
