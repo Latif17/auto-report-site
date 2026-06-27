@@ -148,7 +148,6 @@ describe('Security Middlewares', () => {
 
     it('should limit requests to 100 per 15 minutes', async () => {
         // We will make 100 requests first.
-        // It's a mock endpoint so it's fast.
         for (let i = 0; i < 100; i++) {
             await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
         }

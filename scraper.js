@@ -253,10 +253,16 @@ async function submitGovForm(userData, incidentData) {
             if (ta) ta.value = desc || '';
         }, incidentData.description);
         
+        // Proceed to final review page
+        await goNext(page);
+        debugLog('Navigating to Final Review Page');
+        
         // Final submit
         if (isTestMode) {
-            debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 seconds...');
-            await new Promise(r => setTimeout(r, 5000));
+            debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers...');
+            if (!process.env.JEST_WORKER_ID) {
+                await new Promise(r => setTimeout(r, 300000));
+            }
         } else {
             await goNext(page);
             console.log(`Successfully submitted form for ${userData.email}`);

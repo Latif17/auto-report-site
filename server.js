@@ -48,6 +48,7 @@ const supabase = process.env.SUPABASE_URL
                     const chain = {
                         eq: (col, val) => { mockState[col] = val; return chain; },
                         single: () => chain,
+                        maybeSingle: () => chain,
                         throwOnError: () => chain,
                         gte: () => chain,
                         order: () => chain,
@@ -115,7 +116,7 @@ const supabase = process.env.SUPABASE_URL
 app.get('/api/stats', async (req, res) => {
     try {
         const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError();
-        const { data: sysData } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).single().throwOnError();
+        const { data: sysData } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).maybeSingle().throwOnError();
         
         // Fetch only the absolute latest incident
         const { data: recentIncidents } = await supabase.from('incidents')
