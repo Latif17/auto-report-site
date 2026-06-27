@@ -23,3 +23,14 @@ DROP POLICY IF EXISTS "Allow anon update on incidents" ON incidents;
 DROP POLICY IF EXISTS "Allow anon select on opted_in_user_reports" ON opted_in_user_reports;
 DROP POLICY IF EXISTS "Allow anon insert on opted_in_user_reports" ON opted_in_user_reports;
 DROP POLICY IF EXISTS "Allow anon update on opted_in_user_reports" ON opted_in_user_reports;
+
+-- merge smell timestamp
+ALTER TABLE incidents 
+ADD COLUMN smell_timestamp TIMESTAMP;
+
+ALTER TABLE incidents 
+ALTER COLUMN smell_timestamp SET NOT NULL;
+
+ALTER TABLE incidents 
+DROP COLUMN date_of_smell,
+DROP COLUMN time_of_smell;

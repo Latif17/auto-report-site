@@ -63,8 +63,7 @@ const supabase = process.env.SUPABASE_URL
                                     count: 1,
                                     data: [{
                                         id: 9999,
-                                        date_of_smell: defaultDate,
-                                        time_of_smell: defaultTime,
+                                        smell_timestamp: `${defaultDate} ${defaultTime}:00`,
                                         smell_type: 'Industrial Stench',
                                         business_location: 'Multiple (ReFood, Veolia, BioGas)',
                                         status: 'pending',
@@ -121,7 +120,7 @@ app.get('/api/stats', async (req, res) => {
         // Fetch only the absolute latest incident
         const { data: recentIncidents } = await supabase.from('incidents')
             .select('*')
-            .order('created_at', { ascending: false })
+            .order('smell_timestamp', { ascending: false })
             .limit(1)
             .throwOnError();
 
@@ -184,10 +183,10 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Check for duplicates
+        const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00`;
         let query = supabase.from('incidents')
             .select('id')
-            .eq('date_of_smell', dateOfSmell)
-            .eq('time_of_smell', timeOfSmell);
+            .eq('smell_timestamp', smellTimestamp);
             
         if (businessLocation == null) {
             query = query.is('business_location', null);
@@ -211,7 +210,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         const { data: newIncident } = await supabase.from('incidents')
-            .insert({ date_of_smell: dateOfSmell, time_of_smell: timeOfSmell, smell_type: smellType, business_location: businessLocation, status: 'pending' })
+            .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending' })
             .select()
             .single()
             .throwOnError();

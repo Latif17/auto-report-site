@@ -1,6 +1,3 @@
-import { inject } from "@vercel/analytics";
-
-inject();
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('report-form');
@@ -47,8 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const topIncident = data.recentIncidents[0];
                 const isReported = topIncident.alreadyReported || localReported.includes(topIncident.id);
                 
-                const formattedDate = new Date(topIncident.date_of_smell).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                document.getElementById('active-incident-time').textContent = `${formattedDate} - ${topIncident.time_of_smell}`;
+                const tsDate = new Date(topIncident.smell_timestamp.replace(' ', 'T'));
+                const formattedDate = tsDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                const formattedTime = tsDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('active-incident-time').textContent = `${formattedDate} - ${formattedTime}`;
                 document.getElementById('active-incident-location').textContent = `Reported: ${topIncident.business_location}`;
                 
                 const joinBtn = document.getElementById('join-incident-btn');

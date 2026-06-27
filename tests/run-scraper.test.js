@@ -106,7 +106,7 @@ describe('run-scraper', () => {
         });
 
         const pendingIncidents = [
-            { id: 1, time_of_smell: '10:00', smell_type: 'sulfur', business_location: 'factory' }
+            { id: 1, smell_timestamp: '2026-06-27 10:00:00', smell_type: 'sulfur', business_location: 'factory' }
         ];
 
         const userReports = [{ user_email: 'test@example.com' }];
@@ -149,7 +149,7 @@ describe('run-scraper', () => {
         // Should have called scraper
         expect(submitGovForm).toHaveBeenCalledWith(
             { email: 'test@example.com', fullName: 'Test', postcode: '123', phone: '12345', address: '123 St' },
-            { timeOfSmell: '10:00', smellType: 'sulfur', businessLocation: 'factory' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '10:00', smellType: 'sulfur', businessLocation: 'factory' }
         );
 
         // Should log scraper error

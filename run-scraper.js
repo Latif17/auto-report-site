@@ -80,9 +80,10 @@ async function run() {
                         phone: user.phone,
                         address: user.address
                     };
+                    const [datePart, timePart] = incident.smell_timestamp.replace('T', ' ').split(' ');
                     const incidentData = {
-                        dateOfSmell: incident.date_of_smell,
-                        timeOfSmell: incident.time_of_smell,
+                        dateOfSmell: datePart,
+                        timeOfSmell: timePart.substring(0, 5),
                         smellType: incident.smell_type,
                         businessLocation: incident.business_location
                     };
