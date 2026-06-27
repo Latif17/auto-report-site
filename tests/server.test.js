@@ -2,8 +2,27 @@ const request = require('supertest');
 const app = require('../server');
 
 describe('API Endpoints', () => {
+    let usersUpsertSpy;
+
     beforeEach(() => {
         jest.clearAllMocks();
+        usersUpsertSpy = jest.fn().mockReturnValue({
+            throwOnError: jest.fn().mockReturnThis(),
+            then: jest.fn((cb) => cb({}))
+        });
+
+        const originalFrom = app.supabase.from.bind(app.supabase);
+        jest.spyOn(app.supabase, 'from').mockImplementation((table) => {
+            const chain = originalFrom(table);
+            if (table === 'users') {
+                chain.upsert = usersUpsertSpy;
+            }
+            return chain;
+        });
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     it('GET /api/stats returns counts', async () => {
@@ -35,12 +54,15 @@ describe('API Endpoints', () => {
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.3')
             .send({ 
+                email: 'testfalse@example.com',
+                fullName: 'Test False',
                 timeOfSmell: '00:00',
                 smellType: 'Waste',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
+        expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: false }));
     });
 
     it('POST /api/submit handles shareData correctly and returns success', async () => {
@@ -57,6 +79,7 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(200);
         expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
+        expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
     });
 
     it('POST /api/submit prevents duplicate submissions', async () => {
@@ -72,6 +95,19 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(400);
         expect(res.body).toHaveProperty('error', 'You have already submitted a report for this exact event.');
+    });
+
+    it('POST /api/join passes pool_data: true', async () => {
+        const res = await request(app)
+            .post('/api/join')
+            .set('X-Forwarded-For', '10.0.0.10')
+            .send({
+                email: 'join@example.com',
+                fullName: 'Join User',
+                incidentId: 9999
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
     });
 });
 

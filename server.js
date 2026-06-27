@@ -227,8 +227,8 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         const incidentId = newIncident.id;
 
         const insertPromises = [];
-        if (shareData) {
-            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError());
+        if (email) {
+            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData || false }).throwOnError());
         }
 
         // Even if they don't share data with community, we still track they reported it so the script runs for them
@@ -238,6 +238,19 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             }));
         }
         await Promise.all(insertPromises);
+
+        // --- LOCAL TESTING HOOK ---
+        // If there's no real DB connection, trigger the scraper directly in the background
+        if (!process.env.SUPABASE_URL) {
+            console.log("Local Mock Mode: Triggering scraper directly without database...");
+            process.env.TEST_MODE = 'true'; // FORCE test mode to prevent accidental real submissions
+            const { submitGovForm } = require('./scraper');
+            const userData = { email, fullName, postcode, phone, address };
+            const incidentData = { dateOfSmell, timeOfSmell, smellType, businessLocation };
+            
+            // Run asynchronously so it doesn't block the frontend response
+            submitGovForm(userData, incidentData).catch(e => console.error("Mock scraper error:", e));
+        }
 
         res.json({ success: true, message: "Report triggered", incidentId });
 
@@ -253,7 +266,7 @@ app.post('/api/join', strictLimiter, async (req, res) => {
 
     try {
         await Promise.all([
-            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError(),
+            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: true }).throwOnError(),
             supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             })
@@ -270,4 +283,5 @@ const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
+app.supabase = supabase;
 module.exports = app;
