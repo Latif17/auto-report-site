@@ -81,21 +81,43 @@ The repository is organized into distinct deployment-specific folders:
 - Add `SUPABASE_URL` and `SUPABASE_KEY` as Environment Variables.
 - Deploy the project.
 
-### 3. Background Scraper Setup (Homelab or GitHub Actions)
+### 3. Background Scraper Setup (Proxmox VE / Homelab)
 
-#### Option A: Homelab (Docker Compose)
-- Copy the `.env.example` file to `homelab/.env` and populate your Supabase credentials:
-  ```env
-  SUPABASE_URL=your-supabase-url
-  SUPABASE_KEY=your-supabase-key
-  ```
-- Build and launch the container daemon:
-  ```bash
-  cd homelab
-  docker-compose up -d
-  ```
+To run the background scraper continuously on your Proxmox VE instance, you can deploy it inside a Linux Container (LXC) or a Virtual Machine (VM) running Docker:
 
-#### Option B: GitHub Actions (Scheduled Scraper)
-- Go to your repository settings: **Settings > Secrets and variables > Actions**.
-- Create two secrets: `SUPABASE_URL` and `SUPABASE_KEY`.
-- The scheduled cron job in `.github/workflows/scraper.yml` will automatically poll and process queued reports every 5 minutes.
+#### Option A: Running inside a Proxmox LXC Container (Recommended)
+1. **Create an LXC Container**:
+   - In Proxmox VE, click **Create CT**.
+   - Choose a lightweight template like **Debian** or **Ubuntu**.
+   - Under the **Options > Features** tab for the created container, check the box for **Nesting** (required to run Docker inside LXC).
+2. **Install Docker and Docker Compose**:
+   - Start the container, log in via SSH/Console, and run:
+     ```bash
+     apt update && apt install -y curl git
+     curl -sSL https://get.docker.com | sh
+     ```
+3. **Deploy the Scraper**:
+   - Clone this repository inside the container:
+     ```bash
+     git clone <your-repo-git-url> /opt/auto-report-site
+     cd /opt/auto-report-site/homelab
+     ```
+   - Copy the environment file and fill in your Supabase details:
+     ```bash
+     cp .env.example .env
+     nano .env
+     ```
+   - Start the scraper daemon using Docker Compose:
+     ```bash
+     docker compose up -d
+     ```
+
+#### Option B: Running inside a Proxmox VM
+1. Set up a standard Linux VM (e.g., Ubuntu Server).
+2. Install Docker and Docker Compose.
+3. Clone this repository, configure `homelab/.env`, and run `docker compose up -d` in the `homelab/` directory.
+
+To verify that the daemon is running and check its logs, run:
+```bash
+docker compose logs -f
+```
