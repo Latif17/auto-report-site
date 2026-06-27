@@ -48,8 +48,8 @@ This project uses **Vercel** for the frontend and Express API, **GitHub Actions*
 
 ### 1. Database Setup (Supabase)
 - Create a free project at [Supabase](https://supabase.com).
-- Go to the SQL Editor and run the SQL from `schema.sql` to initialize the tables.
-- **For existing setups:** Be sure to also run the SQL from `schema_update.sql` to apply the latest security patches and drop old insecure public access policies.
+- Go to the SQL Editor and run the SQL from `supabase/schema.sql` to initialize the tables.
+- **For existing setups:** Be sure to also run the SQL from `supabase/schema_update.sql` to apply the latest security patches and drop old insecure public access policies.
 - Retrieve your Project URL and Secret Key from Project Settings > API.
 
 ### 2. Backend Scheduled Task Setup (GitHub Actions)
