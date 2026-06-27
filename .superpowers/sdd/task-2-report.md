@@ -1,84 +1,79 @@
-# Task 2 Report: Update Scraper Fetch & Cleanup Logic
+# Task 2 Report: Move Web Application to vercel/
 
 ## Implementation Details
-We updated the scraper fetch and cleanup logic in `run-scraper.js` as follows:
-- **Fetched Pooled Users:** Integrated retrieving pooled users (`pool_data: true`) from the `users` database table and merged their email addresses with those of explicit opted-in users.
-- **Updated Scraper Scope:** Combined explicit and pooled emails to fetch the corresponding user profiles and populated the incident mapping lists with all applicable users.
-- **Post-Submission Cleanup:** Added cleanup logic at the end of each incident iteration. The script filters for unpooled users (`pool_data: false`), queries if they are linked to other pending incidents, and deletes their database records from the `users` table if no other pending references exist.
-- **Cleanup Query Error Handling:** Destructured `error` as `otherPendingError` from the `opted_in_user_reports` query, checked if it's present, logged a console error, and skipped deleting the unpooled users for this iteration to avoid accidental user deletion if the database query fails.
+We migrated all web-related client and server code into the `vercel/` folder:
+- **Moved Web Files:** Moved the `server.js` file, the `public/` directory (containing frontend files `index.html`, `style.css`, and `app.js`), and the `tests/server.test.js` file from the repository root to `vercel/`.
+- **Created Vercel Serverless Function entry point:** Created [vercel/api/index.js](file:///Users/latif/Documents/repos/auto-report-site/vercel/api/index.js) which imports and exports `vercel/server.js`.
+- **Created Vercel Routing Configuration:** Created [vercel/vercel.json](file:///Users/latif/Documents/repos/auto-report-site/vercel/vercel.json) containing rewrites for `/api/*` requests to the Serverless Function and root paths to `vercel/public/` static files.
+- **Updated Static Path:** Modified [vercel/server.js](file:///Users/latif/Documents/repos/auto-report-site/vercel/server.js) to resolve the static file directory to `path.join(__dirname, 'public')` since `public/` is always relative to `server.js` in the new structure.
+- **Cleaned Up Root Directory:** Deleted obsolete web-related files at the root level (`server.js`, `public/`, `tests/server.test.js`, `vercel.json`, and `api/`) to keep the codebase clean.
 
 ## Files Changed
-- [run-scraper.js](file:///Users/latif/Documents/repos/auto-report-site/run-scraper.js)
-- [tests/run-scraper.test.js](file:///Users/latif/Documents/repos/auto-report-site/tests/run-scraper.test.js)
+- [vercel/server.js](file:///Users/latif/Documents/repos/auto-report-site/vercel/server.js)
+- [vercel/api/index.js](file:///Users/latif/Documents/repos/auto-report-site/vercel/api/index.js)
+- [vercel/vercel.json](file:///Users/latif/Documents/repos/auto-report-site/vercel/vercel.json)
+- Moved directories and files:
+  - `public/` -> `vercel/public/`
+  - `tests/server.test.js` -> `vercel/tests/server.test.js`
+- Deleted old root duplicates:
+  - `server.js`
+  - `public/`
+  - `tests/server.test.js`
+  - `vercel.json`
+  - `api/`
 
 ## Verification and Testing
-We updated and extended `tests/run-scraper.test.js` to mock the Supabase client calls reliably, maintaining robust chain mocks for intermediate and terminal calls.
-Added a unit test case `should skip deleting unpooled users if querying other pending reports fails` to verify that when the database query fails, users are not deleted and a console error is logged.
+We ran the server test suite inside `vercel/` and the overall suite at the root directory to confirm all functionality remains intact:
 
-### Test Results
-All tests pass cleanly:
+### Vercel Server Tests
+Inside `vercel/`:
 ```bash
-PASS tests/run-scraper.test.js
-  run-scraper
-    ✓ should exit if supabase is not initialized (2 ms)
-    ✓ should exit if fetching pending incidents fails
-    ✓ should exit if no pending incidents (1 ms)
-    ✓ should process pending incidents, handling scraper errors gracefully (13 ms)
-    ✓ should process both opted_in and pooled users, and cleanup unpooled users (1 ms)
-    ✓ should skip deleting unpooled users if querying other pending reports fails (1 ms)
-
+npm install
+npm test
+```
+Result:
+```
 PASS tests/server.test.js
+  API Endpoints
+    ✓ GET /api/stats returns counts (12 ms)
+    ✓ POST /api/opt-in succeeds with valid data (4 ms)
+    ✓ POST /api/opt-in fails without email (1 ms)
+    ✓ POST /api/submit when shareData is false returns success (2 ms)
+    ✓ POST /api/submit handles shareData correctly and returns success (1 ms)
+    ✓ POST /api/submit prevents duplicate submissions (1 ms)
+    ✓ POST /api/join passes pool_data: true (1 ms)
+  Security Middlewares
+    ✓ should have helmet security headers (3 ms)
+    ✓ should strict rate limit mutation endpoints to 3 per 15 minutes (4 ms)
+    ✓ should rate limit /api/opt-in (4 ms)
+    ✓ should rate limit /api/join (3 ms)
+    ✓ should limit requests to 100 per 15 minutes (40 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       12 passed, 12 total
+Snapshots:   0 total
+Time:        0.24 s, estimated 1 s
+```
+
+### Full Repository Tests
+At the root directory:
+```bash
+npm test
+```
+Result:
+```
+PASS tests/run-scraper.test.js
+PASS vercel/tests/server.test.js
 PASS tests/scraper.test.js
 
 Test Suites: 3 passed, 3 total
-Tests:       23 passed, 23 total
+Tests:       29 passed, 29 total
 Snapshots:   0 total
-Time:        1.45 s
+Time:        1.278 s, estimated 2 s
 Ran all test suites.
 ```
 
 ## Self-Review Findings
-- **Completeness:** Implemented all required fetch logic changes, the cleanup steps, and the review-discovered error check.
-- **Quality:** Restructured the mock assertions in `run-scraper.test.js` to ensure robust checking of cleanups.
-- **Discipline:** No extraneous code or refactoring was introduced.
-- **Warnings/Noise:** Output is clean and warning-free.
-
-## Task 2 Re-review Updates
-
-### Implementation Details (Re-review Fixes)
-We addressed the issues found in the Task 2 Re-review in [run-scraper.js](file:///Users/latif/Documents/repos/auto-report-site/run-scraper.js):
-- **Halt Scraper on Batch Fetch Failures (Critical):** Destructured `{ error }` from all three batch fetch queries (the `opted_in_user_reports` query, the `users` for `pool_data: true` query, and the user details query by emails). If any of these queries fail, a console error is logged, and the scraper run is aborted immediately by calling `process.exit(1)` and returning early. This prevents the script from falsely marking pending incidents as completed when the data fetch fails.
-- **Cleanup User Filter Improvement (Minor):** Updated the filter for identifying unpooled processed users from `u.pool_data === false` to `!u.pool_data`. This correctly captures unpooled users even if `pool_data` is `null` or `undefined` in the database.
-- **Delete Cleanup Error Handling (Minor):** Destructured `{ error: deleteError }` from the `supabase.from('users').delete().in('email', emailsToDelete)` call and logged it if an error occurs.
-
-### Added Unit Tests
-We added four new test cases to [run-scraper.test.js](file:///Users/latif/Documents/repos/auto-report-site/tests/run-scraper.test.js):
-- `should exit if fetching opted-in user reports fails`
-- `should exit if fetching pooled users fails`
-- `should exit if fetching user details by emails fails`
-- `should log an error if deleting unpooled users fails`
-
-### Test Command and Output
-We ran the test suite using `npm test` and all 27 tests passed successfully.
-
-Command run:
-```bash
-npm test
-```
-
-Output:
-```
-> backend@1.0.0 test
-> jest
-
-PASS tests/run-scraper.test.js
-PASS tests/server.test.js
-PASS tests/scraper.test.js
-
-Test Suites: 3 passed, 3 total
-Tests:       27 passed, 27 total
-Snapshots:   0 total
-Time:        1.26 s, estimated 2 s
-Ran all test suites.
-```
-
+- **Completeness:** All steps from the task brief were completed exactly as described.
+- **Quality:** Checked that paths resolve correctly relative to `__dirname` in all contexts.
+- **Discipline:** No overbuilding or unnecessary refactoring was introduced. Removed obsolete root files to prevent redundancy.
