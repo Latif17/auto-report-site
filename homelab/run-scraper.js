@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 const { submitGovForm } = require('./scraper');
 const { randomDelay } = require('./utils');
 
-const supabase = process.env.SUPABASE_URL 
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : null;
 
@@ -167,7 +167,11 @@ async function processQueue() {
                 const emailsToDelete = unpooledProcessed.filter(e => !emailsWithOtherPending.has(e));
                 
                 if (emailsToDelete.length > 0) {
-                    console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
+                    console.log(`Deleting ${emailsToDelete.length} unpooled user records and associated reports...`);
+                    const { error: deleteReportsError } = await supabase.from('opted_in_user_reports').delete().in('user_email', emailsToDelete);
+                    if (deleteReportsError) {
+                        console.error("Error deleting unpooled user reports:", deleteReportsError);
+                    }
                     const { error: deleteError } = await supabase.from('users').delete().in('email', emailsToDelete);
                     if (deleteError) {
                         console.error("Error deleting unpooled users:", deleteError);

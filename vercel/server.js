@@ -38,7 +38,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Londo
 const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
 
 // Mock supabase client for test if env vars are missing
-const supabase = process.env.SUPABASE_URL 
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : { 
         from: (table) => {
