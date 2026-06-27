@@ -32,6 +32,26 @@ async function run() {
         return;
     }
 
+    // --- BATCH FETCH DATA TO PREVENT N+1 QUERIES ---
+    const incidentIds = pendingIncidents.map(i => i.id);
+    const { data: allUserReports } = await supabase
+        .from('opted_in_user_reports')
+        .select('incident_id, user_email')
+        .in('incident_id', incidentIds);
+
+    const allEmails = [...new Set((allUserReports || []).map(r => r.user_email))];
+    const { data: allUsers } = allEmails.length > 0
+        ? await supabase.from('users').select('*').in('email', allEmails)
+        : { data: [] };
+
+    const usersByEmail = (allUsers || []).reduce((acc, user) => { acc[user.email] = user; return acc; }, {});
+    const emailsByIncidentId = (allUserReports || []).reduce((acc, report) => {
+        if (!acc[report.incident_id]) acc[report.incident_id] = [];
+        acc[report.incident_id].push(report.user_email);
+        return acc;
+    }, {});
+    // --- END BATCH FETCH ---
+
     for (const incident of pendingIncidents) {
         console.log(`Processing incident ${incident.id}...`);
         
@@ -46,32 +66,11 @@ async function run() {
             continue;
         }
 
-        // Fetch all opted-in users for this incident
-        const { data: userReports, error: userReportsError } = await supabase
-            .from('opted_in_user_reports')
-            .select('user_email')
-            .eq('incident_id', incident.id);
-
-        if (userReportsError) {
-            console.error(`Error fetching user reports for incident ${incident.id}:`, userReportsError);
-            // Revert back to pending? Or just continue to next, leaving it as processing? 
-            // It's probably better to just continue or set to error. Let's just log and continue.
-            continue;
-        }
-
-        if (userReports && userReports.length > 0) {
-            const emails = userReports.map(r => r.user_email);
-            const { data: users, error: usersError } = await supabase
-                .from('users')
-                .select('*')
-                .in('email', emails);
-
-            if (usersError) {
-                console.error(`Error fetching users for incident ${incident.id}:`, usersError);
-                continue;
-            }
-
-            if (users) {
+        const incidentEmails = emailsByIncidentId[incident.id] || [];
+        if (incidentEmails.length > 0) {
+            const users = incidentEmails.map(e => usersByEmail[e]).filter(Boolean);
+            
+            if (users && users.length > 0) {
                 for (const user of users) {
                     const userData = {
                         email: user.email,

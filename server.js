@@ -80,14 +80,16 @@ const supabase = process.env.SUPABASE_URL
                                 }
                             }
                             return resolve({ count: 0, data: [] });
-                        }
+                        },
+                        catch: () => chain
                     };
                     return chain;
                 }, 
                 upsert: () => {
                     const chain = {
                         throwOnError: () => chain,
-                        then: (resolve) => resolve({})
+                        then: (resolve) => resolve({}),
+                        catch: () => chain
                     };
                     return chain;
                 },
@@ -95,7 +97,8 @@ const supabase = process.env.SUPABASE_URL
                     const chain = {
                         eq: () => chain,
                         throwOnError: () => chain,
-                        then: (resolve) => resolve({})
+                        then: (resolve) => resolve({}),
+                        catch: () => chain
                     };
                     return chain;
                 },
@@ -104,7 +107,8 @@ const supabase = process.env.SUPABASE_URL
                         select: () => chain,
                         single: () => chain,
                         throwOnError: () => chain,
-                        then: (resolve) => resolve({ data: { id: 1 }, error: null })
+                        then: (resolve) => resolve({ data: { id: 1 }, error: null }),
+                        catch: () => chain
                     };
                     return chain;
                 }
@@ -114,15 +118,19 @@ const supabase = process.env.SUPABASE_URL
 
 app.get('/api/stats', async (req, res) => {
     try {
-        const { count } = await supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError();
-        const { data: sysData } = await supabase.from('system_stats').select('last_report_time').eq('id', 1).maybeSingle().throwOnError();
-        
-        // Fetch only the absolute latest incident
-        const { data: recentIncidents } = await supabase.from('incidents')
-            .select('*')
-            .order('smell_timestamp', { ascending: false })
-            .limit(1)
-            .throwOnError();
+        const [
+            { count },
+            { data: sysData },
+            { data: recentIncidents }
+        ] = await Promise.all([
+            supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
+            supabase.from('system_stats').select('last_report_time').eq('id', 1).maybeSingle().throwOnError(),
+            supabase.from('incidents')
+                .select('*')
+                .order('smell_timestamp', { ascending: false })
+                .limit(1)
+                .throwOnError()
+        ]);
 
         let reportedIncidentIds = [];
         const userEmail = req.query.email;
@@ -167,7 +175,8 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
 
     try {
-        await supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError();
+        // Update stats without blocking the rest of the execution
+        supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError().catch(e => console.error('Failed to update stats', e));
 
         const now = new Date();
         if (!timeOfSmell) {
@@ -217,15 +226,18 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         
         const incidentId = newIncident.id;
 
+        const insertPromises = [];
         if (shareData) {
-            await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
+            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError());
         }
 
         // Even if they don't share data with community, we still track they reported it so the script runs for them
         if (email) {
-            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
-            if (error && error.code !== '23505') throw error;
+            insertPromises.push(supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
+                if (error && error.code !== '23505') throw error;
+            }));
         }
+        await Promise.all(insertPromises);
 
         res.json({ success: true, message: "Report triggered", incidentId });
 
@@ -240,10 +252,12 @@ app.post('/api/join', strictLimiter, async (req, res) => {
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
 
     try {
-        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
-        
-        const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email });
-        if (error && error.code !== '23505') throw error;
+        await Promise.all([
+            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError(),
+            supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
+                if (error && error.code !== '23505') throw error;
+            })
+        ]);
 
         res.json({ success: true, message: "Joined report successfully" });
     } catch (error) {

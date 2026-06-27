@@ -109,25 +109,25 @@ describe('run-scraper', () => {
             { id: 1, smell_timestamp: '2026-06-27 10:00:00', smell_type: 'sulfur', business_location: 'factory' }
         ];
 
-        const userReports = [{ user_email: 'test@example.com' }];
+        const userReports = [{ incident_id: 1, user_email: 'test@example.com' }];
         const users = [{ email: 'test@example.com', full_name: 'Test', postcode: '123', phone: '12345', address: '123 St' }];
 
-        // Mock fetch pending incidents
+        // 1. Mock fetch pending incidents (eq)
         mockSupabase.eq.mockResolvedValueOnce({ data: pendingIncidents, error: null });
         
-        // Mock update to processing
-        mockSupabase.eq.mockResolvedValueOnce({ error: null });
+        // 2. Mock fetch opted-in user reports (in)
+        mockSupabase.in.mockResolvedValueOnce({ data: userReports, error: null });
 
-        // Mock fetch opted-in user reports
-        mockSupabase.eq.mockResolvedValueOnce({ data: userReports, error: null });
-
-        // Mock fetch users
+        // 3. Mock fetch users (in)
         mockSupabase.in.mockResolvedValueOnce({ data: users, error: null });
+
+        // 4. Mock update to processing (eq)
+        mockSupabase.eq.mockResolvedValueOnce({ error: null });
 
         // Mock scraper throwing error
         submitGovForm.mockRejectedValueOnce(new Error('Scraper failed'));
 
-        // Mock update to completed
+        // 5. Mock update to completed (eq)
         mockSupabase.eq.mockResolvedValueOnce({ error: null });
 
         const runPromise = runFunc();

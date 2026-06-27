@@ -92,6 +92,11 @@
                 </div>
 
 
+                <!-- Loading State for Incidents -->
+                <div id="incident-loading-section" class="primary-action-section" style="text-align: center; color: var(--ink-light); margin-bottom: 2rem;">
+                    <div style="font-family: var(--font-mono); font-size: 0.9rem; text-transform: uppercase;">Checking for community reports...</div>
+                </div>
+
                 <!-- Active Incident Section (Shown if there's a recent event) -->
                 <div id="active-incident-section" class="primary-action-section hidden" style="border-color: var(--accent); background: var(--error-bg); margin-bottom: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
@@ -115,7 +120,7 @@
                 </div>
 
                 <!-- The Primary Action (Option 1) -->
-                <div id="new-incident-section" class="primary-action-section" style="text-align: left;">
+                <div id="new-incident-section" class="primary-action-section hidden" style="text-align: left;">
                     <h2 style="font-family: var(--font-mono); font-size: 1.25rem; text-transform: uppercase; margin-bottom: 0.25rem;">Log a new smell</h2>
                     <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.5rem;">Don't see your detection above? Be the first to start a report.</p>
                     <div class="input-grid" style="margin-bottom: 2rem;">

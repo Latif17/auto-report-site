@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const activeSection = document.getElementById('active-incident-section');
             const newSection = document.getElementById('new-incident-section');
+            const loadingSection = document.getElementById('incident-loading-section');
+            
+            if (loadingSection) loadingSection.classList.add('hidden');
             
             if (data.recentIncidents && data.recentIncidents.length > 0) {
                 const topIncident = data.recentIncidents[0];
