@@ -176,7 +176,9 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
     try {
         // Update stats without blocking the rest of the execution
-        supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).throwOnError().catch(e => console.error('Failed to update stats', e));
+        supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).then(({ error }) => {
+            if (error) console.error('Failed to update stats', error);
+        });
 
         const now = new Date();
         if (!timeOfSmell) {
