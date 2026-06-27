@@ -147,11 +147,7 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 6: Describe smell
         debugLog('Navigating to Page 6: Describe smell');
-        if (incidentData.smellType && incidentData.smellType !== 'Other') {
-            await clickLabel(page, incidentData.smellType);
-        } else {
-            await clickLabel(page, 'You cannot describe it');
-        }
+        await clickLabel(page, 'You cannot describe it');
         await goNext(page);
 
         // Page 7: Problems before?
@@ -253,19 +249,17 @@ async function submitGovForm(userData, incidentData) {
             if (ta) ta.value = desc || '';
         }, incidentData.description);
         
-        // Proceed to final review page
-        await goNext(page);
-        debugLog('Navigating to Final Review Page');
-        
         // Final submit
         if (isTestMode) {
             debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers (skipped in CI)...');
             if (!process.env.JEST_WORKER_ID && !process.env.GITHUB_ACTIONS && !process.env.CI) {
                 await new Promise(r => setTimeout(r, 300000));
             }
-        } else {
+        } else {            
+            // Submit
             await goNext(page);
-            
+            debugLog('Navigating to Result Page');
+        
             // Verify submission success
             try {
                 // Wait up to 5 seconds for the confirmation panel to appear

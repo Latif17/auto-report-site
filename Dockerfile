@@ -1,4 +1,4 @@
-FROM ghcr.io/puppeteer/puppeteer:21.11.0
+FROM ghcr.io/puppeteer/puppeteer:25.2.1
 
 USER root
 RUN mkdir -p /app && chown -R pptruser:pptruser /app
