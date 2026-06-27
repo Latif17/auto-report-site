@@ -77,3 +77,8 @@ Ran all test suites.
 - **Completeness:** All steps from the task brief were completed exactly as described.
 - **Quality:** Checked that paths resolve correctly relative to `__dirname` in all contexts.
 - **Discipline:** No overbuilding or unnecessary refactoring was introduced. Removed obsolete root files to prevent redundancy.
+
+## Re-review Fixes
+- Added `"engines": { "node": "^18.x" }` to `vercel/package.json` to enforce the Node.js version constraint.
+- Note: The root `package.json` and root `tests/` directory will be deleted in Tasks 4 and 5, so root-level updates for them are bypassed to avoid redundancy.
+
