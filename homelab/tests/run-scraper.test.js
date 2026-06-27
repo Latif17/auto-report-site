@@ -179,8 +179,8 @@ describe('run-scraper', () => {
             expect.any(Error)
         );
 
-        // Should still update to completed despite scraper error
-        expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'completed' });
+        // Should update status to pending on scraper error to allow retrying
+        expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'pending' });
     });
 
     it('should process both opted_in and pooled users, and cleanup unpooled users', async () => {
@@ -314,8 +314,9 @@ describe('run-scraper', () => {
         // Verify submitGovForm called for explicit user
         expect(submitGovForm).toHaveBeenCalledTimes(1);
 
-        // Verify delete query was NOT constructed/called
-        expect(mockSupabase.delete).not.toHaveBeenCalled();
+        // Verify delete query was NOT called for users table
+        const usersTableCalls = mockSupabase.from.mock.calls.filter(c => c[0] === 'users');
+        expect(usersTableCalls.length).toBe(2); // Only the two initial select queries, no delete query
 
         // Verify console.error logged the query failure
         expect(mockConsoleError).toHaveBeenCalledWith(

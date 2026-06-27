@@ -113,6 +113,7 @@ async function processQueue() {
 
         const incidentEmails = emailsByIncidentId[incident.id] || [];
         let users = [];
+        const successfulUsers = [];
         if (incidentEmails.length > 0) {
             users = incidentEmails.map(e => usersByEmail[e]).filter(Boolean);
             
@@ -138,7 +139,23 @@ async function processQueue() {
                     console.log(`Submitting report for ${userData.email}...`);
                     
                     try {
-                        await submitGovForm(userData, incidentData);
+                        const success = await submitGovForm(userData, incidentData);
+                        if (success) {
+                            successfulUsers.push(user);
+                            if (!user.pool_data) {
+                                // Delete this specific report link immediately so it's not retried
+                                const { error: deleteLinkError } = await supabase
+                                    .from('opted_in_user_reports')
+                                    .delete()
+                                    .eq('incident_id', incident.id)
+                                    .eq('user_email', user.email);
+                                if (deleteLinkError) {
+                                    console.error(`Error deleting report link for ${user.email}:`, deleteLinkError);
+                                }
+                            }
+                        } else {
+                            console.error(`Failed to submit report for ${userData.email}. Will keep user/report in queue.`);
+                        }
                     } catch (submitError) {
                         console.error(`Error submitting form for ${userData.email}:`, submitError);
                     }
@@ -150,8 +167,8 @@ async function processQueue() {
             }
         }
 
-        // Cleanup unpooled users
-        const unpooledProcessed = users.filter(u => !u.pool_data).map(u => u.email);
+        // Cleanup unpooled users who successfully submitted
+        const unpooledProcessed = successfulUsers.filter(u => !u.pool_data).map(u => u.email);
         if (unpooledProcessed.length > 0) {
             const { data: otherPending, error: otherPendingError } = await supabase
                 .from('opted_in_user_reports')
@@ -167,11 +184,7 @@ async function processQueue() {
                 const emailsToDelete = unpooledProcessed.filter(e => !emailsWithOtherPending.has(e));
                 
                 if (emailsToDelete.length > 0) {
-                    console.log(`Deleting ${emailsToDelete.length} unpooled user records and associated reports...`);
-                    const { error: deleteReportsError } = await supabase.from('opted_in_user_reports').delete().in('user_email', emailsToDelete);
-                    if (deleteReportsError) {
-                        console.error("Error deleting unpooled user reports:", deleteReportsError);
-                    }
+                    console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
                     const { error: deleteError } = await supabase.from('users').delete().in('email', emailsToDelete);
                     if (deleteError) {
                         console.error("Error deleting unpooled users:", deleteError);
@@ -180,14 +193,18 @@ async function processQueue() {
             }
         }
 
-        // Mark as completed
-        const { error: updateCompletedError } = await supabase
+        // Mark incident status based on whether all submissions succeeded
+        const allSucceeded = successfulUsers.length === users.length;
+        const targetStatus = allSucceeded ? 'completed' : 'pending';
+        console.log(`Incident ${incident.id} processed: ${successfulUsers.length}/${users.length} succeeded. Setting status to: ${targetStatus}`);
+        
+        const { error: updateStatusError } = await supabase
             .from('incidents')
-            .update({ status: 'completed' })
+            .update({ status: targetStatus })
             .eq('id', incident.id);
 
-        if (updateCompletedError) {
-            console.error(`Error updating incident ${incident.id} to completed:`, updateCompletedError);
+        if (updateStatusError) {
+            console.error(`Error updating incident ${incident.id} to ${targetStatus}:`, updateStatusError);
         } else {
             console.log(`Finished processing incident ${incident.id}.`);
         }
