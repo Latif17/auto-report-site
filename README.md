@@ -60,5 +60,3 @@ This project uses **Vercel** for the frontend and Express API, **GitHub Actions*
 - Import your repository. Vercel will automatically detect the configuration from `vercel.json`.
 - Under **Environment Variables**, add the `SUPABASE_URL` and `SUPABASE_KEY` variables.
 - Click **Deploy**.
-
-Your site is now live! Vercel handles the instant web traffic, while GitHub Actions handles the heavy automated browser reporting in the background.
