@@ -159,6 +159,13 @@
             <p>Data stored locally. <a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a></p>
         </footer>
     </div>
-    <script src="app.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "@vercel/analytics": "https://esm.sh/@vercel/analytics"
+            }
+        }
+    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

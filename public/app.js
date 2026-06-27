@@ -1,3 +1,7 @@
+import { inject } from "@vercel/analytics";
+
+inject();
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('report-form');
     const submitBtn = document.getElementById('submit-btn');
