@@ -239,19 +239,6 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
         await Promise.all(insertPromises);
 
-        // --- LOCAL TESTING HOOK ---
-        // If there's no real DB connection, trigger the scraper directly in the background
-        if (!process.env.SUPABASE_URL) {
-            console.log("Local Mock Mode: Triggering scraper directly without database...");
-            process.env.TEST_MODE = 'true'; // FORCE test mode to prevent accidental real submissions
-            const { submitGovForm } = require('./scraper');
-            const userData = { email, fullName, postcode, phone, address };
-            const incidentData = { dateOfSmell, timeOfSmell, smellType, businessLocation };
-            
-            // Run asynchronously so it doesn't block the frontend response
-            submitGovForm(userData, incidentData).catch(e => console.error("Mock scraper error:", e));
-        }
-
         res.json({ success: true, message: "Report triggered", incidentId });
 
     } catch (error) {
