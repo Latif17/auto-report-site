@@ -12,6 +12,6 @@ RUN npm ci
 COPY --chown=pptruser:pptruser . .
 
 ENV DAEMON_MODE=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
 
 CMD ["node", "run-scraper.js"]
