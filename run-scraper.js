@@ -80,10 +80,13 @@ async function run() {
                         phone: user.phone,
                         address: user.address
                     };
-                    const [datePart, timePart] = incident.smell_timestamp.replace('T', ' ').split(' ');
+                    const tsDate = new Date(incident.smell_timestamp);
+                    const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+                    const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
+                    
                     const incidentData = {
-                        dateOfSmell: datePart,
-                        timeOfSmell: timePart.substring(0, 5),
+                        dateOfSmell: dateFormatter.format(tsDate),
+                        timeOfSmell: timeFormatter.format(tsDate),
                         smellType: incident.smell_type,
                         businessLocation: incident.business_location
                     };

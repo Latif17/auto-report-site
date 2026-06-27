@@ -183,7 +183,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Check for duplicates
-        const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00`;
+        const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00 Europe/London`;
         let query = supabase.from('incidents')
             .select('id')
             .eq('smell_timestamp', smellTimestamp);

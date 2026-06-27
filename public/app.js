@@ -44,9 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const topIncident = data.recentIncidents[0];
                 const isReported = topIncident.alreadyReported || localReported.includes(topIncident.id);
                 
-                const tsDate = new Date(topIncident.smell_timestamp.replace(' ', 'T'));
-                const formattedDate = tsDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-                const formattedTime = tsDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                const tsDate = new Date(topIncident.smell_timestamp);
+                const formattedDate = tsDate.toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short' });
+                const formattedTime = tsDate.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
                 document.getElementById('active-incident-time').textContent = `${formattedDate} - ${formattedTime}`;
                 document.getElementById('active-incident-location').textContent = `Reported: ${topIncident.business_location}`;
                 
