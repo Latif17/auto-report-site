@@ -1,12 +1,15 @@
-FROM ghcr.io/puppeteer/puppeteer:latest
+FROM ghcr.io/puppeteer/puppeteer:21.11.0
 
 USER root
-WORKDIR /app
+RUN mkdir -p /app && chown -R pptruser:pptruser /app
 
-COPY package*.json ./
+WORKDIR /app
+USER pptruser
+
+COPY --chown=pptruser:pptruser package*.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=pptruser:pptruser . .
 
 ENV DAEMON_MODE=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
