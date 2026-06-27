@@ -17,49 +17,85 @@ Previously, the only recourse for the community was organizing manual mass repor
 
 **This tool was built to automate the reporting process** for Barking Riverside residents based on these known culprits, ensuring that incidents are consistently and systematically logged to hold the responsible parties accountable.
 
-## Tech Stack & Architecture
+## Repository Structure & Decoupled Architecture
 
-- **Frontend:** Vanilla HTML, CSS, and JavaScript. Kept simple and lightweight to ensure fast loading times and ease of use.
-- **Backend API:** Node.js with Express. Receives report submissions from the frontend and queues them in the database.
-- **Automation / Scraping:** Puppeteer. Used to run a headless browser that automates filling out and submitting the government's environmental problem form.
-- **Database:** Supabase (PostgreSQL). Stores user details, incident logs, and the reporting queue.
+The repository is organized into distinct deployment-specific folders:
 
-### Deployment Choices
+- **`vercel/` (Web Application & Server API):**
+  - Contains the frontend client (`public/`) and serverless Express API endpoints (`server.js`).
+  - Optimized package configuration (no Puppeteer dependency) for fast serverless build times and low cold-start latency.
+- **`homelab/` (Dockerized Scraper Daemon):**
+  - Contains the background worker daemon (`run-scraper.js`, `scraper.js`, `utils.js`) and Docker configs (`Dockerfile`, `docker-compose.yml`).
+  - Manages browser automation dependencies independently.
+- **`supabase/` (Database Schemas):**
+  - Contains the PostgreSQL schemas and migration scripts (`schema.sql`, `schema_update.sql`, `schema_update_pool_data.sql`).
 
-- **Vercel (Frontend & API):** Chosen for its excellent serverless capabilities. It allows the static frontend and the Express API to be hosted with instant scaling and minimal configuration.
-- **GitHub Actions (Scraper Cron Job):** Because serverless functions (like those on Vercel) have strict timeout limits and struggle to run full headless browsers, we use GitHub Actions. It runs a scheduled job every 5 minutes (`scraper.yml`) to execute Puppeteer and reliably process the queued reports.
-- **Supabase (Database):** Provides a managed PostgreSQL database that integrates seamlessly with both our serverless API and our GitHub Actions scraper.
+---
 
 ## Local Development
 
-1. **Environment Variables:**
-   - Ensure you have `SUPABASE_URL` and `SUPABASE_KEY` available if connecting to a real database, or let it run without them for mock mode.
-2. **Install and Run:**
+### 1. Web Frontend & API (`vercel/`)
+1. Navigate to the web folder:
+   ```bash
+   cd vercel
+   ```
+2. Install dependencies:
    ```bash
    npm install
+   ```
+3. Run the development server:
+   ```bash
    npm start
    ```
-3. **View the App:**
-   - Open your browser to `http://localhost:3000`.
+4. Access the web app in your browser at `http://localhost:3000`.
 
-## Deployment
+### 2. Scraper Worker (`homelab/`)
+1. Navigate to the worker folder:
+   ```bash
+   cd homelab
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the scraper daemon locally:
+   ```bash
+   npm start
+   ```
 
-This project uses **Vercel** for the frontend and Express API, **GitHub Actions** for the background scheduled task, and **Supabase** for the PostgreSQL database.
+---
+
+## Deployment Setup
 
 ### 1. Database Setup (Supabase)
-- Create a free project at [Supabase](https://supabase.com).
-- Go to the SQL Editor and run the SQL from `supabase/schema.sql` to initialize the tables.
-- **For existing setups:** Be sure to also run the SQL from `supabase/schema_update.sql` to apply the latest security patches and drop old insecure public access policies.
-- Retrieve your Project URL and Secret Key from Project Settings > API.
+- Create a project on [Supabase](https://supabase.com).
+- Open the SQL Editor and run the schemas in the following order:
+  1. `supabase/schema.sql`
+  2. `supabase/schema_update.sql`
+  3. `supabase/schema_update_pool_data.sql`
+- Copy your `Project URL` and `Secret Key` from **Project Settings > API**.
 
-### 2. Backend Scheduled Task Setup (GitHub Actions)
-- In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
-- Create a **New repository secret** called `SUPABASE_URL` and paste your project URL.
-- Create another secret called `SUPABASE_KEY` and paste your Secret Key.
-- The GitHub Action (`.github/workflows/scraper.yml`) will now run automatically every 5 minutes to process queued smell reports.
+### 2. Web & API Setup (Vercel)
+- Create an account on [Vercel](https://vercel.com) and import this repository.
+- **Important:** Under **Project Settings > General**, set the **Root Directory** to `vercel`.
+- Add `SUPABASE_URL` and `SUPABASE_KEY` as Environment Variables.
+- Deploy the project.
 
-### 3. Frontend & API Setup (Vercel)
-- Create a free account at [Vercel](https://vercel.com) and link your GitHub account.
-- Import your repository. Vercel will automatically detect the configuration from `vercel.json`.
-- Under **Environment Variables**, add the `SUPABASE_URL` and `SUPABASE_KEY` variables.
-- Click **Deploy**.
+### 3. Background Scraper Setup (Homelab or GitHub Actions)
+
+#### Option A: Homelab (Docker Compose)
+- Copy the `.env.example` file to `homelab/.env` and populate your Supabase credentials:
+  ```env
+  SUPABASE_URL=your-supabase-url
+  SUPABASE_KEY=your-supabase-key
+  ```
+- Build and launch the container daemon:
+  ```bash
+  cd homelab
+  docker-compose up -d
+  ```
+
+#### Option B: GitHub Actions (Scheduled Scraper)
+- Go to your repository settings: **Settings > Secrets and variables > Actions**.
+- Create two secrets: `SUPABASE_URL` and `SUPABASE_KEY`.
+- The scheduled cron job in `.github/workflows/scraper.yml` will automatically poll and process queued reports every 5 minutes.
