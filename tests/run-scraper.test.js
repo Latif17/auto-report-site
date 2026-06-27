@@ -444,4 +444,89 @@ describe('run-scraper', () => {
         // Verify delete error is logged
         expect(mockConsoleError).toHaveBeenCalledWith("Error deleting unpooled users:", { message: 'delete failed' });
     });
+
+    it('should run in daemon mode and poll periodically', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            process.env.DAEMON_MODE = 'true';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // First iteration: no pending incidents, should just return
+        mockEqResponses.push({ data: [], error: null });
+
+        // Second iteration: fetch incidents fails with unhandled error to break the loop
+        mockEqResponses.push({
+            get data() {
+                throw new Error('Break loop');
+            }
+        });
+
+        const runPromise = runFunc();
+
+        // Let the first iteration run
+        await Promise.resolve();
+
+        const expectation = expect(runPromise).rejects.toThrow('Break loop');
+
+        // Advance timers by 2 minutes to trigger the second iteration
+        if (jest.runAllTimersAsync) {
+            await jest.advanceTimersByTimeAsync(120000);
+        } else {
+            jest.advanceTimersByTime(120000);
+            await Promise.resolve();
+        }
+
+        // Wait for the runPromise to reject (which breaks the loop)
+        await expectation;
+
+        expect(mockConsoleLog).toHaveBeenCalledWith("Starting scraper worker...");
+        expect(mockConsoleLog).toHaveBeenCalledWith("Daemon mode active. Polling every 2 minutes.");
+        expect(mockConsoleLog).toHaveBeenCalledWith("No pending incidents found.");
+        expect(mockExit).not.toHaveBeenCalled();
+    });
+
+    it('should log db error and not exit when in daemon mode', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            process.env.DAEMON_MODE = 'true';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // First iteration: fetch incidents fails with db error
+        mockEqResponses.push({ data: null, error: { message: 'db connection error' } });
+
+        // Second iteration: break the loop
+        mockEqResponses.push({
+            get data() {
+                throw new Error('Break loop');
+            }
+        });
+
+        const runPromise = runFunc();
+
+        // Let the first iteration run
+        await Promise.resolve();
+
+        const expectation = expect(runPromise).rejects.toThrow('Break loop');
+
+        // Advance timers by 2 minutes to trigger the second iteration
+        if (jest.runAllTimersAsync) {
+            await jest.advanceTimersByTimeAsync(120000);
+        } else {
+            jest.advanceTimersByTime(120000);
+            await Promise.resolve();
+        }
+
+        await expectation;
+
+        expect(mockConsoleError).toHaveBeenCalledWith("Error fetching incidents:", { message: 'db connection error' });
+        expect(mockExit).not.toHaveBeenCalled();
+    });
 });

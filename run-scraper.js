@@ -7,7 +7,7 @@ const supabase = process.env.SUPABASE_URL
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : null;
 
-async function run() {
+async function processQueue() {
     if (!supabase) {
         console.error("Missing Supabase credentials.");
         process.exit(1);
@@ -22,13 +22,19 @@ async function run() {
 
     if (fetchError) {
         console.error("Error fetching incidents:", fetchError);
-        process.exit(1);
+        if (process.env.DAEMON_MODE !== 'true') {
+            process.exit(1);
+        }
         return;
     }
 
     if (!pendingIncidents || pendingIncidents.length === 0) {
-        console.log("No pending incidents found. Exiting.");
-        process.exit(0);
+        if (process.env.DAEMON_MODE === 'true') {
+            console.log("No pending incidents found.");
+        } else {
+            console.log("No pending incidents found. Exiting.");
+            process.exit(0);
+        }
         return;
     }
 
@@ -41,7 +47,9 @@ async function run() {
 
     if (reportsError) {
         console.error("Error fetching opted-in user reports:", reportsError);
-        process.exit(1);
+        if (process.env.DAEMON_MODE !== 'true') {
+            process.exit(1);
+        }
         return;
     }
 
@@ -54,7 +62,9 @@ async function run() {
         
     if (pooledError) {
         console.error("Error fetching pooled users:", pooledError);
-        process.exit(1);
+        if (process.env.DAEMON_MODE !== 'true') {
+            process.exit(1);
+        }
         return;
     }
     
@@ -70,7 +80,9 @@ async function run() {
             .in('email', allEmails);
         if (usersError) {
             console.error("Error fetching user details by emails:", usersError);
-            process.exit(1);
+            if (process.env.DAEMON_MODE !== 'true') {
+                process.exit(1);
+            }
             return;
         }
         allUsers = usersData || [];
@@ -178,6 +190,19 @@ async function run() {
     }
 }
 
+async function run() {
+    console.log("Starting scraper worker...");
+    if (process.env.DAEMON_MODE === 'true') {
+        console.log("Daemon mode active. Polling every 2 minutes.");
+        while(true) {
+            await processQueue();
+            await new Promise(r => setTimeout(r, 120000));
+        }
+    } else {
+        await processQueue();
+    }
+}
+
 if (require.main === module) {
     run().catch(err => {
         console.error(err);
@@ -185,4 +210,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { run };
+module.exports = { run, processQueue };
