@@ -81,9 +81,7 @@ The repository is organized into distinct deployment-specific folders:
 - Add `SUPABASE_URL` and `SUPABASE_KEY` as Environment Variables.
 - Deploy the project.
 
-### 3. Background Scraper Setup (Homelab or GitHub Actions)
-
-#### Option A: Homelab (Docker Compose)
+### 3. Background Scraper Setup (Homelab)
 - Copy the `.env.example` file to `homelab/.env` and populate your Supabase credentials:
   ```env
   SUPABASE_URL=your-supabase-url
@@ -94,8 +92,3 @@ The repository is organized into distinct deployment-specific folders:
   cd homelab
   docker-compose up -d
   ```
-
-#### Option B: GitHub Actions (Scheduled Scraper)
-- Go to your repository settings: **Settings > Secrets and variables > Actions**.
-- Create two secrets: `SUPABASE_URL` and `SUPABASE_KEY`.
-- The scheduled cron job in `.github/workflows/scraper.yml` will automatically poll and process queued reports every 5 minutes.
