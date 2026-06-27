@@ -34,25 +34,47 @@ async function run() {
 
     // --- BATCH FETCH DATA TO PREVENT N+1 QUERIES ---
     const incidentIds = pendingIncidents.map(i => i.id);
-    const { data: allUserReports } = await supabase
+    const { data: allUserReports, error: reportsError } = await supabase
         .from('opted_in_user_reports')
         .select('incident_id, user_email')
         .in('incident_id', incidentIds);
 
+    if (reportsError) {
+        console.error("Error fetching opted-in user reports:", reportsError);
+        process.exit(1);
+        return;
+    }
+
     const explicitEmails = (allUserReports || []).map(r => r.user_email);
     
-    const { data: pooledUsersRecord } = await supabase
+    const { data: pooledUsersRecord, error: pooledError } = await supabase
         .from('users')
         .select('email')
         .eq('pool_data', true);
         
+    if (pooledError) {
+        console.error("Error fetching pooled users:", pooledError);
+        process.exit(1);
+        return;
+    }
+    
     const pooledEmails = (pooledUsersRecord || []).map(u => u.email);
     
     const allEmails = [...new Set([...explicitEmails, ...pooledEmails])];
     
-    const { data: allUsers } = allEmails.length > 0
-        ? await supabase.from('users').select('*').in('email', allEmails)
-        : { data: [] };
+    let allUsers = [];
+    if (allEmails.length > 0) {
+        const { data: usersData, error: usersError } = await supabase
+            .from('users')
+            .select('*')
+            .in('email', allEmails);
+        if (usersError) {
+            console.error("Error fetching user details by emails:", usersError);
+            process.exit(1);
+            return;
+        }
+        allUsers = usersData || [];
+    }
 
     const usersByEmail = (allUsers || []).reduce((acc, user) => { acc[user.email] = user; return acc; }, {});
     
@@ -117,7 +139,7 @@ async function run() {
         }
 
         // Cleanup unpooled users
-        const unpooledProcessed = users.filter(u => u.pool_data === false).map(u => u.email);
+        const unpooledProcessed = users.filter(u => !u.pool_data).map(u => u.email);
         if (unpooledProcessed.length > 0) {
             const { data: otherPending, error: otherPendingError } = await supabase
                 .from('opted_in_user_reports')
@@ -134,7 +156,10 @@ async function run() {
                 
                 if (emailsToDelete.length > 0) {
                     console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
-                    await supabase.from('users').delete().in('email', emailsToDelete);
+                    const { error: deleteError } = await supabase.from('users').delete().in('email', emailsToDelete);
+                    if (deleteError) {
+                        console.error("Error deleting unpooled users:", deleteError);
+                    }
                 }
             }
         }

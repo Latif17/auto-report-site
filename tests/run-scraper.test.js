@@ -323,4 +323,125 @@ describe('run-scraper', () => {
             { message: 'db failure' }
         );
     });
+
+    it('should exit if fetching opted-in user reports fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: [{ id: 1 }], error: null });
+        // 2. Fetch opted-in reports (in) -> fail
+        mockInResponses.push({ data: null, error: { message: 'opted-in reports query failed' } });
+
+        await runFunc();
+
+        expect(mockConsoleError).toHaveBeenCalledWith("Error fetching opted-in user reports:", { message: 'opted-in reports query failed' });
+        expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('should exit if fetching pooled users fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: [{ id: 1 }], error: null });
+        // 2. Fetch opted-in reports (in)
+        mockInResponses.push({ data: [], error: null });
+        // 3. Fetch pooled users (eq) -> fail
+        mockEqResponses.push({ data: null, error: { message: 'pooled users query failed' } });
+
+        await runFunc();
+
+        expect(mockConsoleError).toHaveBeenCalledWith("Error fetching pooled users:", { message: 'pooled users query failed' });
+        expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('should exit if fetching user details by emails fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: [{ id: 1 }], error: null });
+        // 2. Fetch opted-in reports (in)
+        mockInResponses.push({ data: [{ incident_id: 1, user_email: 'test@example.com' }], error: null });
+        // 3. Fetch pooled users (eq)
+        mockEqResponses.push({ data: [], error: null });
+        // 4. Fetch details of all users (in) -> fail
+        mockInResponses.push({ data: null, error: { message: 'user details query failed' } });
+
+        await runFunc();
+
+        expect(mockConsoleError).toHaveBeenCalledWith("Error fetching user details by emails:", { message: 'user details query failed' });
+        expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('should log an error if deleting unpooled users fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        const pendingIncidents = [
+            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
+        ];
+
+        const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
+        const pooledUsers = [];
+        const users = [
+            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false }
+        ];
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: pendingIncidents, error: null });
+        // 2. Fetch opted-in reports (in)
+        mockInResponses.push({ data: userReports, error: null });
+        // 3. Fetch pooled users record (eq)
+        mockEqResponses.push({ data: pooledUsers, error: null });
+        // 4. Fetch details of all users (in)
+        mockInResponses.push({ data: users, error: null });
+        // 5. Update status to processing (eq)
+        mockEqResponses.push({ error: null });
+
+        // Mock scraper successful submissions
+        submitGovForm.mockResolvedValue(true);
+
+        // 6. Check other pending reports (neq)
+        mockNeqResponses.push({ data: [], error: null });
+        // 7. Delete explicit@example.com (in) -> fail
+        mockInResponses.push({ error: { message: 'delete failed' } });
+        // 8. Update status to completed (eq)
+        mockEqResponses.push({ error: null });
+
+        const runPromise = runFunc();
+        if (jest.runAllTimersAsync) {
+            await jest.runAllTimersAsync();
+        } else {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+                jest.runAllTimers();
+            }
+        }
+        await runPromise;
+
+        // Verify delete error is logged
+        expect(mockConsoleError).toHaveBeenCalledWith("Error deleting unpooled users:", { message: 'delete failed' });
+    });
 });
