@@ -39,17 +39,28 @@ async function run() {
         .select('incident_id, user_email')
         .in('incident_id', incidentIds);
 
-    const allEmails = [...new Set((allUserReports || []).map(r => r.user_email))];
+    const explicitEmails = (allUserReports || []).map(r => r.user_email);
+    
+    const { data: pooledUsersRecord } = await supabase
+        .from('users')
+        .select('email')
+        .eq('pool_data', true);
+        
+    const pooledEmails = (pooledUsersRecord || []).map(u => u.email);
+    
+    const allEmails = [...new Set([...explicitEmails, ...pooledEmails])];
+    
     const { data: allUsers } = allEmails.length > 0
         ? await supabase.from('users').select('*').in('email', allEmails)
         : { data: [] };
 
     const usersByEmail = (allUsers || []).reduce((acc, user) => { acc[user.email] = user; return acc; }, {});
-    const emailsByIncidentId = (allUserReports || []).reduce((acc, report) => {
-        if (!acc[report.incident_id]) acc[report.incident_id] = [];
-        acc[report.incident_id].push(report.user_email);
-        return acc;
-    }, {});
+    
+    const emailsByIncidentId = {};
+    for (const incident of pendingIncidents) {
+        const explicitForIncident = (allUserReports || []).filter(r => r.incident_id === incident.id).map(r => r.user_email);
+        emailsByIncidentId[incident.id] = [...new Set([...explicitForIncident, ...pooledEmails])];
+    }
     // --- END BATCH FETCH ---
 
     for (const incident of pendingIncidents) {
@@ -67,8 +78,9 @@ async function run() {
         }
 
         const incidentEmails = emailsByIncidentId[incident.id] || [];
+        let users = [];
         if (incidentEmails.length > 0) {
-            const users = incidentEmails.map(e => usersByEmail[e]).filter(Boolean);
+            users = incidentEmails.map(e => usersByEmail[e]).filter(Boolean);
             
             if (users && users.length > 0) {
                 for (const user of users) {
@@ -101,6 +113,25 @@ async function run() {
                     console.log(`Waiting 5-15s before next submission...`);
                     await randomDelay(5000, 15000);
                 }
+            }
+        }
+
+        // Cleanup unpooled users
+        const unpooledProcessed = users.filter(u => u.pool_data === false).map(u => u.email);
+        if (unpooledProcessed.length > 0) {
+            const { data: otherPending } = await supabase
+                .from('opted_in_user_reports')
+                .select('user_email, incidents!inner(status)')
+                .in('user_email', unpooledProcessed)
+                .eq('incidents.status', 'pending')
+                .neq('incident_id', incident.id);
+                
+            const emailsWithOtherPending = new Set((otherPending || []).map(r => r.user_email));
+            const emailsToDelete = unpooledProcessed.filter(e => !emailsWithOtherPending.has(e));
+            
+            if (emailsToDelete.length > 0) {
+                console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
+                await supabase.from('users').delete().in('email', emailsToDelete);
             }
         }
 

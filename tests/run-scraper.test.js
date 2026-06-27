@@ -11,6 +11,10 @@ describe('run-scraper', () => {
     let mockConsoleError;
     let mockConsoleLog;
 
+    let mockInResponses = [];
+    let mockEqResponses = [];
+    let mockNeqResponses = [];
+
     beforeEach(() => {
         jest.clearAllMocks();
 
@@ -20,13 +24,34 @@ describe('run-scraper', () => {
         mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
         mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
 
+        mockInResponses = [];
+        mockEqResponses = [];
+        mockNeqResponses = [];
+
         // Setup mock Supabase client chain
         mockSupabase = {
             from: jest.fn().mockReturnThis(),
             select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
             update: jest.fn().mockReturnThis(),
-            in: jest.fn().mockReturnThis(),
+            delete: jest.fn().mockReturnThis(),
+            in: jest.fn().mockImplementation((column, values) => {
+                if (column === 'user_email') {
+                    return mockSupabase;
+                }
+                const nextVal = mockInResponses.shift();
+                return Promise.resolve(nextVal || { data: [], error: null });
+            }),
+            eq: jest.fn().mockImplementation((column, value) => {
+                if (column === 'incidents.status') {
+                    return mockSupabase;
+                }
+                const nextVal = mockEqResponses.shift();
+                return Promise.resolve(nextVal || { data: [], error: null });
+            }),
+            neq: jest.fn().mockImplementation((column, value) => {
+                const nextVal = mockNeqResponses.shift();
+                return Promise.resolve(nextVal || { data: [], error: null });
+            }),
         };
 
         createClient.mockReturnValue(mockSupabase);
@@ -34,8 +59,6 @@ describe('run-scraper', () => {
         // Ensure supabase client is initialized
         process.env.SUPABASE_URL = 'http://localhost';
         process.env.SUPABASE_KEY = 'test-key';
-        
-        // Re-require to pick up env vars if necessary (though it's cached, so we might need to reset modules if we were testing the init, but we're testing `run`)
     });
 
     afterEach(() => {
@@ -46,9 +69,6 @@ describe('run-scraper', () => {
     });
 
     it('should exit if supabase is not initialized', async () => {
-        // We'll simulate this by mocking the internal check. Since supabase is a module-level variable,
-        // we can't easily reset it without jest.resetModules(). Let's use jest.isolateModules.
-        
         let runFunc;
         jest.isolateModules(() => {
             process.env.SUPABASE_URL = '';
@@ -71,7 +91,7 @@ describe('run-scraper', () => {
             runFunc = module.run;
         });
 
-        mockSupabase.eq.mockResolvedValueOnce({ data: null, error: { message: 'db error' } });
+        mockEqResponses.push({ data: null, error: { message: 'db error' } });
 
         await runFunc();
 
@@ -88,7 +108,7 @@ describe('run-scraper', () => {
             runFunc = module.run;
         });
 
-        mockSupabase.eq.mockResolvedValueOnce({ data: [], error: null });
+        mockEqResponses.push({ data: [], error: null });
 
         await runFunc();
 
@@ -110,29 +130,30 @@ describe('run-scraper', () => {
         ];
 
         const userReports = [{ incident_id: 1, user_email: 'test@example.com' }];
-        const users = [{ email: 'test@example.com', full_name: 'Test', postcode: '123', phone: '12345', address: '123 St' }];
+        const users = [{ email: 'test@example.com', full_name: 'Test', postcode: '123', phone: '12345', address: '123 St', pool_data: true }];
 
         // 1. Mock fetch pending incidents (eq)
-        mockSupabase.eq.mockResolvedValueOnce({ data: pendingIncidents, error: null });
+        mockEqResponses.push({ data: pendingIncidents, error: null });
         
         // 2. Mock fetch opted-in user reports (in)
-        mockSupabase.in.mockResolvedValueOnce({ data: userReports, error: null });
+        mockInResponses.push({ data: userReports, error: null });
 
-        // 3. Mock fetch users (in)
-        mockSupabase.in.mockResolvedValueOnce({ data: users, error: null });
+        // 3. Mock fetch pooled users (eq)
+        mockEqResponses.push({ data: [], error: null });
 
-        // 4. Mock update to processing (eq)
-        mockSupabase.eq.mockResolvedValueOnce({ error: null });
+        // 4. Mock fetch users (in)
+        mockInResponses.push({ data: users, error: null });
+
+        // 5. Mock update to processing (eq)
+        mockEqResponses.push({ error: null });
 
         // Mock scraper throwing error
         submitGovForm.mockRejectedValueOnce(new Error('Scraper failed'));
 
-        // 5. Mock update to completed (eq)
-        mockSupabase.eq.mockResolvedValueOnce({ error: null });
+        // 6. Mock update to completed (eq)
+        mockEqResponses.push({ error: null });
 
         const runPromise = runFunc();
-        // Since we have async operations before the timer, we need to let the event loop process them
-        // before advancing the timers. We can use runAllTimersAsync if available, or a simple loop.
         if (jest.runAllTimersAsync) {
             await jest.runAllTimersAsync();
         } else {
@@ -160,5 +181,79 @@ describe('run-scraper', () => {
 
         // Should still update to completed despite scraper error
         expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'completed' });
+    });
+
+    it('should process both opted_in and pooled users, and cleanup unpooled users', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        const pendingIncidents = [
+            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
+        ];
+
+        const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
+        const pooledUsers = [{ email: 'pooled@example.com' }];
+        const users = [
+            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false },
+            { email: 'pooled@example.com', full_name: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2', pool_data: true }
+        ];
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: pendingIncidents, error: null });
+        
+        // 2. Fetch opted-in reports (in)
+        mockInResponses.push({ data: userReports, error: null });
+
+        // 3. Fetch pooled users record (eq)
+        mockEqResponses.push({ data: pooledUsers, error: null });
+
+        // 4. Fetch details of all users (in)
+        mockInResponses.push({ data: users, error: null });
+
+        // 5. Update status to processing (eq)
+        mockEqResponses.push({ error: null });
+
+        // Mock scraper successful submissions
+        submitGovForm.mockResolvedValue(true);
+
+        // 6. Check other pending reports for explicit@example.com (neq)
+        mockNeqResponses.push({ data: [], error: null });
+
+        // 7. Delete explicit@example.com (in)
+        mockInResponses.push({ error: null });
+
+        // 8. Update status to completed (eq)
+        mockEqResponses.push({ error: null });
+
+        const runPromise = runFunc();
+        if (jest.runAllTimersAsync) {
+            await jest.runAllTimersAsync();
+        } else {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+                jest.runAllTimers();
+            }
+        }
+        await runPromise;
+
+        // Verify submitGovForm called for BOTH users
+        expect(submitGovForm).toHaveBeenCalledTimes(2);
+        expect(submitGovForm).toHaveBeenNthCalledWith(1,
+            { email: 'explicit@example.com', fullName: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1' },
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'chemical', businessLocation: 'dump' }
+        );
+        expect(submitGovForm).toHaveBeenNthCalledWith(2,
+            { email: 'pooled@example.com', fullName: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2' },
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'chemical', businessLocation: 'dump' }
+        );
+
+        // Verify delete query was constructed for explicit@example.com (since pool_data is false)
+        expect(mockSupabase.delete).toHaveBeenCalled();
+        expect(mockSupabase.in).toHaveBeenCalledWith('email', ['explicit@example.com']);
     });
 });
