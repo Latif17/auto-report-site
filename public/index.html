@@ -15,7 +15,7 @@
         <header class="dossier-header">
             <div class="header-top">
                 <span class="classification">CONFIDENTIAL // EVIDENCE LOG</span>
-                <span class="case-number">CASE: BARKING-RIVERSIDE-01</span>
+                <span class="case-number">CASE: BARKING-RIVERSIDE</span>
             </div>
             <h1>Stink Log</h1>
             <p class="subject">SUBJECT: ReFoods UK, Veolia, East London BioGas</p>
@@ -41,8 +41,13 @@
                             </div>
 
                             <div class="input-group">
-                                <label for="email">Email Address</label>
-                                <input type="email" id="email" name="email" required placeholder="jane@example.com">
+                                <label for="phone">Phone Number (Optional)</label>
+                                <input type="tel" id="phone" name="phone" placeholder="07700 900000">
+                            </div>
+
+                            <div class="input-group">
+                                <label for="address">Address Line 1</label>
+                                <input type="text" id="address" name="address" required placeholder="123 Riverside Way">
                             </div>
 
                             <div class="input-group">
@@ -50,14 +55,9 @@
                                 <input type="text" id="postcode" name="postcode" required placeholder="IG11 0YP">
                             </div>
 
-                            <div class="input-group">
-                                <label for="phone">Phone Number (Optional)</label>
-                                <input type="tel" id="phone" name="phone" placeholder="07700 900000">
-                            </div>
-
                             <div class="input-group full-width">
-                                <label for="address">Address Line 1</label>
-                                <input type="text" id="address" name="address" required placeholder="123 Riverside Way">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="email" required placeholder="jane@example.com">
                             </div>
                         </div>
 
@@ -139,6 +139,10 @@
                             <input type="time" id="timeOfSmell" name="timeOfSmell" required>
                         </div>
                     </div>
+                    
+                    <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.5rem; line-height: 1.4;">
+                        Your form submission will be added to a queue to be processed. You will receive an email confirmation from GOV.UK once it is submitted.
+                    </p>
                     
                     <button type="submit" class="btn btn-submit" id="submit-btn">
                         <span class="btn-text" id="submit-btn-text">Log this smell</span>

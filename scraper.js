@@ -259,8 +259,8 @@ async function submitGovForm(userData, incidentData) {
         
         // Final submit
         if (isTestMode) {
-            debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers...');
-            if (!process.env.JEST_WORKER_ID) {
+            debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers (skipped in CI)...');
+            if (!process.env.JEST_WORKER_ID && !process.env.GITHUB_ACTIONS && !process.env.CI) {
                 await new Promise(r => setTimeout(r, 300000));
             }
         } else {

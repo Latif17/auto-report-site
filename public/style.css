@@ -242,6 +242,10 @@ h1 {
     grid-column: 1 / -1;
 }
 
+.input-group {
+    min-width: 0;
+}
+
 .input-group label {
     display: block;
     font-family: var(--font-mono);
@@ -258,6 +262,8 @@ input[type="date"],
 input[type="time"],
 select {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--border);
     font-family: var(--font-sans);
