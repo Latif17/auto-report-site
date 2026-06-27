@@ -8,3 +8,18 @@ ALTER TABLE system_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE opted_in_user_reports ENABLE ROW LEVEL SECURITY;
 
+-- Drop insecure anon policies that were previously removed from schema.sql
+DROP POLICY IF EXISTS "Allow anon select on users" ON users;
+DROP POLICY IF EXISTS "Allow anon insert on users" ON users;
+DROP POLICY IF EXISTS "Allow anon update on users" ON users;
+
+DROP POLICY IF EXISTS "Allow anon select on system_stats" ON system_stats;
+DROP POLICY IF EXISTS "Allow anon update on system_stats" ON system_stats;
+
+DROP POLICY IF EXISTS "Allow anon select on incidents" ON incidents;
+DROP POLICY IF EXISTS "Allow anon insert on incidents" ON incidents;
+DROP POLICY IF EXISTS "Allow anon update on incidents" ON incidents;
+
+DROP POLICY IF EXISTS "Allow anon select on opted_in_user_reports" ON opted_in_user_reports;
+DROP POLICY IF EXISTS "Allow anon insert on opted_in_user_reports" ON opted_in_user_reports;
+DROP POLICY IF EXISTS "Allow anon update on opted_in_user_reports" ON opted_in_user_reports;

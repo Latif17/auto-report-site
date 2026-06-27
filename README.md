@@ -46,12 +46,13 @@ This project uses **Vercel** for the frontend and Express API, **GitHub Actions*
 ### 1. Database Setup (Supabase)
 - Create a free project at [Supabase](https://supabase.com).
 - Go to the SQL Editor and run the SQL from `schema.sql` to initialize the tables.
-- Retrieve your Project URL and anon API key from Project Settings > API.
+- **For existing setups:** Be sure to also run the SQL from `schema_update.sql` to apply the latest security patches and drop old insecure public access policies.
+- Retrieve your Project URL and Secret Key from Project Settings > API.
 
 ### 2. Backend Scheduled Task Setup (GitHub Actions)
 - In your GitHub repository, go to **Settings > Secrets and variables > Actions**.
 - Create a **New repository secret** called `SUPABASE_URL` and paste your project URL.
-- Create another secret called `SUPABASE_KEY` and paste your anon API key.
+- Create another secret called `SUPABASE_KEY` and paste your Secret Key.
 - The GitHub Action (`.github/workflows/scraper.yml`) will now run automatically every 5 minutes to process queued smell reports.
 
 ### 3. Frontend & API Setup (Vercel)
