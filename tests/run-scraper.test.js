@@ -256,4 +256,71 @@ describe('run-scraper', () => {
         expect(mockSupabase.delete).toHaveBeenCalled();
         expect(mockSupabase.in).toHaveBeenCalledWith('email', ['explicit@example.com']);
     });
+
+    it('should skip deleting unpooled users if querying other pending reports fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        const pendingIncidents = [
+            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
+        ];
+
+        const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
+        const pooledUsers = [];
+        const users = [
+            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false }
+        ];
+
+        // 1. Fetch pending incidents (eq)
+        mockEqResponses.push({ data: pendingIncidents, error: null });
+        
+        // 2. Fetch opted-in reports (in)
+        mockInResponses.push({ data: userReports, error: null });
+
+        // 3. Fetch pooled users record (eq)
+        mockEqResponses.push({ data: pooledUsers, error: null });
+
+        // 4. Fetch details of all users (in)
+        mockInResponses.push({ data: users, error: null });
+
+        // 5. Update status to processing (eq)
+        mockEqResponses.push({ error: null });
+
+        // Mock scraper successful submissions
+        submitGovForm.mockResolvedValue(true);
+
+        // 6. Check other pending reports for explicit@example.com (neq) -> simulate error
+        mockNeqResponses.push({ data: null, error: { message: 'db failure' } });
+
+        // 7. Update status to completed (eq)
+        mockEqResponses.push({ error: null });
+
+        const runPromise = runFunc();
+        if (jest.runAllTimersAsync) {
+            await jest.runAllTimersAsync();
+        } else {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+                jest.runAllTimers();
+            }
+        }
+        await runPromise;
+
+        // Verify submitGovForm called for explicit user
+        expect(submitGovForm).toHaveBeenCalledTimes(1);
+
+        // Verify delete query was NOT constructed/called
+        expect(mockSupabase.delete).not.toHaveBeenCalled();
+
+        // Verify console.error logged the query failure
+        expect(mockConsoleError).toHaveBeenCalledWith(
+            "Error querying other pending reports during cleanup:",
+            { message: 'db failure' }
+        );
+    });
 });

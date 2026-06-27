@@ -119,19 +119,23 @@ async function run() {
         // Cleanup unpooled users
         const unpooledProcessed = users.filter(u => u.pool_data === false).map(u => u.email);
         if (unpooledProcessed.length > 0) {
-            const { data: otherPending } = await supabase
+            const { data: otherPending, error: otherPendingError } = await supabase
                 .from('opted_in_user_reports')
                 .select('user_email, incidents!inner(status)')
                 .in('user_email', unpooledProcessed)
                 .eq('incidents.status', 'pending')
                 .neq('incident_id', incident.id);
                 
-            const emailsWithOtherPending = new Set((otherPending || []).map(r => r.user_email));
-            const emailsToDelete = unpooledProcessed.filter(e => !emailsWithOtherPending.has(e));
-            
-            if (emailsToDelete.length > 0) {
-                console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
-                await supabase.from('users').delete().in('email', emailsToDelete);
+            if (otherPendingError) {
+                console.error(`Error querying other pending reports during cleanup:`, otherPendingError);
+            } else {
+                const emailsWithOtherPending = new Set((otherPending || []).map(r => r.user_email));
+                const emailsToDelete = unpooledProcessed.filter(e => !emailsWithOtherPending.has(e));
+                
+                if (emailsToDelete.length > 0) {
+                    console.log(`Deleting ${emailsToDelete.length} unpooled user records...`);
+                    await supabase.from('users').delete().in('email', emailsToDelete);
+                }
             }
         }
 
