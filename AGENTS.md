@@ -1,14 +1,12 @@
-# Auto Report Site - Root Context
+# Public (Frontend) Context
 
 **Purpose:**
-This is the root directory of the "Auto Report Site" project. It contains the core configuration files, backend Express server (`server.js`), Puppeteer scraping logic (`scraper.js`, `run-scraper.js`), database schema (`schema.sql`), and dependency definitions (`package.json`).
+This directory contains the frontend client code for the Auto Report Site. This is a Vanilla HTML/CSS/JS frontend without a complex framework.
 
 **Key Files:**
-- `server.js`: The Express API and backend application logic.
-- `scraper.js`: Functions utilizing Puppeteer to automate website reporting interactions.
-- `run-scraper.js`: A standalone script to run the scraper, typically via GitHub Actions.
-- `schema.sql`: The database schema definition for Supabase (PostgreSQL).
-- `README.md`: High-level setup and deployment documentation.
+- `index.html`: The main entry point and structure of the website.
+- `app.js`: The frontend JavaScript logic that interacts with the user and the backend API.
+- `style.css`: The styling definitions for the application interface.
 
 **How AI should use this folder:**
-Understand the core application logic and dependencies here. Look here for database queries, scraping workflows, server API routes, and main configuration.
+Look here when adding frontend features, changing the user interface, or modifying how the frontend communicates with the backend API.
