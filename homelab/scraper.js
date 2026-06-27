@@ -32,12 +32,16 @@ function formatTime(timeStr) {
 }
 
 function getGovUkDateCategory(dateStr) {
-    const [y, m, d] = dateStr.split('-');
-    const target = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-    target.setHours(0,0,0,0);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const diffTime = Math.abs(today - target);
+    const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+    const todayStr = dateFormatter.format(new Date());
+
+    const [tY, tM, tD] = todayStr.split('-').map(Number);
+    const [dY, dM, dD] = dateStr.split('-').map(Number);
+
+    const todayDate = new Date(Date.UTC(tY, tM - 1, tD));
+    const targetDate = new Date(Date.UTC(dY, dM - 1, dD));
+
+    const diffTime = Math.abs(todayDate - targetDate);
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) return 'Earlier today';

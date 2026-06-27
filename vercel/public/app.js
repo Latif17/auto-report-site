@@ -104,12 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved data from localStorage on init
     loadSavedData();
 
-    // Set default date and time
+    // Set default date and time using London local time
     const now = new Date();
-    document.getElementById('timeOfSmell').value = now.toTimeString().slice(0,5);
-    // Format YYYY-MM-DD
-    const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    document.getElementById('dateOfSmell').value = localDate;
+    const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
+    const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
+    
+    document.getElementById('dateOfSmell').value = dateFormatter.format(now);
+    document.getElementById('timeOfSmell').value = timeFormatter.format(now);
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
