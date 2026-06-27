@@ -9,6 +9,9 @@ jobs:
   process-incidents:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./homelab
     
     steps:
       - name: Checkout repository

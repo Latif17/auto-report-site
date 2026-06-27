@@ -147,7 +147,11 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 6: Describe smell
         debugLog('Navigating to Page 6: Describe smell');
-        await clickLabel(page, 'You cannot describe it');
+        if (incidentData.smellType && incidentData.smellType !== 'Other') {
+            await clickLabel(page, incidentData.smellType);
+        } else {
+            await clickLabel(page, 'You cannot describe it');
+        }
         await goNext(page);
 
         // Page 7: Problems before?
@@ -248,7 +252,11 @@ async function submitGovForm(userData, incidentData) {
             const ta = document.querySelector('textarea');
             if (ta) ta.value = desc || '';
         }, incidentData.description);
-        
+
+        // Proceed to final review page
+        await goNext(page);
+        debugLog('Navigating to Final Review Page');
+
         // Final submit
         if (isTestMode) {
             debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers (skipped in CI)...');
