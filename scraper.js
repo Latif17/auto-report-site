@@ -265,7 +265,20 @@ async function submitGovForm(userData, incidentData) {
             }
         } else {
             await goNext(page);
-            console.log(`Successfully submitted form for ${userData.email}`);
+            
+            // Verify submission success
+            const successTextExists = await page.evaluate(() => {
+                const panel = document.querySelector('.govuk-panel.govuk-panel--confirmation');
+                if (!panel) return false;
+                return panel.innerText.includes('We have received your report');
+            });
+
+            if (successTextExists) {
+                console.log(`Successfully submitted form for ${userData.email}`);
+            } else {
+                console.error(`Failed to verify submission for ${userData.email}. Success panel missing or text incorrect.`);
+                return false;
+            }
         }
         
         return true;
