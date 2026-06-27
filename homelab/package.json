@@ -1,0 +1,23 @@
+{
+  "name": "auto-report-worker",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "run-scraper.js",
+  "scripts": {
+    "start": "node run-scraper.js",
+    "test": "jest tests/ --runInBand"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "dotenv": "^17.4.2",
+    "puppeteer": "^25.2.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
+}

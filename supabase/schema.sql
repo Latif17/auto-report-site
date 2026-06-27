@@ -3,7 +3,8 @@ CREATE TABLE users (
   full_name text,
   postcode text,
   phone text,
-  address text
+  address text,
+  pool_data boolean DEFAULT false
 );
 CREATE TABLE system_stats (
   id integer PRIMARY KEY,

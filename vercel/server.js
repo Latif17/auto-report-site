@@ -32,13 +32,13 @@ const strictLimiter = rateLimit({
 
 app.use(globalLimiter);
 
-app.use(express.static(path.join(__dirname, __dirname.endsWith('api') ? '../public' : 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
 const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
 
 // Mock supabase client for test if env vars are missing
-const supabase = process.env.SUPABASE_URL 
+const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : { 
         from: (table) => {
@@ -227,8 +227,8 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         const incidentId = newIncident.id;
 
         const insertPromises = [];
-        if (shareData) {
-            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError());
+        if (email) {
+            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData || false }).throwOnError());
         }
 
         // Even if they don't share data with community, we still track they reported it so the script runs for them
@@ -253,7 +253,7 @@ app.post('/api/join', strictLimiter, async (req, res) => {
 
     try {
         await Promise.all([
-            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError(),
+            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: true }).throwOnError(),
             supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             })
@@ -270,4 +270,5 @@ const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
+app.supabase = supabase;
 module.exports = app;

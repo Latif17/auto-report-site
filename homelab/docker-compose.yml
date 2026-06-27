@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: .
+    container_name: auto-report-scraper
+    restart: always
+    shm_size: '2gb'
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
