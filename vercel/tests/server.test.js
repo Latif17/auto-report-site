@@ -109,6 +109,24 @@ describe('API Endpoints', () => {
         expect(res.statusCode).toEqual(200);
         expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
     });
+
+    describe('DELETE /api/delete-data', () => {
+        it('deletes user and returns success', async () => {
+            const res = await request(app)
+                .delete('/api/delete-data')
+                .send({ email: 'delete@example.com' });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body).toEqual({ success: true, message: 'Data deleted successfully' });
+        });
+
+        it('fails without email', async () => {
+            const res = await request(app)
+                .delete('/api/delete-data')
+                .send({});
+            expect(res.statusCode).toEqual(400);
+            expect(res.body).toHaveProperty('error', 'Email is required');
+        });
+    });
 });
 
 describe('Security Middlewares', () => {

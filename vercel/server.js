@@ -121,6 +121,15 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
                         catch: () => chain
                     };
                     return chain;
+                },
+                delete: () => {
+                    const chain = {
+                        eq: () => chain,
+                        throwOnError: () => chain,
+                        then: (resolve) => resolve({}),
+                        catch: () => chain
+                    };
+                    return chain;
                 }
             };
         } 
@@ -291,6 +300,28 @@ app.post('/api/join', strictLimiter, async (req, res) => {
         res.json({ success: true, message: "Joined report successfully" });
     } catch (error) {
         console.error('Join error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/api/delete-data', strictLimiter, async (req, res) => {
+    let { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+    const processed = processEmail(email);
+    if (processed.error) return res.status(400).json({ error: processed.error });
+    email = processed.email;
+
+    try {
+        // Delete from opted_in_user_reports first to handle potential foreign key constraints
+        await supabase.from('opted_in_user_reports').delete().eq('user_email', email).throwOnError();
+        // Delete from users
+        await supabase.from('users').delete().eq('email', email).throwOnError();
+
+        res.json({ success: true, message: 'Data deleted successfully' });
+    } catch (error) {
+        console.error('Delete error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
