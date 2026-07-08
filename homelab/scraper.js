@@ -103,6 +103,7 @@ async function submitGovForm(userData, incidentData) {
         }
         browser = await puppeteer.launch(launchArgs);
         const page = await browser.newPage();
+        await page.emulateTimezone('Europe/London');
 
         // Page 1: Where is smell coming from?
         debugLog('Navigating to Page 1: Where is smell coming from?');

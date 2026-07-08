@@ -12,6 +12,7 @@ jest.mock('puppeteer', () => {
         }),
         type: jest.fn().mockResolvedValue(),
         waitForNavigation: jest.fn().mockResolvedValue(),
+        emulateTimezone: jest.fn().mockResolvedValue(),
     };
     return {
         launch: jest.fn().mockResolvedValue({
@@ -89,6 +90,7 @@ describe('submitGovForm', () => {
 
         expect(mockPage.goto).toHaveBeenCalledTimes(1);
         expect(mockPage.goto).toHaveBeenCalledWith('https://report-an-environmental-problem.service.gov.uk/smell/source', expect.any(Object));
+        expect(mockPage.emulateTimezone).toHaveBeenCalledWith('Europe/London');
         expect(mockPage.evaluate.mock.calls.length).toBeGreaterThan(10);
     }, 10000);
 });
