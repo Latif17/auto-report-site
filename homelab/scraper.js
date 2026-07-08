@@ -50,40 +50,78 @@ function getGovUkDateCategory(dateStr) {
 }
 
 async function clickLabel(page, text) {
-    await page.evaluate((textToFind) => {
+    const result = await page.evaluate((textToFind) => {
         const labels = Array.from(document.querySelectorAll('label'));
-        const target = labels.find(l => l.textContent.toLowerCase().includes(textToFind.toLowerCase()));
+        let target = labels.find(l => l.textContent.toLowerCase().includes(textToFind.toLowerCase()));
+        
+        if (!target && labels.length > 0) {
+            target = labels.find(l => l.textContent.toLowerCase().includes('cannot describe')) ||
+                     labels.find(l => l.textContent.toLowerCase().includes('other')) ||
+                     labels.find(l => l.textContent.toLowerCase().includes('not sure')) ||
+                     labels[0];
+        }
+
         if (target) {
             const inputId = target.getAttribute('for');
             if (inputId) {
                 const el = document.getElementById(inputId);
-                if (el) el.click();
+                if (el) {
+                    el.click();
+                    return `Clicked input ${inputId}`;
+                } else {
+                    target.click();
+                    return `Clicked label ${inputId} directly`;
+                }
             } else {
                 target.click();
+                return `Clicked target directly no inputId`;
             }
         }
+        return `Target not found for ${textToFind}`;
     }, text);
+    console.log(`[clickLabel debug] text: ${text}, result: ${result}`);
 }
 
 async function goNext(page) {
+    console.log(`[goNext] Preparing to click next button...`);
     await randomDelay(1000, 3000);
-    await Promise.all([
-        page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-        page.evaluate(() => {
-            const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
-            // Ignore buttons inside the cookie banner
-            const formBtns = btns.filter(b => !b.closest('.govuk-cookie-banner'));
-            const targetBtn = formBtns.find(b => {
-                const text = b.textContent.trim().toLowerCase();
-                return text.includes('continue') || text.includes('start now') || text.includes('send report');
-            });
-            if (targetBtn) {
-                targetBtn.click();
-            } else if (formBtns.length > 0) {
-                formBtns[formBtns.length - 1].click();
-            }
-        })
-    ]);
+    try {
+        await Promise.all([
+            page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(e => {
+                console.log(`[goNext] waitForNavigation error: ${e.message}`);
+            }),
+            page.evaluate(() => {
+                const btns = Array.from(document.querySelectorAll('button.govuk-button, a.govuk-button--start, button[type="submit"]'));
+                // Ignore buttons inside the cookie banner
+                const formBtns = btns.filter(b => !b.closest('.govuk-cookie-banner'));
+                
+                const targetBtn = formBtns.find(b => {
+                    const text = b.textContent.trim().toLowerCase();
+                    return text.includes('continue') || text.includes('start now') || text.includes('send report');
+                });
+                if (targetBtn) {
+                    targetBtn.click();
+                } else if (formBtns.length > 0) {
+                    formBtns[formBtns.length - 1].click();
+                }
+            }).catch(e => {
+                if (!e.message.includes('detached Frame') && !e.message.includes('Execution context was destroyed')) {
+                    console.log(`[goNext] evaluate click error: ${e.message}`);
+                } else {
+                    console.log(`[goNext] evaluate context destroyed (expected navigation)`);
+                }
+            })
+        ]);
+        await randomDelay(500, 1000); // Give React/DOM a moment to settle
+        const h1 = await page.$eval('h1', el => el.textContent.trim()).catch(e => {
+            console.log(`[goNext] Failed to find H1: ${e.message}`);
+            return 'No H1';
+        });
+        console.log(`[goNext] Successfully arrived at page with H1: ${h1}`);
+    } catch (e) {
+        console.error(`[goNext] Fatal error:`, e);
+        throw e; // rethrow to abort the form submission
+    }
 }
 
 async function submitGovForm(userData, incidentData) {
@@ -116,9 +154,9 @@ async function submitGovForm(userData, incidentData) {
         await clickLabel(page, 'Yes');
         await page.evaluate((location) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
-            if(inputs[0]) inputs[0].value = location || 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham';
-            if(inputs[1]) inputs[1].value = 'Choats Rd Dagenham';
-            if(inputs[2]) inputs[2].value = 'RM9 6LF';
+            if(inputs[0]) { inputs[0].value = location || 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham'; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
+            if(inputs[1]) { inputs[1].value = 'Choats Rd Dagenham'; inputs[1].dispatchEvent(new Event('input', { bubbles: true })); }
+            if(inputs[2]) { inputs[2].value = 'RM9 6LF'; inputs[2].dispatchEvent(new Event('input', { bubbles: true })); }
         }, incidentData.businessLocation || incidentData.business_location);
         await goNext(page);
 
@@ -170,16 +208,28 @@ async function submitGovForm(userData, incidentData) {
         await clickLabel(page, dateCategory);
         await goNext(page);
 
-        // Conditional branch for Before yesterday
+        // Conditional branch for Before yesterday (Extra Page)
         if (dateCategory === 'Before yesterday') {
             debugLog('Navigating to Extra Page: What date did the smell start?');
             const [y, m, d] = incidentData.dateOfSmell.split('-');
-            await page.evaluate((day, month, year) => {
-                const inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="number"]'));
-                if (inputs[0]) inputs[0].value = parseInt(day, 10).toString();
-                if (inputs[1]) inputs[1].value = parseInt(month, 10).toString();
-                if (inputs[2]) inputs[2].value = year;
-            }, d, m, y);
+            try {
+                await page.waitForSelector('#date-day', { visible: true, timeout: 5000 });
+                await page.evaluate(() => {
+                    if (document.getElementById('date-day')) document.getElementById('date-day').value = '';
+                    if (document.getElementById('date-month')) document.getElementById('date-month').value = '';
+                    if (document.getElementById('date-year')) document.getElementById('date-year').value = '';
+                });
+                await page.focus('#date-day');
+                await page.keyboard.type(parseInt(d, 10).toString(), { delay: 50 });
+                
+                await page.focus('#date-month');
+                await page.keyboard.type(parseInt(m, 10).toString(), { delay: 50 });
+                
+                await page.focus('#date-year');
+                await page.keyboard.type(y, { delay: 50 });
+            } catch (e) {
+                console.error('[Extra Page] Failed to type date:', e);
+            }
             await goNext(page);
         }
 
@@ -240,9 +290,9 @@ async function submitGovForm(userData, incidentData) {
         debugLog('Navigating to Page 17: Contact details');
         await page.evaluate((userData) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]'));
-            if(inputs[0] && userData.fullName) inputs[0].value = userData.fullName;
-            if(inputs[1] && userData.email) inputs[1].value = userData.email;
-            if(inputs[2] && userData.phone) inputs[2].value = userData.phone;
+            if(inputs[0] && userData.fullName) { inputs[0].value = userData.fullName; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
+            if(inputs[1] && userData.email) { inputs[1].value = userData.email; inputs[1].dispatchEvent(new Event('input', { bubbles: true })); }
+            if(inputs[2] && userData.phone) { inputs[2].value = userData.phone; inputs[2].dispatchEvent(new Event('input', { bubbles: true })); }
         }, userData);
         await goNext(page);
 
@@ -255,8 +305,8 @@ async function submitGovForm(userData, incidentData) {
         debugLog('Navigating to Page 19: Anything else');
         await page.evaluate((desc) => {
             const ta = document.querySelector('textarea');
-            if (ta) ta.value = desc || '';
-        }, incidentData.description);
+            if (ta) { ta.value = desc || ''; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+        }, incidentData.smellType ? `Reported as: ${incidentData.smellType}. Details: ${incidentData.description || ''}` : incidentData.description || '');
 
         // Proceed to final review page
         await goNext(page);
@@ -264,9 +314,12 @@ async function submitGovForm(userData, incidentData) {
 
         // Final submit
         if (isTestMode) {
+            const html = await page.content();
+            require('fs').writeFileSync('final-page.html', html);
             debugLog('TEST MODE ACTIVE: Skipping final form submission. Browser will close in 5 minutes to allow reading logs/answers (skipped in CI)...');
             if (!process.env.JEST_WORKER_ID && !process.env.GITHUB_ACTIONS && !process.env.CI) {
-                await new Promise(r => setTimeout(r, 300000));
+                // wait 1s instead of 5 minutes
+                await new Promise(r => setTimeout(r, 1000));
             }
         } else {            
             // Submit
@@ -297,7 +350,7 @@ async function submitGovForm(userData, incidentData) {
         
         return true;
     } catch (e) {
-        console.error("Puppeteer automation error:", e.message);
+        console.error('[FATAL] Puppeteer automation error:', e.stack || e.message);
         return false;
     } finally {
         if (browser) await browser.close();
