@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage My Data | Barking Stink</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dossier-container">
+        <header class="dossier-header">
+            <h1>Manage My Data</h1>
+            <p class="subject">Exercise your right to erasure</p>
+        </header>
+
+        <main>
+            <div class="primary-action-section" style="text-align: left;">
+                <p style="margin-bottom: 1.5rem; color: var(--ink-light);">
+                    Enter the email address you used to log events or pool data. Clicking delete will immediately remove your information from our database and stop any future automated reports on your behalf.
+                </p>
+                
+                <form id="manage-form">
+                    <div class="input-group full-width" style="margin-bottom: 1rem;">
+                        <label for="deleteEmail">Email Address</label>
+                        <input type="email" id="deleteEmail" required placeholder="jane@example.com">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-submit" id="delete-btn" style="background: var(--error-bg); color: var(--accent); border-color: var(--accent);">
+                        <span class="btn-text" id="delete-btn-text">Delete My Data</span>
+                    </button>
+                </form>
+
+                <div id="manage-status" class="status-message hidden" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <a href="/" class="btn-secondary">Return Home</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('manage-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('deleteEmail').value;
+            const btn = document.getElementById('delete-btn');
+            const status = document.getElementById('manage-status');
+            
+            btn.disabled = true;
+            status.className = 'status-message';
+            status.textContent = 'Processing...';
+            
+            try {
+                const res = await fetch('/api/delete-data', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to delete data');
+                
+                status.textContent = data.message || 'Data deleted successfully.';
+                status.className = 'status-message success';
+                
+                // Clear local storage just in case
+                localStorage.removeItem('freshAirWatchData_v2');
+                localStorage.removeItem('freshAirWatchData');
+            } catch (err) {
+                status.textContent = err.message;
+                status.className = 'status-message error';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
