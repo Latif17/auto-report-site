@@ -51,7 +51,7 @@ const validateAndNormalizeEmail = (req, res, next) => {
     next();
 };
 
-app.use(validateAndNormalizeEmail);
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -137,7 +137,7 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
         } 
     };
 
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', validateAndNormalizeEmail, async (req, res) => {
     try {
         const [
             { count },
@@ -178,8 +178,8 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-app.post('/api/opt-in', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address } = req.body;
+app.post('/api/opt-in', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
+    const { email, fullName, postcode, phone, address } = req.body;
     if (!email) {
         return res.status(400).json({ error: 'Email is required' });
     }
@@ -192,7 +192,7 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/submit', strictLimiter, async (req, res) => {
+app.post('/api/submit', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
 
     try {
@@ -270,8 +270,8 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/join', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, incidentId } = req.body;
+app.post('/api/join', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
+    const { email, fullName, postcode, phone, address, incidentId } = req.body;
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
 
     try {
