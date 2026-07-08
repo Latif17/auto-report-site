@@ -284,7 +284,8 @@ app.post('/api/join', strictLimiter, async (req, res) => {
             supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: true }).throwOnError(),
             supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
-            })
+            }),
+            supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError()
         ]);
 
         res.json({ success: true, message: "Joined report successfully" });

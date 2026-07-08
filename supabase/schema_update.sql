@@ -34,3 +34,7 @@ ALTER COLUMN smell_timestamp SET NOT NULL;
 ALTER TABLE incidents 
 DROP COLUMN date_of_smell,
 DROP COLUMN time_of_smell;
+
+-- add status to opted_in_user_reports
+ALTER TABLE opted_in_user_reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+CREATE INDEX IF NOT EXISTS idx_user_reports_status ON opted_in_user_reports(status);

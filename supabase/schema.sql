@@ -25,6 +25,7 @@ CREATE TABLE opted_in_user_reports (
   id SERIAL PRIMARY KEY,
   incident_id INTEGER REFERENCES incidents(id),
   user_email TEXT,
+  status TEXT DEFAULT 'pending',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

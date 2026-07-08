@@ -111,7 +111,15 @@ async function processQueue() {
             continue;
         }
 
-        const incidentEmails = emailsByIncidentId[incident.id] || [];
+        const { data: completedReports } = await supabase
+            .from('opted_in_user_reports')
+            .select('user_email')
+            .eq('incident_id', incident.id)
+            .eq('status', 'completed');
+            
+        const completedEmails = new Set((completedReports || []).map(r => r.user_email));
+        const incidentEmails = (emailsByIncidentId[incident.id] || []).filter(e => !completedEmails.has(e));
+        
         let users = [];
         const successfulUsers = [];
         if (incidentEmails.length > 0) {
@@ -142,16 +150,19 @@ async function processQueue() {
                         const success = await submitGovForm(userData, incidentData);
                         if (success) {
                             successfulUsers.push(user);
-                            if (!user.pool_data) {
-                                // Delete this specific report link immediately so it's not retried
-                                const { error: deleteLinkError } = await supabase
-                                    .from('opted_in_user_reports')
-                                    .delete()
-                                    .eq('incident_id', incident.id)
-                                    .eq('user_email', user.email);
-                                if (deleteLinkError) {
-                                    console.error(`Error deleting report link for ${user.email}:`, deleteLinkError);
-                                }
+                            
+                            // Mark report as completed in opted_in_user_reports
+                            // Upsert ensures we update if it exists or insert if they were pooled and not in the table
+                            const { error: completeLinkError } = await supabase
+                                .from('opted_in_user_reports')
+                                .upsert({ 
+                                    incident_id: incident.id, 
+                                    user_email: user.email,
+                                    status: 'completed'
+                                }, { onConflict: 'user_email, incident_id' });
+                                
+                            if (completeLinkError) {
+                                console.error(`Error marking report complete for ${user.email}:`, completeLinkError);
                             }
                         } else {
                             console.error(`Failed to submit report for ${userData.email}. Will keep user/report in queue.`);
@@ -175,6 +186,7 @@ async function processQueue() {
                 .select('user_email, incidents!inner(status)')
                 .in('user_email', unpooledProcessed)
                 .eq('incidents.status', 'pending')
+                .eq('status', 'pending')
                 .neq('incident_id', incident.id);
                 
             if (otherPendingError) {
