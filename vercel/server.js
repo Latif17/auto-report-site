@@ -134,7 +134,8 @@ app.get('/api/stats', async (req, res) => {
         ]);
 
         let reportedIncidentIds = [];
-        const userEmail = req.query.email ? validator.normalizeEmail(req.query.email) : null;
+        const userEmail = typeof req.query.email === 'string' ? validator.normalizeEmail(req.query.email) : null;
+        if (userEmail && !validator.isEmail(userEmail)) return res.status(400).json({ error: 'Invalid email' });
         if (userEmail && recentIncidents && recentIncidents.length > 0) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
@@ -160,10 +161,11 @@ app.get('/api/stats', async (req, res) => {
 
 app.post('/api/opt-in', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address } = req.body;
-    if (email) email = validator.normalizeEmail(email);
+    if (typeof email === 'string') email = validator.normalizeEmail(email);
     if (!email) {
         return res.status(400).json({ error: 'Email is required' });
     }
+    if (!validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
     try {
         await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
         res.json({ success: true });
@@ -175,7 +177,8 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
 
 app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
-    if (email) email = validator.normalizeEmail(email);
+    if (typeof email === 'string') email = validator.normalizeEmail(email);
+    if (email && !validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
 
     try {
         // Update stats without blocking the rest of the execution
@@ -254,8 +257,9 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
 app.post('/api/join', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, incidentId } = req.body;
-    if (email) email = validator.normalizeEmail(email);
+    if (typeof email === 'string') email = validator.normalizeEmail(email);
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
+    if (!validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
 
     try {
         await Promise.all([
