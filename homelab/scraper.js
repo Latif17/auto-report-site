@@ -333,13 +333,16 @@ async function submitGovForm(userData, incidentData) {
                 
                 const successTextExists = await page.evaluate(() => {
                     const panel = document.querySelector('.govuk-panel.govuk-panel--confirmation');
-                    return panel && panel.textContent.includes('We have received your report');
+                    if (!panel) return false;
+                    const text = panel.textContent.toLowerCase();
+                    return text.includes('we have received') || text.includes('report sent') || text.includes('submitted');
                 });
 
                 if (successTextExists) {
                     console.log(`Successfully submitted form for ${userData.email}`);
                 } else {
-                    console.error(`Failed to verify submission for ${userData.email}. Success text incorrect.`);
+                    const panelText = await page.evaluate(() => document.querySelector('.govuk-panel.govuk-panel--confirmation')?.textContent || 'null');
+                    console.error(`Failed to verify submission for ${userData.email}. Success text incorrect. Panel text was: "${panelText.trim()}"`);
                     return false;
                 }
             } catch (error) {
