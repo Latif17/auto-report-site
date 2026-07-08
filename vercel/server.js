@@ -33,6 +33,26 @@ const strictLimiter = rateLimit({
 
 app.use(globalLimiter);
 
+const validateAndNormalizeEmail = (req, res, next) => {
+    if (req.body && req.body.email) {
+        if (typeof req.body.email !== 'string') return res.status(400).json({ error: 'Invalid email' });
+        const normalized = validator.normalizeEmail(req.body.email);
+        if (!validator.isEmail(normalized)) return res.status(400).json({ error: 'Invalid email' });
+        req.body.email = normalized;
+    }
+    
+    if (req.query && req.query.email) {
+        if (typeof req.query.email !== 'string') return res.status(400).json({ error: 'Invalid email' });
+        const normalized = validator.normalizeEmail(req.query.email);
+        if (!validator.isEmail(normalized)) return res.status(400).json({ error: 'Invalid email' });
+        req.query.email = normalized;
+    }
+
+    next();
+};
+
+app.use(validateAndNormalizeEmail);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -134,9 +154,7 @@ app.get('/api/stats', async (req, res) => {
         ]);
 
         let reportedIncidentIds = [];
-        if (req.query.email && typeof req.query.email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-        const userEmail = req.query.email ? validator.normalizeEmail(req.query.email) : null;
-        if (userEmail && !validator.isEmail(userEmail)) return res.status(400).json({ error: 'Invalid email' });
+        const userEmail = req.query.email || null;
         if (userEmail && recentIncidents && recentIncidents.length > 0) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
@@ -162,12 +180,9 @@ app.get('/api/stats', async (req, res) => {
 
 app.post('/api/opt-in', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address } = req.body;
-    if (email && typeof email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-    if (email) email = validator.normalizeEmail(email);
     if (!email) {
         return res.status(400).json({ error: 'Email is required' });
     }
-    if (!validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
     try {
         await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address }).throwOnError();
         res.json({ success: true });
@@ -179,9 +194,6 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
 
 app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
-    if (email && typeof email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-    if (email) email = validator.normalizeEmail(email);
-    if (email && !validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
 
     try {
         // Update stats without blocking the rest of the execution
@@ -260,10 +272,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
 app.post('/api/join', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, incidentId } = req.body;
-    if (email && typeof email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-    if (email) email = validator.normalizeEmail(email);
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
-    if (!validator.isEmail(email)) return res.status(400).json({ error: 'Invalid email' });
 
     try {
         await Promise.all([
