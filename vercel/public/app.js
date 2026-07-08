@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('phone').value = data.phone || '';
                 document.getElementById('address').value = data.address || '';
 
-                document.getElementById('storeLocally').checked = data.storeLocally !== false;
+                document.getElementById('storeLocally').checked = data.storeLocally === true;
                 document.getElementById('shareData').checked = data.shareData === true;
             } catch (e) {
                 console.error("Failed to parse local storage data", e);
