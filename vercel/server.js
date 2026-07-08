@@ -314,10 +314,10 @@ app.delete('/api/delete-data', strictLimiter, async (req, res) => {
     email = processed.email;
 
     try {
-        // Delete from opted_in_user_reports first to handle potential foreign key constraints
-        await supabase.from('opted_in_user_reports').delete().eq('user_email', email).throwOnError();
-        // Delete from users
-        await supabase.from('users').delete().eq('email', email).throwOnError();
+        await Promise.all([
+            supabase.from('opted_in_user_reports').delete().eq('user_email', email).throwOnError(),
+            supabase.from('users').delete().eq('email', email).throwOnError()
+        ]);
 
         res.json({ success: true, message: 'Data deleted successfully' });
     } catch (error) {

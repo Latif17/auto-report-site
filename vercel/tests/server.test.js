@@ -3,6 +3,7 @@ const app = require('../server');
 
 describe('API Endpoints', () => {
     let usersUpsertSpy;
+    let deleteEqSpy;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -11,12 +12,24 @@ describe('API Endpoints', () => {
             then: jest.fn((cb) => cb({}))
         });
 
+        deleteEqSpy = jest.fn();
+
         const originalFrom = app.supabase.from.bind(app.supabase);
         jest.spyOn(app.supabase, 'from').mockImplementation((table) => {
             const chain = originalFrom(table);
             if (table === 'users') {
                 chain.upsert = usersUpsertSpy;
             }
+            const originalDelete = chain.delete.bind(chain);
+            chain.delete = () => {
+                const deleteChain = originalDelete();
+                const originalEq = deleteChain.eq.bind(deleteChain);
+                deleteChain.eq = (col, val) => {
+                    deleteEqSpy(table, col, val);
+                    return originalEq(col, val);
+                };
+                return deleteChain;
+            };
             return chain;
         });
     });
@@ -117,6 +130,8 @@ describe('API Endpoints', () => {
                 .send({ email: 'delete@example.com' });
             expect(res.statusCode).toEqual(200);
             expect(res.body).toEqual({ success: true, message: 'Data deleted successfully' });
+            expect(deleteEqSpy).toHaveBeenCalledWith('opted_in_user_reports', 'user_email', 'delete@example.com');
+            expect(deleteEqSpy).toHaveBeenCalledWith('users', 'email', 'delete@example.com');
         });
 
         it('fails without email', async () => {
