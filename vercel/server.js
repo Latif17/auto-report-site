@@ -33,23 +33,12 @@ const strictLimiter = rateLimit({
 
 app.use(globalLimiter);
 
-const validateAndNormalizeEmail = (req, res, next) => {
-    if (req.body && req.body.email) {
-        if (typeof req.body.email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-        const normalized = validator.normalizeEmail(req.body.email);
-        if (!validator.isEmail(normalized)) return res.status(400).json({ error: 'Invalid email' });
-        req.body.email = normalized;
+function processEmail(email) {
+    if (email && typeof email === 'string' && validator.isEmail(email)) {
+        return validator.normalizeEmail(email);
     }
-    
-    if (req.query && req.query.email) {
-        if (typeof req.query.email !== 'string') return res.status(400).json({ error: 'Invalid email' });
-        const normalized = validator.normalizeEmail(req.query.email);
-        if (!validator.isEmail(normalized)) return res.status(400).json({ error: 'Invalid email' });
-        req.query.email = normalized;
-    }
-
-    next();
-};
+    return null;
+}
 
 
 
@@ -137,7 +126,7 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
         } 
     };
 
-app.get('/api/stats', validateAndNormalizeEmail, async (req, res) => {
+app.get('/api/stats', async (req, res) => {
     try {
         const [
             { count },
@@ -154,7 +143,7 @@ app.get('/api/stats', validateAndNormalizeEmail, async (req, res) => {
         ]);
 
         let reportedIncidentIds = [];
-        const userEmail = req.query.email || null;
+        const userEmail = processEmail(req.query.email);
         if (userEmail && recentIncidents && recentIncidents.length > 0) {
             const { data: userReports } = await supabase.from('opted_in_user_reports')
                 .select('incident_id')
@@ -178,8 +167,9 @@ app.get('/api/stats', validateAndNormalizeEmail, async (req, res) => {
     }
 });
 
-app.post('/api/opt-in', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
-    const { email, fullName, postcode, phone, address } = req.body;
+app.post('/api/opt-in', strictLimiter, async (req, res) => {
+    let { email, fullName, postcode, phone, address } = req.body;
+    if (email) email = processEmail(email);
     if (!email) {
         return res.status(400).json({ error: 'Email is required' });
     }
@@ -192,8 +182,9 @@ app.post('/api/opt-in', strictLimiter, validateAndNormalizeEmail, async (req, re
     }
 });
 
-app.post('/api/submit', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
+app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
+    if (email) email = processEmail(email);
 
     try {
         // Update stats without blocking the rest of the execution
@@ -270,8 +261,9 @@ app.post('/api/submit', strictLimiter, validateAndNormalizeEmail, async (req, re
     }
 });
 
-app.post('/api/join', strictLimiter, validateAndNormalizeEmail, async (req, res) => {
-    const { email, fullName, postcode, phone, address, incidentId } = req.body;
+app.post('/api/join', strictLimiter, async (req, res) => {
+    let { email, fullName, postcode, phone, address, incidentId } = req.body;
+    if (email) email = processEmail(email);
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
 
     try {
