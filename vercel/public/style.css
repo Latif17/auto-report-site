@@ -564,3 +564,45 @@ footer a {
         text-align: center;
     }
 }
+
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    max-width: 600px;
+    margin: 2rem auto;
+    padding-left: 2rem;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2.35rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--accent);
+}
+.timeline-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+}
+.timeline-content {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink);
+}
