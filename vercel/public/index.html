@@ -68,8 +68,8 @@
                                 <input type="checkbox" id="storeLocally" name="storeLocally">
                                 <span class="checkmark"></span>
                                 <div class="checkbox-content">
-                                    <strong>Retain locally</strong>
-                                    <span>Saves your details in your own browser so you don't have to re-type them next time. When you log a stink event, your info is securely transmitted to our server temporarily to process the request, and is immediately deleted afterward.</span>
+                                    <strong>Remember my details</strong>
+                                    <span>Save your details in your browser so you don't have to re-type them next time.</span>
                                 </div>
                             </label>
 
@@ -153,6 +153,19 @@
                         <span class="btn-text" id="submit-btn-text">Log this smell</span>
                         <div class="loader"></div>
                     </button>
+                    
+                    <div class="trust-box" style="margin-top: 1.5rem; background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem;">
+                        <h3 style="margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            Data Protection Promise
+                        </h3>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--ink);">
+                            <li style="margin-bottom: 0.5rem;">✓ <strong>Secure Storage:</strong> Your data is encrypted in transit and safely stored at rest, used exclusively to file official reports on your behalf.</li>
+                            <li style="margin-bottom: 0.5rem;">✓ <strong>Anonymized Pooling:</strong> If you share with the community, your personal details are strictly separated. Neighbors only see the smell event itself.</li>
+                            <li style="margin-bottom: 0.75rem;">✓ <strong>Full Control:</strong> You can permanently wipe your data from our servers at any time.</li>
+                        </ul>
+                        <a href="/promise.html" style="font-size: 0.85rem; font-weight: 600;">Read our full Data Promise →</a>
+                    </div>
                 </div>
 
                 <div id="status-message" class="status-message hidden"></div>
