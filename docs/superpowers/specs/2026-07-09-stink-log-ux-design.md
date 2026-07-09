@@ -5,6 +5,8 @@ This document outlines the UX improvements for the Barking Riverside Stink Log w
 
 ## 1. Smart Collapsible Sections (Progressive UI)
 
+*Note: As most users are on mobile (iPhone/Android), all UI elements must prioritize touch optimization, large tap targets, and responsive layout without horizontal scrolling.*
+
 ### Concept
 The current form requires users to scroll past a long "Reporter Information" section every time they log a smell. To fix this, we will implement a smart collapse feature.
 
