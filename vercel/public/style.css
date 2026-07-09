@@ -276,6 +276,8 @@ select {
     background: var(--paper);
     color: var(--ink);
     color-scheme: light dark;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 input:focus {
