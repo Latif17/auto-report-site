@@ -120,8 +120,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (editDetailsBtn) {
         editDetailsBtn.addEventListener('click', () => {
-            verifiedSummary.classList.add('hidden');
-            reporterDetails.classList.remove('hidden');
+            if (verifiedSummary && reporterDetails) {
+                verifiedSummary.classList.add('hidden');
+                reporterDetails.classList.remove('hidden');
+            }
             if (closeEditBtn) {
                 closeEditBtn.classList.remove('hidden');
             }
@@ -240,11 +242,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const verifiedSummary = document.getElementById('verified-summary');
                     const reporterDetails = document.getElementById('reporter-details');
                     const summaryDetails = document.getElementById('summary-details');
+                    const closeEditBtn = document.getElementById('close-edit-btn');
 
                     if (summaryDetails && verifiedSummary && reporterDetails) {
                         summaryDetails.textContent = `${data.fullName} - ${data.postcode}`;
                         verifiedSummary.classList.remove('hidden');
                         reporterDetails.classList.add('hidden');
+                        if (closeEditBtn) {
+                            closeEditBtn.classList.add('hidden');
+                        }
                     }
                 }
             } catch (e) {
@@ -372,6 +378,13 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.textContent = 'Please fill out your personal details below to join this report.';
             statusMessage.className = 'status-message alert-info';
             statusMessage.classList.remove('hidden');
+            
+            const verifiedSummary = document.getElementById('verified-summary');
+            const reporterDetails = document.getElementById('reporter-details');
+            if (verifiedSummary && reporterDetails) {
+                verifiedSummary.classList.add('hidden');
+                reporterDetails.classList.remove('hidden');
+            }
             
             document.getElementById('reporter-details').scrollIntoView({ behavior: 'smooth' });
         }
