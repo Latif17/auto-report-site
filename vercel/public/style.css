@@ -212,18 +212,25 @@ h1 {
     background: var(--paper);
 }
 
+.form-section-header {
+    padding: 1rem;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+}
+
 .section-title {
     font-family: var(--font-mono);
     font-weight: 600;
     font-size: 0.9rem;
-    padding: 1rem;
-    background: var(--header-bg);
-    border-bottom: 1px solid var(--border);
     margin: 0;
 }
 
 .details-content {
     padding: 1.5rem;
+}
+
+.details-content.expanded-from-summary {
+    margin-top: 1.5rem;
 }
 
 .details-instructions {

@@ -28,19 +28,22 @@
             <form id="report-form" class="report-form">
                 <input type="hidden" id="joinIncidentId">
                 
-                <!-- Verified Summary Card -->
-                <div id="verified-summary" class="verified-summary hidden">
-                    <div class="summary-content">
-                        <!-- <span class="verification-stamp">[VERIFIED]</span> -->
-                        <span id="summary-details">Jane Doe - IG11 0YP</span>
-                    </div>
-                    <button type="button" id="edit-details-btn" class="btn-small">Edit File</button>
-                </div>
-
                 <!-- Personal Details (Dossier File) -->
                 <div class="reporter-details" id="reporter-details">
-                    <h2 class="section-title">Reporter Information (Required for official submission)</h2>
-                    <div class="details-content">
+                    <!-- Default Header -->
+                    <div id="default-header" class="form-section-header" style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <h2 class="section-title">Reporter Information (Required for official submission)</h2>
+                    </div>
+
+                    <!-- Verified Summary (Returning User) -->
+                    <div id="verified-summary" class="hidden form-section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="summary-content" style="font-weight: 600; font-family: var(--font-mono); color: var(--accent); font-size: 1.1rem;">
+                            <span id="summary-details">Jane Doe - IG11 0YP</span>
+                        </div>
+                        <button type="button" id="edit-details-btn" class="btn-small">Edit File</button>
+                    </div>
+
+                    <div id="details-content" class="details-content">
                         <p class="details-instructions">The government requires individual details for a complaint to be valid. Fill this once.</p>
                         
                         <div class="input-grid">
@@ -95,9 +98,7 @@
                                 </div>
                             </label>
                         </div>
-                        <div style="margin-top: 1.5rem; text-align: right;">
-                            <button type="button" id="close-edit-btn" class="btn-secondary hidden">Cancel Edit</button>
-                        </div>
+
                     </div>
                 </div>
 

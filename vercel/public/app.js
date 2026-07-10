@@ -112,28 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dateOfSmell').value = dateFormatter.format(now);
     document.getElementById('timeOfSmell').value = timeFormatter.format(now);
 
-    // Event listener for opening edit mode
+    // Event listener for opening/closing edit mode
     const editDetailsBtn = document.getElementById('edit-details-btn');
-    const closeEditBtn = document.getElementById('close-edit-btn');
     const verifiedSummary = document.getElementById('verified-summary');
-    const reporterDetails = document.getElementById('reporter-details');
+    const detailsContent = document.getElementById('details-content');
 
     if (editDetailsBtn) {
         editDetailsBtn.addEventListener('click', () => {
-            if (verifiedSummary && reporterDetails) {
-                verifiedSummary.classList.add('hidden');
-                reporterDetails.classList.remove('hidden');
+            if (detailsContent && editDetailsBtn) {
+                if (detailsContent.classList.contains('hidden')) {
+                    detailsContent.classList.remove('hidden');
+                    editDetailsBtn.textContent = 'Cancel Edit';
+                } else {
+                    loadSavedData(); // Reverts and collapses
+                }
             }
-            if (closeEditBtn) {
-                closeEditBtn.classList.remove('hidden');
-            }
-        });
-    }
-
-    if (closeEditBtn) {
-        closeEditBtn.addEventListener('click', () => {
-            // Re-load saved data to revert any unsaved changes
-            loadSavedData();
         });
     }
 
@@ -240,16 +233,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Trigger Returning User State if we have core details
                 if (data.fullName && data.postcode) {
                     const verifiedSummary = document.getElementById('verified-summary');
-                    const reporterDetails = document.getElementById('reporter-details');
+                    const detailsContent = document.getElementById('details-content');
+                    const defaultHeader = document.getElementById('default-header');
                     const summaryDetails = document.getElementById('summary-details');
-                    const closeEditBtn = document.getElementById('close-edit-btn');
+                    const editDetailsBtn = document.getElementById('edit-details-btn');
 
-                    if (summaryDetails && verifiedSummary && reporterDetails) {
+                    if (summaryDetails && verifiedSummary && detailsContent && defaultHeader) {
                         summaryDetails.textContent = `${data.fullName} - ${data.postcode}`;
                         verifiedSummary.classList.remove('hidden');
-                        reporterDetails.classList.add('hidden');
-                        if (closeEditBtn) {
-                            closeEditBtn.classList.add('hidden');
+                        defaultHeader.classList.add('hidden');
+                        detailsContent.classList.add('hidden');
+                        detailsContent.classList.add('expanded-from-summary');
+                        if (editDetailsBtn) {
+                            editDetailsBtn.textContent = 'Edit File';
                         }
                     }
                 }
@@ -379,11 +375,11 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.className = 'status-message alert-info';
             statusMessage.classList.remove('hidden');
             
-            const verifiedSummary = document.getElementById('verified-summary');
-            const reporterDetails = document.getElementById('reporter-details');
-            if (verifiedSummary && reporterDetails) {
-                verifiedSummary.classList.add('hidden');
-                reporterDetails.classList.remove('hidden');
+            const detailsContent = document.getElementById('details-content');
+            const editDetailsBtn = document.getElementById('edit-details-btn');
+            if (detailsContent) {
+                detailsContent.classList.remove('hidden');
+                if (editDetailsBtn) editDetailsBtn.textContent = 'Cancel Edit';
             }
             
             document.getElementById('reporter-details').scrollIntoView({ behavior: 'smooth' });
