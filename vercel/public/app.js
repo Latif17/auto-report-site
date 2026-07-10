@@ -112,6 +112,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dateOfSmell').value = dateFormatter.format(now);
     document.getElementById('timeOfSmell').value = timeFormatter.format(now);
 
+    // Event listener for opening edit mode
+    const editDetailsBtn = document.getElementById('edit-details-btn');
+    const closeEditBtn = document.getElementById('close-edit-btn');
+    const verifiedSummary = document.getElementById('verified-summary');
+    const reporterDetails = document.getElementById('reporter-details');
+
+    if (editDetailsBtn) {
+        editDetailsBtn.addEventListener('click', () => {
+            verifiedSummary.classList.add('hidden');
+            reporterDetails.classList.remove('hidden');
+            if (closeEditBtn) {
+                closeEditBtn.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (closeEditBtn) {
+        closeEditBtn.addEventListener('click', () => {
+            // Re-load saved data to revert any unsaved changes
+            loadSavedData();
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
