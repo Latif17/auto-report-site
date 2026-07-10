@@ -211,6 +211,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.getElementById('storeLocally').checked = data.storeLocally === true;
                 document.getElementById('shareData').checked = data.shareData === true;
+
+                // Trigger Returning User State if we have core details
+                if (data.fullName && data.postcode) {
+                    const verifiedSummary = document.getElementById('verified-summary');
+                    const reporterDetails = document.getElementById('reporter-details');
+                    const summaryDetails = document.getElementById('summary-details');
+
+                    if (summaryDetails && verifiedSummary && reporterDetails) {
+                        summaryDetails.textContent = `${data.fullName} - ${data.postcode}`;
+                        verifiedSummary.classList.remove('hidden');
+                        reporterDetails.classList.add('hidden');
+                    }
+                }
             } catch (e) {
                 console.error("Failed to parse local storage data", e);
             }
