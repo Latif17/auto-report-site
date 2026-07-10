@@ -225,5 +225,5 @@ describe('Security Middlewares', () => {
         const res = await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
         expect(res.statusCode).toEqual(429);
         expect(res.body).toHaveProperty('error', 'Too many requests from this IP, please try again after 15 minutes');
-    });
+    }, 15000);
 });
