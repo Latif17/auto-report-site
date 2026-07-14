@@ -61,6 +61,7 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
                         maybeSingle: () => chain,
                         throwOnError: () => chain,
                         gte: () => chain,
+                        lte: () => chain,
                         order: () => chain,
                         limit: () => chain,
                         in: () => chain,
@@ -198,6 +199,17 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
     }
 });
 
+const shiftHours = (dateStr, timeStr, offsetHours) => {
+    const dt = new Date(`${dateStr}T${timeStr}:00Z`);
+    dt.setUTCHours(dt.getUTCHours() + offsetHours);
+    const yyyy = dt.getUTCFullYear();
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getUTCDate()).padStart(2, '0');
+    const hh = String(dt.getUTCHours()).padStart(2, '0');
+    const min = String(dt.getUTCMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:00 Europe/London`;
+};
+
 app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
     if (email) {
@@ -227,9 +239,16 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
         // Check for duplicates
         const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00 Europe/London`;
+        const lowerBound = shiftHours(dateOfSmell, timeOfSmell, -3);
+        const upperBound = shiftHours(dateOfSmell, timeOfSmell, 3);
+        
         let query = supabase.from('incidents')
             .select('id')
-            .eq('smell_timestamp', smellTimestamp);
+            .eq('smell_type', smellType)
+            .gte('smell_timestamp', lowerBound)
+            .lte('smell_timestamp', upperBound)
+            .order('smell_timestamp', { ascending: true })
+            .limit(1);
             
         if (businessLocation == null) {
             query = query.is('business_location', null);
@@ -239,26 +258,30 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
         const { data: existingIncidents } = await query.throwOnError();
 
-        if (existingIncidents && existingIncidents.length > 0 && email) {
-            const incidentIds = existingIncidents.map(i => i.id);
-            const { data: userLink } = await supabase.from('opted_in_user_reports')
-                .select('id')
-                .eq('user_email', email)
-                .in('incident_id', incidentIds)
-                .throwOnError();
+        let incidentId;
 
-            if (userLink && userLink.length > 0) {
-                return res.status(400).json({ error: 'You have already submitted a report for this exact event.' });
+        if (existingIncidents && existingIncidents.length > 0) {
+            incidentId = existingIncidents[0].id;
+            if (email) {
+                const { data: userLink } = await supabase.from('opted_in_user_reports')
+                    .select('id')
+                    .eq('user_email', email)
+                    .eq('incident_id', incidentId)
+                    .throwOnError();
+
+                if (userLink && userLink.length > 0) {
+                    return res.status(400).json({ error: 'You have already submitted a report for this exact event.' });
+                }
             }
+        } else {
+            const { data: newIncident } = await supabase.from('incidents')
+                .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending' })
+                .select()
+                .single()
+                .throwOnError();
+            
+            incidentId = newIncident.id;
         }
-
-        const { data: newIncident } = await supabase.from('incidents')
-            .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending' })
-            .select()
-            .single()
-            .throwOnError();
-        
-        const incidentId = newIncident.id;
 
         const insertPromises = [];
         if (email) {
