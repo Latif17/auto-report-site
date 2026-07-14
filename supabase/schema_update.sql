@@ -38,3 +38,5 @@ DROP COLUMN time_of_smell;
 -- add status to opted_in_user_reports
 ALTER TABLE opted_in_user_reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 CREATE INDEX IF NOT EXISTS idx_user_reports_status ON opted_in_user_reports(status);
+
+ALTER TABLE opted_in_user_reports ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP WITH TIME ZONE;

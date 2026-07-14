@@ -26,7 +26,8 @@ CREATE TABLE opted_in_user_reports (
   incident_id INTEGER REFERENCES incidents(id),
   user_email TEXT,
   status TEXT DEFAULT 'pending',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  submitted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- Enable Row Level Security (RLS)
