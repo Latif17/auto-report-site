@@ -72,11 +72,13 @@
     </div>
 
     <script>
-        document.getElementById('feedback-form').addEventListener('submit', function(e) {
+        document.getElementById('feedback-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const submitBtn = document.getElementById('feedback-submit-btn');
             const errorDiv = document.getElementById('feedback-error');
+            const successDiv = document.getElementById('feedback-success');
+            const form = document.getElementById('feedback-form');
             const btnText = submitBtn.querySelector('.btn-text');
             
             // Reset state
@@ -85,13 +87,41 @@
             btnText.textContent = 'Submitting...';
             submitBtn.disabled = true;
 
-            // Formspree implementation removed per user request
-            setTimeout(() => {
-                errorDiv.textContent = 'Feedback submission is temporarily disabled while we upgrade our systems. Please check back later.';
+            const feedbackType = document.getElementById('feedbackType').value;
+            const message = document.getElementById('message').value;
+
+            try {
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ feedbackType, message })
+                });
+
+                if (!response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    let errorMessage = 'Failed to submit feedback';
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        try {
+                            const data = await response.json();
+                            errorMessage = data.error || errorMessage;
+                        } catch (e) {
+                            // JSON parsing failed, use default error message
+                        }
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                // Success
+                form.classList.add('hidden');
+                successDiv.classList.remove('hidden');
+            } catch (error) {
+                errorDiv.textContent = error.message;
                 errorDiv.classList.remove('hidden');
                 btnText.textContent = originalText;
                 submitBtn.disabled = false;
-            }, 500);
+            }
         });
     </script>
 </body>

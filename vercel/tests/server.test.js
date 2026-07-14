@@ -7,6 +7,7 @@ describe('API Endpoints', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(console, 'error').mockImplementation(() => {});
         usersUpsertSpy = jest.fn().mockReturnValue({
             throwOnError: jest.fn().mockReturnThis(),
             then: jest.fn((cb) => cb({}))
@@ -140,6 +141,97 @@ describe('API Endpoints', () => {
                 .send({});
             expect(res.statusCode).toEqual(400);
             expect(res.body).toHaveProperty('error', 'Email is required');
+        });
+    });
+    describe('POST /api/feedback', () => {
+        let originalFetch;
+
+        beforeAll(() => {
+            originalFetch = global.fetch;
+        });
+
+        afterAll(() => {
+            global.fetch = originalFetch;
+        });
+
+        beforeEach(() => {
+            jest.resetModules();
+            process.env.GITHUB_TOKEN = 'mock_token';
+            global.fetch = jest.fn();
+            jest.spyOn(console, 'error').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            delete process.env.GITHUB_TOKEN;
+        });
+
+        it('fails with missing parameters', async () => {
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.20')
+                .send({ feedbackType: 'Bug Report' });
+            expect(res.statusCode).toEqual(400);
+            expect(res.body).toHaveProperty('error', 'Feedback type and message are required');
+        });
+
+        it('fails when parameters are not strings', async () => {
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.20')
+                .send({ feedbackType: 'Bug Report', message: { object: 'invalid' } });
+            expect(res.statusCode).toEqual(400);
+            expect(res.body).toHaveProperty('error', 'Feedback type and message must be strings');
+        });
+
+        it('fails when GITHUB_TOKEN is missing', async () => {
+            delete process.env.GITHUB_TOKEN;
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.21')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(500);
+            expect(res.body).toHaveProperty('error', 'Server configuration error');
+        });
+
+        it('handles upstream API errors', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: false,
+                text: jest.fn().mockResolvedValueOnce('Bad Request')
+            });
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.22')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(502);
+            expect(res.body).toHaveProperty('error', 'Failed to create issue with third-party service');
+        });
+
+        it('succeeds with valid data and properly formats the issue body', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: jest.fn().mockResolvedValueOnce({ html_url: 'https://github.com/issue/1' })
+            });
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.23')
+                .send({ feedbackType: 'Bug Report', message: 'Test message @someone' });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body).toHaveProperty('success', true);
+            expect(res.body).toHaveProperty('issueUrl', 'https://github.com/issue/1');
+            
+            const fetchArgs = global.fetch.mock.calls[0];
+            const requestBody = JSON.parse(fetchArgs[1].body);
+            expect(requestBody.body).toContain('```text\nTest message @someone\n```');
+        });
+
+        it('handles network timeout errors', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Network timeout'));
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.24')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(500);
+            expect(res.body).toHaveProperty('error', 'Internal server error');
         });
     });
 });
