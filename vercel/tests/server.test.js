@@ -7,6 +7,7 @@ describe('API Endpoints', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.spyOn(console, 'error').mockImplementation(() => {});
         usersUpsertSpy = jest.fn().mockReturnValue({
             throwOnError: jest.fn().mockReturnThis(),
             then: jest.fn((cb) => cb({}))
@@ -144,22 +145,24 @@ describe('API Endpoints', () => {
     });
     describe('POST /api/feedback', () => {
         let originalFetch;
-        let originalEnv;
 
         beforeAll(() => {
             originalFetch = global.fetch;
-            originalEnv = process.env;
         });
 
         afterAll(() => {
             global.fetch = originalFetch;
-            process.env = originalEnv;
         });
 
         beforeEach(() => {
             jest.resetModules();
-            process.env = { ...originalEnv, GITHUB_TOKEN: 'mock_token' };
+            process.env.GITHUB_TOKEN = 'mock_token';
             global.fetch = jest.fn();
+            jest.spyOn(console, 'error').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            delete process.env.GITHUB_TOKEN;
         });
 
         it('fails with missing parameters', async () => {
@@ -206,6 +209,16 @@ describe('API Endpoints', () => {
             expect(res.statusCode).toEqual(200);
             expect(res.body).toHaveProperty('success', true);
             expect(res.body).toHaveProperty('issueUrl', 'https://github.com/issue/1');
+        });
+
+        it('handles network timeout errors', async () => {
+            global.fetch.mockRejectedValueOnce(new Error('Network timeout'));
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.24')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(500);
+            expect(res.body).toHaveProperty('error', 'Internal server error');
         });
     });
 });
