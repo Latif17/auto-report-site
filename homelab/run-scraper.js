@@ -158,7 +158,8 @@ async function processQueue() {
                                 .upsert({ 
                                     incident_id: incident.id, 
                                     user_email: user.email,
-                                    status: 'completed'
+                                    status: 'completed',
+                                    submitted_at: new Date().toISOString()
                                 }, { onConflict: 'user_email, incident_id' });
                                 
                             if (completeLinkError) {
