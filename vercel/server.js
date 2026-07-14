@@ -328,6 +328,52 @@ app.post('/api/join', strictLimiter, async (req, res) => {
     }
 });
 
+app.post('/api/feedback', strictLimiter, async (req, res) => {
+    const { feedbackType, message } = req.body;
+
+    if (!feedbackType || !message) {
+        return res.status(400).json({ error: 'Feedback type and message are required' });
+    }
+
+    try {
+        const githubToken = process.env.GITHUB_TOKEN;
+        if (!githubToken) {
+            console.error('GITHUB_TOKEN is not set');
+            return res.status(500).json({ error: 'Server configuration error' });
+        }
+
+        const issueTitle = `[${feedbackType}] New User Feedback`;
+        const issueBody = `**Type:** ${feedbackType}\n\n**Message:**\n${message}`;
+
+        const response = await fetch('https://api.github.com/repos/Latif17/auto-report-site/issues', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+                'User-Agent': 'auto-report-site'
+            },
+            body: JSON.stringify({
+                title: issueTitle,
+                body: issueBody,
+                labels: ['user-feedback', feedbackType === 'Bug Report' ? 'bug' : 'enhancement']
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('GitHub API error:', errorData);
+            return res.status(502).json({ error: 'Failed to create issue with third-party service' });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, issueUrl: data.html_url });
+    } catch (error) {
+        console.error('Feedback submission error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.delete('/api/delete-data', strictLimiter, async (req, res) => {
     let { email } = req.body;
     if (!email) {
