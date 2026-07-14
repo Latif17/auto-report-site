@@ -210,10 +210,14 @@ async function processQueue() {
         const targetStatus = allSucceeded ? 'completed' : 'pending';
         console.log(`Incident ${incident.id} processed: ${successfulUsers.length}/${users.length} succeeded. Setting status to: ${targetStatus}`);
         
-        const { error: updateStatusError } = await supabase
-            .from('incidents')
-            .update({ status: targetStatus })
-            .eq('id', incident.id);
+        let query = supabase.from('incidents').update({ status: targetStatus }).eq('id', incident.id);
+        
+        // If we are trying to mark it completed, only do so if it hasn't been flipped back to pending by a new joiner
+        if (targetStatus === 'completed') {
+            query = query.eq('status', 'processing');
+        }
+
+        const { error: updateStatusError } = await query;
 
         if (updateStatusError) {
             console.error(`Error updating incident ${incident.id} to ${targetStatus}:`, updateStatusError);

@@ -293,9 +293,6 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             insertPromises.push(supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }));
-            insertPromises.push(supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).then(({error}) => {
-                if (error) throw error;
-            }));
         }
         await Promise.all(insertPromises);
 
