@@ -100,8 +100,17 @@
                 });
 
                 if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Failed to submit feedback');
+                    const contentType = response.headers.get("content-type");
+                    let errorMessage = 'Failed to submit feedback';
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        try {
+                            const data = await response.json();
+                            errorMessage = data.error || errorMessage;
+                        } catch (e) {
+                            // JSON parsing failed, use default error message
+                        }
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 // Success

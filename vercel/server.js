@@ -335,6 +335,10 @@ app.post('/api/feedback', strictLimiter, async (req, res) => {
         return res.status(400).json({ error: 'Feedback type and message are required' });
     }
 
+    if (typeof feedbackType !== 'string' || typeof message !== 'string') {
+        return res.status(400).json({ error: 'Feedback type and message must be strings' });
+    }
+
     try {
         const githubToken = process.env.GITHUB_TOKEN;
         if (!githubToken) {
@@ -343,7 +347,7 @@ app.post('/api/feedback', strictLimiter, async (req, res) => {
         }
 
         const issueTitle = `[${feedbackType}] New User Feedback`;
-        const issueBody = `**Type:** ${feedbackType}\n\n**Message:**\n${message}`;
+        const issueBody = `**Type:** ${feedbackType}\n\n**Message:**\n\`\`\`text\n${message}\n\`\`\``;
 
         const response = await fetch('https://api.github.com/repos/Latif17/auto-report-site/issues', {
             method: 'POST',

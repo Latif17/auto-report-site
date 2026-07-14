@@ -174,6 +174,15 @@ describe('API Endpoints', () => {
             expect(res.body).toHaveProperty('error', 'Feedback type and message are required');
         });
 
+        it('fails when parameters are not strings', async () => {
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.20')
+                .send({ feedbackType: 'Bug Report', message: { object: 'invalid' } });
+            expect(res.statusCode).toEqual(400);
+            expect(res.body).toHaveProperty('error', 'Feedback type and message must be strings');
+        });
+
         it('fails when GITHUB_TOKEN is missing', async () => {
             delete process.env.GITHUB_TOKEN;
             const res = await request(app)
@@ -197,7 +206,7 @@ describe('API Endpoints', () => {
             expect(res.body).toHaveProperty('error', 'Failed to create issue with third-party service');
         });
 
-        it('succeeds with valid data', async () => {
+        it('succeeds with valid data and properly formats the issue body', async () => {
             global.fetch.mockResolvedValueOnce({
                 ok: true,
                 json: jest.fn().mockResolvedValueOnce({ html_url: 'https://github.com/issue/1' })
@@ -205,10 +214,14 @@ describe('API Endpoints', () => {
             const res = await request(app)
                 .post('/api/feedback')
                 .set('X-Forwarded-For', '10.0.0.23')
-                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+                .send({ feedbackType: 'Bug Report', message: 'Test message @someone' });
             expect(res.statusCode).toEqual(200);
             expect(res.body).toHaveProperty('success', true);
             expect(res.body).toHaveProperty('issueUrl', 'https://github.com/issue/1');
+            
+            const fetchArgs = global.fetch.mock.calls[0];
+            const requestBody = JSON.parse(fetchArgs[1].body);
+            expect(requestBody.body).toContain('```text\nTest message @someone\n```');
         });
 
         it('handles network timeout errors', async () => {
