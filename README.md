@@ -78,7 +78,7 @@ The repository is organized into distinct deployment-specific folders:
 ### 2. Web & API Setup (Vercel)
 - Create an account on [Vercel](https://vercel.com) and import this repository.
 - **Important:** Under **Project Settings > General**, set the **Root Directory** to `vercel`.
-- Add `SUPABASE_URL` and `SUPABASE_KEY` as Environment Variables.
+- Add `SUPABASE_URL`, `SUPABASE_KEY`, and `GITHUB_TOKEN` as Environment Variables.
 - Deploy the project.
 
 ### 3. Background Scraper Setup (Proxmox VE / Homelab)
