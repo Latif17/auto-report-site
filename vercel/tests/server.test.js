@@ -142,6 +142,72 @@ describe('API Endpoints', () => {
             expect(res.body).toHaveProperty('error', 'Email is required');
         });
     });
+    describe('POST /api/feedback', () => {
+        let originalFetch;
+        let originalEnv;
+
+        beforeAll(() => {
+            originalFetch = global.fetch;
+            originalEnv = process.env;
+        });
+
+        afterAll(() => {
+            global.fetch = originalFetch;
+            process.env = originalEnv;
+        });
+
+        beforeEach(() => {
+            jest.resetModules();
+            process.env = { ...originalEnv, GITHUB_TOKEN: 'mock_token' };
+            global.fetch = jest.fn();
+        });
+
+        it('fails with missing parameters', async () => {
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.20')
+                .send({ feedbackType: 'Bug Report' });
+            expect(res.statusCode).toEqual(400);
+            expect(res.body).toHaveProperty('error', 'Feedback type and message are required');
+        });
+
+        it('fails when GITHUB_TOKEN is missing', async () => {
+            delete process.env.GITHUB_TOKEN;
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.21')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(500);
+            expect(res.body).toHaveProperty('error', 'Server configuration error');
+        });
+
+        it('handles upstream API errors', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: false,
+                text: jest.fn().mockResolvedValueOnce('Bad Request')
+            });
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.22')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(502);
+            expect(res.body).toHaveProperty('error', 'Failed to create issue with third-party service');
+        });
+
+        it('succeeds with valid data', async () => {
+            global.fetch.mockResolvedValueOnce({
+                ok: true,
+                json: jest.fn().mockResolvedValueOnce({ html_url: 'https://github.com/issue/1' })
+            });
+            const res = await request(app)
+                .post('/api/feedback')
+                .set('X-Forwarded-For', '10.0.0.23')
+                .send({ feedbackType: 'Bug Report', message: 'Test message' });
+            expect(res.statusCode).toEqual(200);
+            expect(res.body).toHaveProperty('success', true);
+            expect(res.body).toHaveProperty('issueUrl', 'https://github.com/issue/1');
+        });
+    });
 });
 
 describe('Security Middlewares', () => {
