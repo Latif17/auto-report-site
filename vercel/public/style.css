@@ -267,7 +267,8 @@ input[type="email"],
 input[type="tel"],
 input[type="date"],
 input[type="time"],
-select {
+select,
+textarea {
     display: block;
     width: 100%;
     min-width: 0;
@@ -287,7 +288,9 @@ select {
     appearance: none;
 }
 
-input:focus {
+input:focus,
+select:focus,
+textarea:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--focus);
