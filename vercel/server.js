@@ -273,6 +273,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
                     return res.status(400).json({ error: 'You have already submitted a report for this exact event.' });
                 }
             }
+            await supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError();
         } else {
             const { data: newIncident } = await supabase.from('incidents')
                 .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending' })
