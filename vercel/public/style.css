@@ -698,3 +698,25 @@ footer {
         font-size: 0.85rem;
     }
 }
+
+/* Reading Content (Mobile-optimized legibility for long text) */
+.reading-content {
+    font-size: 1.125rem;
+    line-height: 1.65;
+    text-align: left;
+}
+
+.reading-content p {
+    margin-bottom: 1.5rem;
+}
+
+.reading-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Override timeline text size when inside reading-content */
+.reading-content .timeline-content {
+    font-size: 1.125rem;
+    line-height: 1.65;
+}
