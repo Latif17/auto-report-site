@@ -524,7 +524,14 @@ footer {
     color: var(--ink-light);
 }
 
-footer a {
+.footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.footer-nav a {
     color: var(--ink);
     text-decoration: underline;
 }
