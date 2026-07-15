@@ -1,7 +1,6 @@
 # Auto Report Site
 
-## Production 
-https://report-smell-br.vercel.app/
+Live site: [https://barking-riverside-report-smell.vercel.app/](https://barking-riverside-report-smell.vercel.app/)
 
 ## Why this repo exists
 For over 20 years, the Barking area has been plagued by a severe and persistent stench. Residents in the newly developed Barking Riverside (located just 1 mile away from potential culprits) frequently suffer from foul, toxic smells drifting into their homes, often overnight. This environmental hazard has forced residents to keep windows shut, purchase air purifiers, and avoid going outside when the smell is bad.
