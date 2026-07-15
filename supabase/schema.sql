@@ -6,11 +6,7 @@ CREATE TABLE users (
   address text,
   pool_data boolean DEFAULT false
 );
-CREATE TABLE system_stats (
-  id integer PRIMARY KEY,
-  last_report_time timestamp with time zone
-);
-INSERT INTO system_stats (id) VALUES (1);
+
 
 CREATE TABLE IF NOT EXISTS incidents (
     id SERIAL PRIMARY KEY,
@@ -32,7 +28,7 @@ CREATE TABLE opted_in_user_reports (
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE system_stats ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE opted_in_user_reports ENABLE ROW LEVEL SECURITY;
 

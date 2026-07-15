@@ -4,7 +4,7 @@ ALTER TABLE incidents ADD COLUMN date_of_smell DATE;
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE system_stats ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE opted_in_user_reports ENABLE ROW LEVEL SECURITY;
 
@@ -13,8 +13,7 @@ DROP POLICY IF EXISTS "Allow anon select on users" ON users;
 DROP POLICY IF EXISTS "Allow anon insert on users" ON users;
 DROP POLICY IF EXISTS "Allow anon update on users" ON users;
 
-DROP POLICY IF EXISTS "Allow anon select on system_stats" ON system_stats;
-DROP POLICY IF EXISTS "Allow anon update on system_stats" ON system_stats;
+
 
 DROP POLICY IF EXISTS "Allow anon select on incidents" ON incidents;
 DROP POLICY IF EXISTS "Allow anon insert on incidents" ON incidents;

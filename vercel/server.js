@@ -140,11 +140,9 @@ app.get('/api/stats', async (req, res) => {
     try {
         const [
             { count },
-            { data: sysData },
             { data: recentIncidents }
         ] = await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
-            supabase.from('system_stats').select('last_report_time').eq('id', 1).maybeSingle().throwOnError(),
             supabase.from('incidents')
                 .select('*')
                 .order('smell_timestamp', { ascending: false })
@@ -175,7 +173,7 @@ app.get('/api/stats', async (req, res) => {
             alreadyReported: reportedIncidentIds.includes(recentIncidents[0].id)
         } : null;
 
-        res.json({ count: count || 0, lastReport: sysData?.last_report_time, recentIncidents: formattedIncident ? [formattedIncident] : [] });
+        res.json({ count: count || 0, recentIncidents: formattedIncident ? [formattedIncident] : [] });
     } catch (error) {
         console.error('Stats error:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -219,10 +217,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
     }
 
     try {
-        // Update stats without blocking the rest of the execution
-        supabase.from('system_stats').update({ last_report_time: new Date().toISOString() }).eq('id', 1).then(({ error }) => {
-            if (error) console.error('Failed to update stats', error);
-        });
+
 
         const now = new Date();
         if (!timeOfSmell) {
