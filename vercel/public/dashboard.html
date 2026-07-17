@@ -21,30 +21,33 @@
         </header>
 
         <main class="dashboard-main" style="padding: 0; margin-top: 2rem;">
-        <section class="hero-section text-center">
-            <h1>Our Community Impact</h1>
-            <p>See the real-time difference our users are making by automating reports.</p>
-        </section>
+            <header class="mission-brief">
+                <h2>// SYSTEM STATUS: COMMUNITY MONITORING</h2>
+                <p>Tracking real-time dossier updates and evidence logs.</p>
+            </header>
 
-        <section class="metrics-grid">
-            <div class="metric-card">
-                <h3>Users Signed Up</h3>
-                <div class="metric-value" id="val-users">--</div>
+            <section class="terminal-feed">
+                <div class="terminal-line">
+                    <span class="label">> USERS_ACTIVE:</span>
+                    <span class="value" id="val-users">--</span>
+                    <span class="cursor">_</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="label">> INCIDENTS_LOGGED:</span>
+                    <span class="value" id="val-incidents">--</span>
+                    <span class="cursor">_</span>
+                </div>
+                <div class="terminal-line">
+                    <span class="label">> FORMS_SUBMITTED:</span>
+                    <span class="value" id="val-forms">--</span>
+                    <span class="cursor">_</span>
+                </div>
+            </section>
+            
+            <div id="dashboard-error" class="error-message terminal-error" style="display: none;">
+                [ERR_CONNECTION_FAILED] - RETRYING...
             </div>
-            <div class="metric-card">
-                <h3>Smells Reported</h3>
-                <div class="metric-value" id="val-incidents">--</div>
-            </div>
-            <div class="metric-card">
-                <h3>Forms Submitted</h3>
-                <div class="metric-value" id="val-forms">--</div>
-            </div>
-        </section>
-        
-        <div id="dashboard-error" class="error-message" style="display: none; text-align: center;">
-            Statistics currently unavailable.
-        </div>
-    </main>
+        </main>
         
         <footer>
             <nav class="footer-nav" aria-label="Footer navigation">
