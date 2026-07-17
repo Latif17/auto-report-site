@@ -134,6 +134,21 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         // 1. Gather Data
+        const rawSmellSelection = document.getElementById('businessLocation').value;
+        let mappedBusinessLocation = '';
+        let mappedSmellType = '';
+
+        if (rawSmellSelection === 'rotting_rubbish') {
+            mappedBusinessLocation = 'Multiple (ReFood, East London Bio Gas)';
+            mappedSmellType = 'Rubbish or refuse';
+        } else if (rawSmellSelection === 'chemical_plastic') {
+            mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
+            mappedSmellType = 'Something else';
+        } else if (rawSmellSelection === 'sewage_drain') {
+            mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
+            mappedSmellType = 'Sewage';
+        }
+
         const formData = {
             fullName: document.getElementById('fullName').value,
             email: document.getElementById('email').value,
@@ -142,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
             address: document.getElementById('address').value,
             dateOfSmell: document.getElementById('dateOfSmell').value,
             timeOfSmell: document.getElementById('timeOfSmell').value,
-            smellType: 'Industrial Stench',
-            businessLocation: document.getElementById('businessLocation').value,
+            smellType: mappedSmellType,
+            businessLocation: mappedBusinessLocation,
             storeLocally: document.getElementById('storeLocally').checked,
             shareData: document.getElementById('shareData').checked
         };
