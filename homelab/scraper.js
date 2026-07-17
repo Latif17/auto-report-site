@@ -142,13 +142,12 @@ async function submitGovForm(userData, incidentData) {
         let smellDescription = '';
         let addressStreet = 'Choats Rd Dagenham';
         let addressPostcode = 'RM9 6LF';
-        let addressTown = '';
+        let addressTown = 'Barking Riverside';
         
         if (sType === 'Sewage') {
             siteType = 'sewage or water treatment works';
             addressStreet = '';
             addressPostcode = '';
-            addressTown = 'Barking Riverside';
         } else if (bLoc && bLoc.includes('Veolia')) {
             smellCategory = 'Something else';
             smellDescription = 'chemical/plastic odour';
