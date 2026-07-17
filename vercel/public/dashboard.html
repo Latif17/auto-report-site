@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Platform Impact - Auto Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="site-header">
-        <nav class="nav-container">
-            <a href="index.html" class="logo">Auto Report</a>
-            <div class="nav-links">
-                <a href="dashboard.html">Dashboard</a>
+    <div class="dossier-container">
+        <header class="dossier-header">
+            <div class="header-top">
+                <span class="classification">CONFIDENTIAL // EVIDENCE LOG</span>
+                <span class="case-number">CASE: BARKING-RIVERSIDE</span>
             </div>
-        </nav>
-    </header>
+            <h1>Dashboard</h1>
+            <p class="subject">SUBJECT: Platform Impact</p>
+        </header>
 
-    <main class="dashboard-main">
+        <main class="dashboard-main" style="padding: 0; margin-top: 2rem;">
         <section class="hero-section text-center">
             <h1>Our Community Impact</h1>
             <p>See the real-time difference our users are making by automating reports.</p>
@@ -41,6 +45,20 @@
             Statistics currently unavailable.
         </div>
     </main>
+        
+        <footer>
+            <nav class="footer-nav" aria-label="Footer navigation">
+                <a href="index.html">Home</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a>
+                <a href="/promise.html">Data Promise</a>
+                <a href="/privacy.html">Privacy Policy</a>
+                <a href="/manage.html">Manage My Data</a>
+                <a href="/feedback.html">Feedback</a>
+                <a href="https://github.com/Latif17/auto-report-site" target="_blank" rel="noopener noreferrer">View Source on GitHub</a>
+            </nav>
+        </footer>
+    </div>
 
     <script>
         async function fetchStats() {
