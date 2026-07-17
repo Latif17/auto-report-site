@@ -722,3 +722,120 @@ footer {
 }
 
 /* Dashboard Specific Styles */
+.dashboard-main {
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.mission-brief {
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.mission-brief h2 {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid var(--ink);
+    display: inline-block;
+}
+
+.mission-brief p {
+    font-size: 0.95rem;
+    color: var(--ink-light);
+}
+
+.terminal-feed {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2rem 1.5rem;
+    border: 2px solid var(--border);
+    box-shadow: 6px 6px 0px var(--shadow);
+    font-family: var(--font-mono);
+    margin: 0 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle scanline effect */
+.terminal-feed::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.terminal-line:last-child {
+    margin-bottom: 0;
+}
+
+.terminal-line .label {
+    color: var(--paper);
+    margin-right: 0.75rem;
+}
+
+.terminal-line .value {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.terminal-line .cursor {
+    color: var(--accent);
+    margin-left: 0.25rem;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.terminal-error {
+    font-family: var(--font-mono);
+    color: var(--paper);
+    background: var(--error-text);
+    padding: 1rem;
+    margin: 2rem 1rem 0;
+    border: 2px solid var(--border);
+    font-weight: bold;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 600px) {
+    .dashboard-main {
+        padding: 1rem 0;
+    }
+    
+    .mission-brief {
+        padding: 0;
+    }
+
+    .terminal-feed {
+        margin: 0;
+        padding: 1.5rem 1rem;
+        box-shadow: 4px 4px 0px var(--shadow);
+    }
+
+    .terminal-line {
+        font-size: 1rem;
+        margin-bottom: 1.25rem;
+        /* Allow wrapping if line is too long, but keep label/value together as much as possible */
+    }
+}
