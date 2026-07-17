@@ -147,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (rawSmellSelection === 'sewage_drain') {
             mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
             mappedSmellType = 'Sewage';
+        } else {
+            console.error(`Unexpected smell selection: ${rawSmellSelection}`);
+            throw new Error('Invalid smell selection');
         }
 
         const formData = {
