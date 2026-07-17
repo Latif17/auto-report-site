@@ -133,67 +133,67 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // 1. Gather Data
-        const rawSmellSelection = document.getElementById('businessLocation').value;
-        let mappedBusinessLocation = '';
-        let mappedSmellType = '';
-
-        if (rawSmellSelection === 'rotting_rubbish') {
-            mappedBusinessLocation = 'Multiple (ReFood, East London Bio Gas)';
-            mappedSmellType = 'Rubbish or refuse';
-        } else if (rawSmellSelection === 'chemical_plastic') {
-            mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
-            mappedSmellType = 'Something else';
-        } else if (rawSmellSelection === 'sewage_drain') {
-            mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
-            mappedSmellType = 'Sewage';
-        } else {
-            console.error(`Unexpected smell selection: ${rawSmellSelection}`);
-            throw new Error('Invalid smell selection');
-        }
-
-        const formData = {
-            fullName: document.getElementById('fullName').value,
-            email: document.getElementById('email').value,
-            postcode: document.getElementById('postcode').value,
-            phone: document.getElementById('phone').value,
-            address: document.getElementById('address').value,
-            dateOfSmell: document.getElementById('dateOfSmell').value,
-            timeOfSmell: document.getElementById('timeOfSmell').value,
-            smellType: mappedSmellType,
-            businessLocation: mappedBusinessLocation,
-            storeLocally: document.getElementById('storeLocally').checked,
-            shareData: document.getElementById('shareData').checked
-        };
-
-        // 2. Handle Local Storage
-        if (formData.storeLocally) {
-            const { dateOfSmell, timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
-            localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
-            localStorage.removeItem('freshAirWatchData');
-        } else {
-            localStorage.removeItem('freshAirWatchData_v2');
-            localStorage.removeItem('freshAirWatchData');
-        }
-        
-        // Update pooled user state internally for immediate UI feedback
-        isPooledUser = formData.shareData;
-
-        const joinIncidentId = document.getElementById('joinIncidentId').value;
-        const endpoint = joinIncidentId ? '/api/join' : '/api/submit';
-        
-        if (joinIncidentId) {
-            formData.incidentId = joinIncidentId;
-            // Ensure they pool data if they are joining
-            formData.shareData = true; 
-        }
-
-        // 3. UI Loading State
+        // UI Loading State setup
         submitBtn.classList.add('loading');
         statusMessage.classList.add('hidden');
         statusMessage.className = 'status-message'; // Reset classes
 
         try {
+            // 1. Gather Data
+            const rawSmellSelection = document.getElementById('businessLocation').value;
+            let mappedBusinessLocation = '';
+            let mappedSmellType = '';
+
+            if (rawSmellSelection === 'rotting_rubbish') {
+                mappedBusinessLocation = 'Multiple (ReFood, East London Bio Gas)';
+                mappedSmellType = 'Rubbish or refuse';
+            } else if (rawSmellSelection === 'chemical_plastic') {
+                mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
+                mappedSmellType = 'Something else';
+            } else if (rawSmellSelection === 'sewage_drain') {
+                mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
+                mappedSmellType = 'Sewage';
+            } else {
+                console.error(`Unexpected smell selection: ${rawSmellSelection}`);
+                throw new Error('Invalid smell selection');
+            }
+
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                postcode: document.getElementById('postcode').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                dateOfSmell: document.getElementById('dateOfSmell').value,
+                timeOfSmell: document.getElementById('timeOfSmell').value,
+                smellType: mappedSmellType,
+                businessLocation: mappedBusinessLocation,
+                storeLocally: document.getElementById('storeLocally').checked,
+                shareData: document.getElementById('shareData').checked
+            };
+
+            // 2. Handle Local Storage
+            if (formData.storeLocally) {
+                const { dateOfSmell, timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
+                localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
+                localStorage.removeItem('freshAirWatchData');
+            } else {
+                localStorage.removeItem('freshAirWatchData_v2');
+                localStorage.removeItem('freshAirWatchData');
+            }
+            
+            // Update pooled user state internally for immediate UI feedback
+            isPooledUser = formData.shareData;
+
+            const joinIncidentId = document.getElementById('joinIncidentId').value;
+            const endpoint = joinIncidentId ? '/api/join' : '/api/submit';
+            
+            if (joinIncidentId) {
+                formData.incidentId = joinIncidentId;
+                // Ensure they pool data if they are joining
+                formData.shareData = true; 
+            }
+
             const response = await simulateSubmission(formData, endpoint);
             
             if (response && response.incidentId) {
