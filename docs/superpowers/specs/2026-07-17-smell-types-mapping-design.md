@@ -1,52 +1,73 @@
 # Smell Types Mapping Design
 
 ## Objective
-Update the "Source of smell" selector in the Barking Stink frontend to correctly categorize different odour sources by user-friendly smell descriptions, and map them automatically to the specific GOV.UK smell classifications.
+Update the "Source of smell" selector in the Barking Stink frontend to correctly categorize different odour sources by user-friendly smell descriptions. Automatically map these selections to the precise GOV.UK classifications for both "Where is the smell coming from?" (Page 1) and "Describe smell" (Page 6), as well as dynamically providing the correct facility address details.
 
 ## Architecture & Data Flow
 1. **Frontend Updates (`vercel/public/index.html` & `vercel/public/app.js`)**
-   - The dropdown label will be updated to focus on what the user is smelling.
-   - The options will be grouped using `<optgroup>` tags with user-friendly descriptions (e.g., "Rotting rubbish or compost smell", "Chemical or plastic smell", "Sewage or drain smell").
-   - Each group will have a fallback "I'm not sure, but it smells like [X]" option for users who don't know the specific facility.
-   - When the user selects an option, `app.js` will map that selection to the precise string expected by the GOV.UK form.
-   - Both the selected `businessLocation` and the mapped `smellType` will be sent to the backend API.
+   - The dropdown label will ask: "What does it smell like?".
+   - Options are grouped by descriptive smell types.
+   - When a user selects an option, `app.js` calculates:
+     - `businessLocation`: Name of the site (e.g., "Veolia Dagenham (Plastics)").
+     - `smellType`: The exact label for Page 6 (e.g., `"Something else — chemical/plastic odour"`).
+     - `siteType`: The exact label for Page 1 (e.g., `"industrial site"` vs `"sewage or water treatment works"`).
+     - `streetName`: (e.g., `"Choats Rd Dagenham"` or `""`).
+     - `townCity`: (e.g., `""` or `"Barking Riverside"`).
+     - `postcode`: (e.g., `"RM9 6LF"` or `""`).
+   - These details are sent to the backend.
 
 2. **Backend (`vercel/server.js`)**
-   - No schema changes are needed. The backend will receive the correctly mapped `smellType` string (e.g., `"Sewage"`, `"Something else — chemical/plastic odour"`) instead of the hardcoded `"Industrial Stench"` and store it in the `incidents` table.
+   - The API will receive these new fields and pass them through to the scraper. The database table `incidents` will store the `smell_type` and `business_location`.
 
 3. **Scraper (`homelab/scraper.js`)**
-   - The scraper uses the `clickLabel(page, text)` utility to select the smell type. By ensuring the frontend sends the *exact* label text found on the GOV.UK form, the scraper will natively select the correct radio button without needing modifications to its internal logic.
+   - **Page 1:** Uses `clickLabel(page, incidentData.siteType)` to select "industrial site" or "sewage or water treatment works".
+   - **Page 2:** Dynamically fills out the address fields based on the provided location details (Site Name, Street, Town/City, Postcode) instead of hardcoding "Choats Rd".
+   - **Page 6:** Uses `clickLabel(page, incidentData.smellType)` as planned.
 
 ## Categories & Mappings
 
 ### 1. Rotting rubbish, compost, or food waste
-*Anaerobic digestion and food waste facilities.*
-- **I'm not sure, but it smells like rubbish/compost**
-  - *Location string:* `Multiple (ReFood, BioGas)`
-  - *Maps to Gov.UK:* `"Rubbish or refuse"`
-- **ReFood Dagenham**
-  - *Maps to Gov.UK:* `"Rubbish or refuse"`
-- **East London Bio Gas (TEG Biogas)**
-  - *Maps to Gov.UK:* `"Rubbish or refuse (composting)"`
+- **Page 1 Site Type:** `"industrial site"` (or `"waste site"`)
+- **Page 2 Address:** Street: `"Choats Rd Dagenham"`, Postcode: `"RM9 6LF"`
+- **Options:**
+  - **I'm not sure, but it smells like rubbish/compost**
+    - *Site Name:* `Multiple (ReFood, BioGas)`
+    - *Page 6 Smell:* `"Rubbish or refuse"`
+  - **ReFood Dagenham**
+    - *Site Name:* `ReFood Dagenham`
+    - *Page 6 Smell:* `"Rubbish or refuse"`
+  - **East London Bio Gas (TEG Biogas)**
+    - *Site Name:* `East London Bio Gas (TEG Biogas)`
+    - *Page 6 Smell:* `"Rubbish or refuse (composting)"`
 
 ### 2. Chemical or plastic odour
-*Veolia's Dagenham facility is a dedicated plastics recycling plant (processing post-consumer HDPE milk bottles).*
-- **Veolia Dagenham (Plastics)** 
-  - *Maps to Gov.UK:* `"Something else — chemical/plastic odour"`
+- **Page 1 Site Type:** `"industrial site"` (or `"waste site"`)
+- **Page 2 Address:** Street: `"Choats Rd Dagenham"`, Postcode: `"RM9 6LF"`
+- **Options:**
+  - **Veolia Dagenham (Plastics)** 
+    - *Site Name:* `Veolia Dagenham`
+    - *Page 6 Smell:* `"Something else — chemical/plastic odour"`
 
 ### 3. Sewage or drain smell
-*Sewage Treatment Works.*
-- **I'm not sure, but it smells like sewage/drains**
-  - *Location string:* `Multiple (Sewage Treatment Works)`
-  - *Maps to Gov.UK:* `"Sewage"`
-- **Beckton Sewage Treatment Works**
-  - *Maps to Gov.UK:* `"Sewage"`
-- **Riverside Sewage Treatment Works**
-  - *Maps to Gov.UK:* `"Sewage"`
-- **Crossness Sewage Treatment Works**
-  - *Maps to Gov.UK:* `"Sewage"`
+- **Page 1 Site Type:** `"sewage or water treatment works"`
+- **Page 2 Address:** Town/City: `"Barking Riverside"`, Street/Postcode: `""` (Leave blank)
+- **Options:**
+  - **I'm not sure, but it smells like sewage/drains**
+    - *Site Name:* `Multiple (Beckton, Riverside, Crossness)`
+    - *Page 6 Smell:* `"Sewage"`
+  - **Beckton Sewage Treatment Works**
+    - *Site Name:* `Beckton Sewage Treatment Works`
+    - *Page 6 Smell:* `"Sewage"`
+  - **Riverside Sewage Treatment Works**
+    - *Site Name:* `Riverside Sewage Treatment Works`
+    - *Page 6 Smell:* `"Sewage"`
+  - **Crossness Sewage Treatment Works**
+    - *Site Name:* `Crossness Sewage Treatment Works`
+    - *Page 6 Smell:* `"Sewage"`
 
 ## Implementation Steps
-1. Update `<select id="businessLocation">` in `index.html` with `<optgroup>` tags for the three smell descriptions and include the "I'm not sure" options. Update the label to be more user-friendly.
-2. In `app.js`, create a mapping object that translates the `businessLocation` value into the corresponding GOV.UK `smellType`.
-3. Update the `formData` assembly in `app.js` to dynamically look up the `smellType` instead of hardcoding `'Industrial Stench'`.
+1. Update `<select id="businessLocation">` in `index.html`.
+2. In `app.js`, create a mapping object that maps the selected value to all corresponding GOV.UK fields (`siteType`, `smellType`, address details).
+3. Update the backend payload logic in `app.js` and `server.js` to pass these new fields.
+4. Modify `scraper.js` Page 1 to use `incidentData.siteType`.
+5. Modify `scraper.js` Page 2 to populate specific address fields accurately (Name, Street, Town, Postcode).
