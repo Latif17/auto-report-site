@@ -96,4 +96,25 @@ describe('submitGovForm', () => {
         expect(mockPage.emulateTimezone).toHaveBeenCalledWith('Europe/London');
         expect(mockPage.evaluate.mock.calls.length).toBeGreaterThan(10);
     }, 10000);
+
+    it('handles Veolia business location with "Something else" smell category and description', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' }, 
+            { businessLocation: 'Veolia Facility' }
+        );
+        expect(result).toBe(true);
+        
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+        
+        // Find if evaluate was called with 'chemical/plastic odour'
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const descCall = evaluateCalls.find(call => call[1] === 'chemical/plastic odour');
+        expect(descCall).toBeDefined();
+        
+        expect(mockPage.waitForSelector).toHaveBeenCalledWith(
+            'input[type="text"]:not([hidden]), textarea:not([hidden])', 
+            { timeout: 3000 }
+        );
+    }, 10000);
 });

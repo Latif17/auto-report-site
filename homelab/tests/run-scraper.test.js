@@ -34,19 +34,28 @@ describe('run-scraper', () => {
             select: jest.fn().mockReturnThis(),
             update: jest.fn().mockReturnThis(),
             delete: jest.fn().mockReturnThis(),
+            upsert: jest.fn().mockImplementation(() => {
+                return Promise.resolve({ data: null, error: null });
+            }),
             in: jest.fn().mockImplementation((column, values) => {
                 if (column === 'user_email') {
                     return mockSupabase;
                 }
                 const nextVal = mockInResponses.shift();
-                return Promise.resolve(nextVal || { data: [], error: null });
+                const p = Promise.resolve(nextVal || { data: [], error: null });
+                p.eq = mockSupabase.eq;
+                p.neq = mockSupabase.neq;
+                return p;
             }),
             eq: jest.fn().mockImplementation((column, value) => {
-                if (column === 'incidents.status') {
+                if (column === 'incidents.status' || column === 'incident_id') {
                     return mockSupabase;
                 }
                 const nextVal = mockEqResponses.shift();
-                return Promise.resolve(nextVal || { data: [], error: null });
+                const p = Promise.resolve(nextVal || { data: [], error: null });
+                p.eq = function(c, v) { return p; };
+                p.neq = mockSupabase.neq;
+                return p;
             }),
             neq: jest.fn().mockImplementation((column, value) => {
                 const nextVal = mockNeqResponses.shift();
@@ -147,6 +156,9 @@ describe('run-scraper', () => {
         // 5. Mock update to processing (eq)
         mockEqResponses.push({ error: null });
 
+        // Mock completed reports (eq)
+        mockEqResponses.push({ data: [], error: null });
+
         // Mock scraper throwing error
         submitGovForm.mockRejectedValueOnce(new Error('Scraper failed'));
 
@@ -217,6 +229,9 @@ describe('run-scraper', () => {
 
         // 5. Update status to processing (eq)
         mockEqResponses.push({ error: null });
+
+        // Mock completed reports (eq)
+        mockEqResponses.push({ data: [], error: null });
 
         // Mock scraper successful submissions
         submitGovForm.mockResolvedValue(true);
@@ -290,6 +305,9 @@ describe('run-scraper', () => {
 
         // 5. Update status to processing (eq)
         mockEqResponses.push({ error: null });
+
+        // Mock completed reports (eq)
+        mockEqResponses.push({ data: [], error: null });
 
         // Mock scraper successful submissions
         submitGovForm.mockResolvedValue(true);
@@ -420,6 +438,9 @@ describe('run-scraper', () => {
         mockInResponses.push({ data: users, error: null });
         // 5. Update status to processing (eq)
         mockEqResponses.push({ error: null });
+
+        // Mock completed reports (eq)
+        mockEqResponses.push({ data: [], error: null });
 
         // Mock scraper successful submissions
         submitGovForm.mockResolvedValue(true);
