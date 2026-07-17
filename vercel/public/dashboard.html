@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Impact - Auto Report</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo">Auto Report</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="hero-section text-center">
+            <h1>Our Community Impact</h1>
+            <p>See the real-time difference our users are making by automating reports.</p>
+        </section>
+
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <h3>Users Signed Up</h3>
+                <div class="metric-value" id="val-users">--</div>
+            </div>
+            <div class="metric-card">
+                <h3>Smells Reported</h3>
+                <div class="metric-value" id="val-incidents">--</div>
+            </div>
+            <div class="metric-card">
+                <h3>Forms Submitted</h3>
+                <div class="metric-value" id="val-forms">--</div>
+            </div>
+        </section>
+        
+        <div id="dashboard-error" class="error-message" style="display: none; text-align: center;">
+            Statistics currently unavailable.
+        </div>
+    </main>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/dashboard-stats');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                
+                animateValue('val-users', 0, data.users, 1500);
+                animateValue('val-incidents', 0, data.incidents, 1500);
+                animateValue('val-forms', 0, data.formsSubmitted, 1500);
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+                document.getElementById('dashboard-error').style.display = 'block';
+            }
+        }
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Ease out quad
+                const easeOut = progress * (2 - progress);
+                obj.innerHTML = Math.floor(easeOut * (end - start) + start).toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end.toLocaleString();
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchStats);
+    </script>
+</body>
+</html>
