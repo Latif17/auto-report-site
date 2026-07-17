@@ -134,6 +134,28 @@ async function submitGovForm(userData, incidentData) {
             if (isTestMode) console.log(`[TEST_DEBUG] ${msg}`);
         };
 
+        const bLoc = incidentData.businessLocation || incidentData.business_location;
+        const sType = incidentData.smellType || incidentData.smell_type;
+
+        let siteType = 'industrial site';
+        let smellCategory = sType || 'You cannot describe it';
+        let smellDescription = '';
+        let addressStreet = 'Choats Rd Dagenham';
+        let addressPostcode = 'RM9 6LF';
+        let addressTown = '';
+        
+        if (sType === 'Sewage') {
+            siteType = 'sewage or water treatment works';
+            addressStreet = '';
+            addressPostcode = '';
+            addressTown = 'Barking Riverside';
+        } else if (bLoc && bLoc.includes('Veolia')) {
+            smellCategory = 'Something else';
+            smellDescription = 'chemical/plastic odour';
+        } else {
+            smellCategory = 'Rubbish or refuse';
+        }
+
         debugLog('Launching browser with args: ' + JSON.stringify(launchArgs));
         
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
@@ -146,18 +168,26 @@ async function submitGovForm(userData, incidentData) {
         // Page 1: Where is smell coming from?
         debugLog('Navigating to Page 1: Where is smell coming from?');
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source', { waitUntil: 'networkidle0' });
-        await clickLabel(page, 'industrial site');
+        await clickLabel(page, siteType);
         await goNext(page);
 
         // Page 2: Can you give details?
         debugLog('Navigating to Page 2: Can you give details?');
         await clickLabel(page, 'Yes');
-        await page.evaluate((location) => {
+        await page.evaluate((locData) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
-            if(inputs[0]) { inputs[0].value = location || 'ReFoods UK (Dagenham), East London BioGas, Veolia Dagenham'; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
-            if(inputs[1]) { inputs[1].value = 'Choats Rd Dagenham'; inputs[1].dispatchEvent(new Event('input', { bubbles: true })); }
-            if(inputs[2]) { inputs[2].value = 'RM9 6LF'; inputs[2].dispatchEvent(new Event('input', { bubbles: true })); }
-        }, incidentData.businessLocation || incidentData.business_location);
+            if(inputs[0] && locData.name) { inputs[0].value = locData.name; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
+            
+            // Try to find specific address fields, otherwise use standard offsets
+            const streetInput = document.querySelector('input[name*="line_1"], input[name*="address1"]') || inputs[1];
+            const townInput = document.querySelector('input[name*="town"], input[name*="city"]') || inputs[3];
+            const postcodeInput = document.querySelector('input[name*="postcode"]') || inputs[inputs.length-1];
+
+            if(streetInput && locData.street) { streetInput.value = locData.street; streetInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            if(townInput && locData.town) { townInput.value = locData.town; townInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            if(postcodeInput && locData.postcode) { postcodeInput.value = locData.postcode; postcodeInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            
+        }, { name: bLoc, street: addressStreet, town: addressTown, postcode: addressPostcode });
         await goNext(page);
 
         // Page 3: Affecting you at home?
