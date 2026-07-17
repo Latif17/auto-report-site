@@ -220,10 +220,21 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 6: Describe smell
         debugLog('Navigating to Page 6: Describe smell');
-        if (incidentData.smellType && incidentData.smellType !== 'Other') {
-            await clickLabel(page, incidentData.smellType);
-        } else {
-            await clickLabel(page, 'You cannot describe it');
+        await clickLabel(page, smellCategory);
+        
+        if (smellCategory === 'Something else' && smellDescription) {
+            // Wait for the input box to appear
+            await page.waitForSelector('input[type="text"]:not([hidden]), textarea:not([hidden])', { timeout: 3000 }).catch(() => {});
+            await page.evaluate((desc) => {
+                const inputs = Array.from(document.querySelectorAll('input[type="text"], textarea')).filter(el => {
+                    const style = window.getComputedStyle(el);
+                    return style.display !== 'none' && style.visibility !== 'hidden';
+                });
+                if (inputs.length > 0) {
+                    inputs[0].value = desc;
+                    inputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, smellDescription);
         }
         await goNext(page);
 

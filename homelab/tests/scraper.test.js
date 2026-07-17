@@ -13,6 +13,9 @@ jest.mock('puppeteer', () => {
         type: jest.fn().mockResolvedValue(),
         waitForNavigation: jest.fn().mockResolvedValue(),
         emulateTimezone: jest.fn().mockResolvedValue(),
+        waitForSelector: jest.fn().mockResolvedValue(),
+        $eval: jest.fn().mockResolvedValue('Mock H1'),
+        content: jest.fn().mockResolvedValue('<html></html>'),
     };
     return {
         launch: jest.fn().mockResolvedValue({
