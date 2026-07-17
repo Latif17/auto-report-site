@@ -136,6 +136,29 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
         } 
     };
 
+app.get('/api/dashboard-stats', async (req, res) => {
+    try {
+        const [
+            { count: usersCount },
+            { count: incidentsCount },
+            { count: formsCount }
+        ] = await Promise.all([
+            supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
+            supabase.from('incidents').select('*', { count: 'exact', head: true }).throwOnError(),
+            supabase.from('opted_in_user_reports').select('*', { count: 'exact', head: true }).throwOnError()
+        ]);
+
+        res.json({
+            users: usersCount || 0,
+            incidents: incidentsCount || 0,
+            formsSubmitted: formsCount || 0
+        });
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/stats', async (req, res) => {
     try {
         const [

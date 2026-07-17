@@ -45,6 +45,14 @@ describe('API Endpoints', () => {
         expect(res.body).toHaveProperty('count');
     });
 
+    it('GET /api/dashboard-stats returns total counts', async () => {
+        const res = await request(app).get('/api/dashboard-stats');
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty('users');
+        expect(res.body).toHaveProperty('incidents');
+        expect(res.body).toHaveProperty('formsSubmitted');
+    });
+
     it('POST /api/opt-in succeeds with valid data', async () => {
         const res = await request(app)
             .post('/api/opt-in')
