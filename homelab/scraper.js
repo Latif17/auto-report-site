@@ -178,9 +178,9 @@ async function submitGovForm(userData, incidentData) {
             if(inputs[0] && locData.name) { inputs[0].value = locData.name; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
             
             // Try to find specific address fields, otherwise use standard offsets
-            const streetInput = document.querySelector('input[name*="line_1"], input[name*="address1"]') || inputs[1];
-            const townInput = document.querySelector('input[name*="town"], input[name*="city"]') || inputs[3];
-            const postcodeInput = document.querySelector('input[name*="postcode"]') || inputs[inputs.length-1];
+            const streetInput = document.querySelector('input[name*="address" i], input[name*="line" i]') || inputs[1];
+            const townInput = document.querySelector('input[name*="town" i], input[name*="city" i]') || inputs[2];
+            const postcodeInput = document.querySelector('input[name*="postcode" i]') || inputs[3];
 
             if(streetInput && locData.street !== undefined) { streetInput.value = locData.street; streetInput.dispatchEvent(new Event('input', { bubbles: true })); }
             if(townInput && locData.town !== undefined) { townInput.value = locData.town; townInput.dispatchEvent(new Event('input', { bubbles: true })); }
