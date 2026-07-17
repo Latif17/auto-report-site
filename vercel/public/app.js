@@ -140,22 +140,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Gather Data
-            const rawSmellSelection = document.getElementById('businessLocation').value;
+            const joinIncidentId = document.getElementById('joinIncidentId').value;
+            
             let mappedBusinessLocation = '';
             let mappedSmellType = '';
 
-            if (rawSmellSelection === 'rotting_rubbish') {
-                mappedBusinessLocation = 'Multiple (ReFood, East London Bio Gas)';
-                mappedSmellType = 'Rubbish or refuse';
-            } else if (rawSmellSelection === 'chemical_plastic') {
-                mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
-                mappedSmellType = 'Something else';
-            } else if (rawSmellSelection === 'sewage_drain') {
-                mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
-                mappedSmellType = 'Sewage';
-            } else {
-                console.error(`Unexpected smell selection: ${rawSmellSelection}`);
-                throw new Error('Invalid smell selection');
+            if (!joinIncidentId) {
+                const rawSmellSelection = document.getElementById('businessLocation').value;
+
+                if (rawSmellSelection === 'rotting_rubbish') {
+                    mappedBusinessLocation = 'Multiple (ReFood, East London Bio Gas)';
+                    mappedSmellType = 'Rubbish or refuse';
+                } else if (rawSmellSelection === 'chemical_plastic') {
+                    mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
+                    mappedSmellType = 'Something else';
+                } else if (rawSmellSelection === 'sewage_drain') {
+                    mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
+                    mappedSmellType = 'Sewage';
+                } else {
+                    console.error(`Unexpected smell selection: ${rawSmellSelection}`);
+                    throw new Error('Invalid smell selection');
+                }
             }
 
             const formData = {
@@ -185,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update pooled user state internally for immediate UI feedback
             isPooledUser = formData.shareData;
 
-            const joinIncidentId = document.getElementById('joinIncidentId').value;
             const endpoint = joinIncidentId ? '/api/join' : '/api/submit';
             
             if (joinIncidentId) {

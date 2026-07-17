@@ -183,9 +183,9 @@ async function submitGovForm(userData, incidentData) {
             const townInput = document.querySelector('input[name*="town"], input[name*="city"]') || inputs[3];
             const postcodeInput = document.querySelector('input[name*="postcode"]') || inputs[inputs.length-1];
 
-            if(streetInput && locData.street) { streetInput.value = locData.street; streetInput.dispatchEvent(new Event('input', { bubbles: true })); }
-            if(townInput && locData.town) { townInput.value = locData.town; townInput.dispatchEvent(new Event('input', { bubbles: true })); }
-            if(postcodeInput && locData.postcode) { postcodeInput.value = locData.postcode; postcodeInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            if(streetInput && locData.street !== undefined) { streetInput.value = locData.street; streetInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            if(townInput && locData.town !== undefined) { townInput.value = locData.town; townInput.dispatchEvent(new Event('input', { bubbles: true })); }
+            if(postcodeInput && locData.postcode !== undefined) { postcodeInput.value = locData.postcode; postcodeInput.dispatchEvent(new Event('input', { bubbles: true })); }
             
         }, { name: bLoc, street: addressStreet, town: addressTown, postcode: addressPostcode });
         await goNext(page);
