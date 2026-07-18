@@ -159,6 +159,60 @@ app.get('/api/dashboard-stats', async (req, res) => {
     }
 });
 
+app.get('/api/smell-stats-weekly', async (req, res) => {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const lowerBound = sevenDaysAgo.toISOString();
+
+        const { data, error } = await supabase.from('opted_in_user_reports')
+            .select('incident_id, incidents!inner(smell_timestamp, smell_type)')
+            .gte('incidents.smell_timestamp', lowerBound)
+            .throwOnError();
+
+        if (error) throw error;
+
+        // Process data
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const labels = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(days[d.getDay()]);
+        }
+
+        const countsBySmellAndDay = {};
+        const allSmellTypes = new Set();
+
+        (data || []).forEach(report => {
+            const incident = Array.isArray(report.incidents) ? report.incidents[0] : report.incidents;
+            if (!incident) return;
+            const date = new Date(incident.smell_timestamp);
+            const dayName = days[date.getDay()];
+            const smell = incident.smell_type || 'Unknown';
+            allSmellTypes.add(smell);
+
+            if (!countsBySmellAndDay[smell]) countsBySmellAndDay[smell] = {};
+            countsBySmellAndDay[smell][dayName] = (countsBySmellAndDay[smell][dayName] || 0) + 1;
+        });
+
+        const datasets = Array.from(allSmellTypes).map(smell => {
+            return {
+                label: smell,
+                data: labels.map(day => countsBySmellAndDay[smell][day] || 0),
+                backgroundColor: 'rgba(0, 255, 0, 0.7)',
+                borderColor: '#00ff00',
+                borderWidth: 1
+            };
+        });
+
+        res.json({ labels, datasets });
+    } catch (error) {
+        console.error('Weekly stats error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/stats', async (req, res) => {
     try {
         const [

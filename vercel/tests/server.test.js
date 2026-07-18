@@ -258,6 +258,17 @@ describe('API Endpoints', () => {
     });
 });
 
+describe('GET /api/smell-stats-weekly', () => {
+    it('should return 200 and structured chart data', async () => {
+        const response = await request(app).get('/api/smell-stats-weekly');
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('labels');
+        expect(response.body).toHaveProperty('datasets');
+        expect(Array.isArray(response.body.labels)).toBe(true);
+        expect(Array.isArray(response.body.datasets)).toBe(true);
+    });
+});
+
 describe('Security Middlewares', () => {
     it('should have helmet security headers', async () => {
         const res = await request(app).get('/api/stats');
