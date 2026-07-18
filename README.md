@@ -72,6 +72,8 @@ The repository is organized into distinct deployment-specific folders:
   1. `supabase/schema.sql`
   2. `supabase/schema_update.sql`
   3. `supabase/schema_update_pool_data.sql`
+  4. `supabase/schema_update_cleanup_rpc.sql`
+  5. `supabase/schema_update_stale_sweep_rpc.sql`
 - Copy your `Project URL` and `Secret Key` from **Project Settings > API**.
 
 ### 2. Web & API Setup (Vercel)
