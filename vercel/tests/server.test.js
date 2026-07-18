@@ -4,9 +4,12 @@ const app = require('../server');
 describe('API Endpoints', () => {
     let usersUpsertSpy;
     let deleteEqSpy;
+    let incidentsInsertSpy;
+    let mockExistingIncidents;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Industrial Stench' }];
         jest.spyOn(console, 'error').mockImplementation(() => {});
         usersUpsertSpy = jest.fn().mockReturnValue({
             throwOnError: jest.fn().mockReturnThis(),
@@ -15,11 +18,31 @@ describe('API Endpoints', () => {
 
         deleteEqSpy = jest.fn();
 
+        incidentsInsertSpy = jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnThis(),
+            single: jest.fn().mockReturnThis(),
+            throwOnError: jest.fn().mockReturnValue({ data: { id: 1 }, error: null }),
+            then: jest.fn((cb) => cb({ data: { id: 1 }, error: null }))
+        });
+
         const originalFrom = app.supabase.from.bind(app.supabase);
         jest.spyOn(app.supabase, 'from').mockImplementation((table) => {
             const chain = originalFrom(table);
             if (table === 'users') {
                 chain.upsert = usersUpsertSpy;
+            }
+            if (table === 'incidents') {
+                const originalSelect = chain.select.bind(chain);
+                chain.select = (...args) => {
+                    const selectChain = originalSelect(...args);
+                    selectChain.then = (resolve) => resolve({ count: mockExistingIncidents.length, data: mockExistingIncidents });
+                    return selectChain;
+                };
+                const originalInsert = chain.insert.bind(chain);
+                chain.insert = (data) => {
+                    incidentsInsertSpy(data);
+                    return originalInsert(data);
+                };
             }
             const originalDelete = chain.delete.bind(chain);
             chain.delete = () => {
@@ -72,6 +95,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit when shareData is false returns success', async () => {
+        mockExistingIncidents = [];
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.3')
@@ -85,6 +109,7 @@ describe('API Endpoints', () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body).toMatchObject({ success: true, message: "Report triggered" });
         expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: false }));
+        expect(incidentsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({ reported_by: 'testfalse@example.com' }));
     });
 
     it('POST /api/submit handles shareData correctly and returns success', async () => {

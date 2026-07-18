@@ -349,7 +349,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             await supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError();
         } else {
             const { data: newIncident } = await supabase.from('incidents')
-                .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending' })
+                .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending', reported_by: email || null })
                 .select()
                 .single()
                 .throwOnError();
