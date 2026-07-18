@@ -15,7 +15,7 @@ RETURNS TABLE(purged_email text) AS $$
           AND u.pool_data = false
           AND r.status = 'pending'
           AND r.created_at < NOW() - (p_cutoff_hours || ' hours')::interval
-        RETURNING r.user_email
+        RETURNING r.id, r.user_email
     ),
     deleted AS (
         DELETE FROM users
@@ -28,6 +28,7 @@ RETURNS TABLE(purged_email text) AS $$
             WHERE r2.user_email = users.email
               AND r2.status = 'pending'
               AND i.status IN ('pending', 'processing')
+              AND r2.id NOT IN (SELECT id FROM stale)
           )
         RETURNING email
     ),
