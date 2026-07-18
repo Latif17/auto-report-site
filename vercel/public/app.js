@@ -308,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const address = document.getElementById('address').value.trim();
         const phone = document.getElementById('phone').value.trim();
         const storeLocally = document.getElementById('storeLocally').checked;
+        const shareData = document.getElementById('shareData').checked;
 
         let hasValidData = false;
         let data = null;
@@ -322,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 address,
                 phone,
                 storeLocally,
-                shareData: true
+                shareData
             };
         } else {
             // Fallback to localStorage
@@ -339,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             address: parsed.address,
                             phone: parsed.phone || '',
                             storeLocally: parsed.storeLocally !== false,
-                            shareData: true
+                            shareData: parsed.shareData === true
                         };
                     }
                 } catch (e) {}
@@ -355,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Handle Local Storage retention/removal
                 if (data.storeLocally) {
                     const { shareData, ...dataToStore } = data;
-                    localStorage.setItem('freshAirWatchData_v2', JSON.stringify({ ...dataToStore, storeLocally: true, shareData: true }));
+                    localStorage.setItem('freshAirWatchData_v2', JSON.stringify({ ...dataToStore, storeLocally: true, shareData: data.shareData }));
                     localStorage.removeItem('freshAirWatchData');
                 } else {
                     localStorage.removeItem('freshAirWatchData_v2');
