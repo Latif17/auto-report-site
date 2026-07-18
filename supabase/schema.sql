@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS incidents (
     smell_type TEXT NOT NULL,
     business_location TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
+    reported_by TEXT REFERENCES users(email) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
