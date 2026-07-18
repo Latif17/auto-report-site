@@ -39,6 +39,11 @@
                     <span class="cursor">_</span>
                 </div>
             </section>
+
+            <section class="chart-section" style="margin-top: 2rem; border: 1px solid #00ff00; padding: 1rem;">
+                <h2 style="color: #00ff00; font-size: 1.2rem; border-bottom: 1px solid #00ff00; padding-bottom: 0.5rem; margin-bottom: 1rem; font-family: 'IBM Plex Mono', monospace;">> WEEKLY_SMELL_BREAKDOWN</h2>
+                <canvas id="weeklySmellChart" style="max-height: 300px;"></canvas>
+            </section>
             
             <div id="dashboard-error" class="error-message terminal-error" style="display: none;">
                 [ERR_CONNECTION_FAILED] - RETRYING...
@@ -94,7 +99,64 @@
             window.requestAnimationFrame(step);
         }
 
-        document.addEventListener('DOMContentLoaded', fetchStats);
+        async function fetchWeeklyChart() {
+            try {
+                const response = await fetch('/api/smell-stats-weekly');
+                if (!response.ok) throw new Error('Failed to fetch chart data');
+                const data = await response.json();
+
+                // Assign colors dynamically to datasets
+                const colors = ['#00ff00', '#00cccc', '#cc00cc', '#cccc00', '#0000cc'];
+                data.datasets.forEach((dataset, index) => {
+                    const color = colors[index % colors.length];
+                    dataset.backgroundColor = color + '80'; // 50% opacity
+                    dataset.borderColor = color;
+                    dataset.borderWidth = 1;
+                });
+
+                const ctx = document.getElementById('weeklySmellChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: false,
+                                grid: { color: '#333333' },
+                                ticks: { color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } }
+                            },
+                            y: {
+                                stacked: false,
+                                beginAtZero: true,
+                                grid: { color: '#333333' },
+                                ticks: { stepSize: 1, color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } }
+                            },
+                            tooltip: {
+                                backgroundColor: '#000000',
+                                titleColor: '#00ff00',
+                                bodyColor: '#00ff00',
+                                borderColor: '#00ff00',
+                                borderWidth: 1,
+                                titleFont: { family: "'IBM Plex Mono', monospace" },
+                                bodyFont: { family: "'IBM Plex Mono', monospace" }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching chart:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { fetchStats(); fetchWeeklyChart(); });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
