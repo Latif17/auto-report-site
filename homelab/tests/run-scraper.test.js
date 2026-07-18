@@ -131,6 +131,85 @@ describe('run-scraper', () => {
         expect(mockExit).toHaveBeenCalledWith(0);
     });
 
+    it('should run the stale unpooled report sweep before checking for pending incidents', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Sweep RPC call
+        mockRpcResponses.push({ data: [], error: null });
+        // 2. Fetch pending incidents (eq) -> none
+        mockEqResponses.push({ data: [], error: null });
+
+        await runFunc();
+
+        expect(mockSupabase.rpc).toHaveBeenCalledWith('sweep_stale_unpooled_reports', { p_cutoff_hours: 48 });
+        expect(mockConsoleLog).toHaveBeenCalledWith("No pending incidents found. Exiting.");
+    });
+
+    it('should log the number of purged users when the stale sweep finds stale reports', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Sweep RPC call -> purges two users
+        mockRpcResponses.push({ data: [{ purged_email: 'stale1@example.com' }, { purged_email: 'stale2@example.com' }], error: null });
+        // 2. Fetch pending incidents (eq) -> none
+        mockEqResponses.push({ data: [], error: null });
+
+        await runFunc();
+
+        expect(mockConsoleLog).toHaveBeenCalledWith("Purged 2 stale unpooled user record(s) past the 48h retry cutoff.");
+    });
+
+    it('should log an error and continue if the stale sweep RPC fails', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        // 1. Sweep RPC call fails
+        mockRpcResponses.push({ data: null, error: { message: 'sweep rpc failed' } });
+        // 2. Fetch pending incidents (eq) -> none
+        mockEqResponses.push({ data: [], error: null });
+
+        await runFunc();
+
+        expect(mockConsoleError).toHaveBeenCalledWith("Error sweeping stale unpooled reports:", { message: 'sweep rpc failed' });
+        expect(mockConsoleLog).toHaveBeenCalledWith("No pending incidents found. Exiting.");
+    });
+
+    it('should use UNPOOLED_RETRY_CUTOFF_HOURS env var for the sweep cutoff', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            process.env.UNPOOLED_RETRY_CUTOFF_HOURS = '12';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        mockRpcResponses.push({ data: [], error: null });
+        mockEqResponses.push({ data: [], error: null });
+
+        await runFunc();
+
+        expect(mockSupabase.rpc).toHaveBeenCalledWith('sweep_stale_unpooled_reports', { p_cutoff_hours: 12 });
+
+        delete process.env.UNPOOLED_RETRY_CUTOFF_HOURS;
+    });
+
     it('should process pending incidents, handling scraper errors gracefully', async () => {
         let runFunc;
         jest.isolateModules(() => {
@@ -381,13 +460,9 @@ describe('run-scraper', () => {
         // Mock scraper successful submission
         submitGovForm.mockResolvedValue(true);
 
+        // 6a. Stale sweep RPC call (runs at the very start of processQueue, before any of the above)
+        mockRpcResponses.push({ data: [], error: null });
         // 6b. Cleanup RPC call fails.
-        // NOTE: as of Task 1, sweepStaleUnpooledReports() (Task 2) doesn't exist yet, so
-        // processQueue() makes exactly one rpc() call (this cleanup call) — there is no "6a"
-        // stale-sweep call to consume a queue entry first. When Task 2 adds that call, prepend
-        // a `mockRpcResponses.push({ data: [], error: null });` (the "6a" sweep response) above
-        // this one so the sweep call consumes it and this error response is still consumed by
-        // the cleanup call.
         mockRpcResponses.push({ data: null, error: { message: 'cleanup rpc failed' } });
 
         // 7. Update status to completed (eq)

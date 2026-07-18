@@ -7,12 +7,31 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
     : null;
 
+const UNPOOLED_RETRY_CUTOFF_HOURS = parseInt(process.env.UNPOOLED_RETRY_CUTOFF_HOURS || '48', 10);
+
+async function sweepStaleUnpooledReports() {
+    const { data: purgedUsers, error } = await supabase.rpc('sweep_stale_unpooled_reports', {
+        p_cutoff_hours: UNPOOLED_RETRY_CUTOFF_HOURS
+    });
+
+    if (error) {
+        console.error("Error sweeping stale unpooled reports:", error);
+        return;
+    }
+
+    if (purgedUsers && purgedUsers.length > 0) {
+        console.log(`Purged ${purgedUsers.length} stale unpooled user record(s) past the ${UNPOOLED_RETRY_CUTOFF_HOURS}h retry cutoff.`);
+    }
+}
+
 async function processQueue() {
     if (!supabase) {
         console.error("Missing Supabase credentials.");
         process.exit(1);
         return;
     }
+
+    await sweepStaleUnpooledReports();
 
     console.log("Checking for pending incidents...");
     const { data: pendingIncidents, error: fetchError } = await supabase
