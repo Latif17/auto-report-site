@@ -14,6 +14,7 @@ describe('run-scraper', () => {
     let mockInResponses = [];
     let mockEqResponses = [];
     let mockNeqResponses = [];
+    let mockRpcResponses = [];
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -27,6 +28,7 @@ describe('run-scraper', () => {
         mockInResponses = [];
         mockEqResponses = [];
         mockNeqResponses = [];
+        mockRpcResponses = [];
 
         // Setup mock Supabase client chain
         mockSupabase = {
@@ -59,6 +61,10 @@ describe('run-scraper', () => {
             }),
             neq: jest.fn().mockImplementation((column, value) => {
                 const nextVal = mockNeqResponses.shift();
+                return Promise.resolve(nextVal || { data: [], error: null });
+            }),
+            rpc: jest.fn().mockImplementation(() => {
+                const nextVal = mockRpcResponses.shift();
                 return Promise.resolve(nextVal || { data: [], error: null });
             }),
         };
@@ -195,7 +201,7 @@ describe('run-scraper', () => {
         expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'pending' });
     });
 
-    it('should process both opted_in and pooled users, and cleanup unpooled users', async () => {
+    it('should process both opted_in and pooled users, and cleanup unpooled users via RPC', async () => {
         let runFunc;
         jest.isolateModules(() => {
             process.env.SUPABASE_URL = 'http://localhost';
@@ -217,7 +223,7 @@ describe('run-scraper', () => {
 
         // 1. Fetch pending incidents (eq)
         mockEqResponses.push({ data: pendingIncidents, error: null });
-        
+
         // 2. Fetch opted-in reports (in)
         mockInResponses.push({ data: userReports, error: null });
 
@@ -236,13 +242,12 @@ describe('run-scraper', () => {
         // Mock scraper successful submissions
         submitGovForm.mockResolvedValue(true);
 
-        // 6. Check other pending reports for explicit@example.com (neq)
-        mockNeqResponses.push({ data: [], error: null });
+        // 6a. Stale sweep RPC call (runs at the very start of processQueue, before any of the above)
+        mockRpcResponses.push({ data: [], error: null });
+        // 6b. Cleanup RPC call for explicit@example.com
+        mockRpcResponses.push({ data: [{ email: 'explicit@example.com' }], error: null });
 
-        // 7. Delete explicit@example.com (in)
-        mockInResponses.push({ error: null });
-
-        // 8. Update status to completed (eq)
+        // 7. Update status to completed (eq)
         mockEqResponses.push({ error: null });
 
         const runPromise = runFunc();
@@ -267,81 +272,13 @@ describe('run-scraper', () => {
             { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'chemical', businessLocation: 'dump' }
         );
 
-        // Verify delete query was constructed for explicit@example.com (since pool_data is false)
-        expect(mockSupabase.delete).toHaveBeenCalled();
-        expect(mockSupabase.in).toHaveBeenCalledWith('email', ['explicit@example.com']);
-    });
-
-    it('should skip deleting unpooled users if querying other pending reports fails', async () => {
-        let runFunc;
-        jest.isolateModules(() => {
-            process.env.SUPABASE_URL = 'http://localhost';
-            process.env.SUPABASE_KEY = 'test';
-            const module = require('../run-scraper');
-            runFunc = module.run;
+        // Verify the atomic cleanup RPC was called for the unpooled user, excluding the current incident
+        expect(mockSupabase.rpc).toHaveBeenCalledWith('cleanup_unpooled_users', {
+            p_emails: ['explicit@example.com'],
+            p_exclude_incident_id: 10
         });
-
-        const pendingIncidents = [
-            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
-        ];
-
-        const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
-        const pooledUsers = [];
-        const users = [
-            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false }
-        ];
-
-        // 1. Fetch pending incidents (eq)
-        mockEqResponses.push({ data: pendingIncidents, error: null });
-        
-        // 2. Fetch opted-in reports (in)
-        mockInResponses.push({ data: userReports, error: null });
-
-        // 3. Fetch pooled users record (eq)
-        mockEqResponses.push({ data: pooledUsers, error: null });
-
-        // 4. Fetch details of all users (in)
-        mockInResponses.push({ data: users, error: null });
-
-        // 5. Update status to processing (eq)
-        mockEqResponses.push({ error: null });
-
-        // Mock completed reports (eq)
-        mockEqResponses.push({ data: [], error: null });
-
-        // Mock scraper successful submissions
-        submitGovForm.mockResolvedValue(true);
-
-        // 6. Check other pending reports for explicit@example.com (neq) -> simulate error
-        mockNeqResponses.push({ data: null, error: { message: 'db failure' } });
-
-        // 7. Update status to completed (eq)
-        mockEqResponses.push({ error: null });
-
-        const runPromise = runFunc();
-        if (jest.runAllTimersAsync) {
-            await jest.runAllTimersAsync();
-        } else {
-            for (let i = 0; i < 10; i++) {
-                await Promise.resolve();
-                jest.runAllTimers();
-            }
-        }
-        await runPromise;
-
-        // Verify submitGovForm called for explicit user
-        expect(submitGovForm).toHaveBeenCalledTimes(1);
-
-        // Verify delete query was NOT called for users table
-        const usersTableCalls = mockSupabase.from.mock.calls.filter(c => c[0] === 'users');
-        expect(usersTableCalls.length).toBe(2); // Only the two initial select queries, no delete query
-
-        // Verify console.error logged the query failure
-        expect(mockConsoleError).toHaveBeenCalledWith(
-            "Error querying other pending reports during cleanup:",
-            { message: 'db failure' }
-        );
     });
+
 
     it('should exit if fetching opted-in user reports fails', async () => {
         let runFunc;
@@ -409,7 +346,7 @@ describe('run-scraper', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it('should log an error if deleting unpooled users fails', async () => {
+    it('should log an error if the cleanup RPC fails', async () => {
         let runFunc;
         jest.isolateModules(() => {
             process.env.SUPABASE_URL = 'http://localhost';
@@ -438,18 +375,22 @@ describe('run-scraper', () => {
         mockInResponses.push({ data: users, error: null });
         // 5. Update status to processing (eq)
         mockEqResponses.push({ error: null });
-
         // Mock completed reports (eq)
         mockEqResponses.push({ data: [], error: null });
 
-        // Mock scraper successful submissions
+        // Mock scraper successful submission
         submitGovForm.mockResolvedValue(true);
 
-        // 6. Check other pending reports (neq)
-        mockNeqResponses.push({ data: [], error: null });
-        // 7. Delete explicit@example.com (in) -> fail
-        mockInResponses.push({ error: { message: 'delete failed' } });
-        // 8. Update status to completed (eq)
+        // 6b. Cleanup RPC call fails.
+        // NOTE: as of Task 1, sweepStaleUnpooledReports() (Task 2) doesn't exist yet, so
+        // processQueue() makes exactly one rpc() call (this cleanup call) — there is no "6a"
+        // stale-sweep call to consume a queue entry first. When Task 2 adds that call, prepend
+        // a `mockRpcResponses.push({ data: [], error: null });` (the "6a" sweep response) above
+        // this one so the sweep call consumes it and this error response is still consumed by
+        // the cleanup call.
+        mockRpcResponses.push({ data: null, error: { message: 'cleanup rpc failed' } });
+
+        // 7. Update status to completed (eq)
         mockEqResponses.push({ error: null });
 
         const runPromise = runFunc();
@@ -463,8 +404,7 @@ describe('run-scraper', () => {
         }
         await runPromise;
 
-        // Verify delete error is logged
-        expect(mockConsoleError).toHaveBeenCalledWith("Error deleting unpooled users:", { message: 'delete failed' });
+        expect(mockConsoleError).toHaveBeenCalledWith("Error cleaning up unpooled users:", { message: 'cleanup rpc failed' });
     });
 
     it('should run in daemon mode and poll periodically', async () => {
