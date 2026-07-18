@@ -324,7 +324,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 });
 
 app.post('/api/join', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, incidentId } = req.body;
+    let { email, fullName, postcode, phone, address, incidentId, shareData } = req.body;
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
     const processed = processEmail(email);
     if (processed.error) return res.status(400).json({ error: processed.error });
@@ -332,7 +332,7 @@ app.post('/api/join', strictLimiter, async (req, res) => {
 
     try {
         await Promise.all([
-            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: true }).throwOnError(),
+            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData === true }).throwOnError(),
             supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }),

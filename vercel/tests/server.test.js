@@ -119,7 +119,7 @@ describe('API Endpoints', () => {
         expect(res.body).toHaveProperty('error', 'You have already submitted a report for this exact event.');
     });
 
-    it('POST /api/join passes pool_data: true', async () => {
+    it('POST /api/join defaults pool_data to false when shareData is not provided', async () => {
         const res = await request(app)
             .post('/api/join')
             .set('X-Forwarded-For', '10.0.0.10')
@@ -127,6 +127,20 @@ describe('API Endpoints', () => {
                 email: 'join@example.com',
                 fullName: 'Join User',
                 incidentId: 9999
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: false }));
+    });
+
+    it('POST /api/join sets pool_data: true when shareData is explicitly true', async () => {
+        const res = await request(app)
+            .post('/api/join')
+            .set('X-Forwarded-For', '10.0.0.11')
+            .send({
+                email: 'joinshare@example.com',
+                fullName: 'Join Share User',
+                incidentId: 9999,
+                shareData: true
             });
         expect(res.statusCode).toEqual(200);
         expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
