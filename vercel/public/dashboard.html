@@ -64,7 +64,10 @@
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        let weeklySmellChartInstance = null;
+
         async function fetchStats() {
             try {
                 const response = await fetch('/api/dashboard-stats');
@@ -115,7 +118,10 @@
                 });
 
                 const ctx = document.getElementById('weeklySmellChart').getContext('2d');
-                new Chart(ctx, {
+                if (weeklySmellChartInstance) {
+                    weeklySmellChartInstance.destroy();
+                }
+                weeklySmellChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: data,
                     options: {
@@ -157,6 +163,5 @@
 
         document.addEventListener('DOMContentLoaded', () => { fetchStats(); fetchWeeklyChart(); });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

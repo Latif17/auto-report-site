@@ -162,7 +162,8 @@ app.get('/api/dashboard-stats', async (req, res) => {
 app.get('/api/smell-stats-weekly', async (req, res) => {
     try {
         const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
         const lowerBound = sevenDaysAgo.toISOString();
 
         const { data, error } = await supabase.from('opted_in_user_reports')
