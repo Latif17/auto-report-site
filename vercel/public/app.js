@@ -194,8 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (joinIncidentId) {
                 formData.incidentId = joinIncidentId;
-                // Ensure they pool data if they are joining
-                formData.shareData = true; 
             }
 
             const response = await simulateSubmission(formData, endpoint);
