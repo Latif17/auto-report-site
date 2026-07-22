@@ -1,5 +1,13 @@
 [
   {
+    "version": "v1.2.0",
+    "date": "2026-07-22",
+    "changes": [
+      "Dynamically display the current version in the header of all pages.",
+      "Added a Changelog link to the footer across the site."
+    ]
+  },
+  {
     "version": "v1.1.0",
     "date": "2026-07-22",
     "changes": [

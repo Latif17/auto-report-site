@@ -407,3 +407,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+
+// Fetch and display latest version in header
+async function updateVersionDisplay() {
+    try {
+        const response = await fetch('/changelog.json');
+        if (!response.ok) throw new Error('Failed to fetch changelog');
+        const data = await response.json();
+        const latestVersion = data[0].version;
+        
+        const versionDisplays = document.querySelectorAll('#version-display');
+        versionDisplays.forEach(el => {
+            el.textContent = 'STINK LOG // ' + latestVersion;
+        });
+    } catch (error) {
+        console.error('Error fetching version:', error);
+    }
+}
+
+// Call on load
+document.addEventListener('DOMContentLoaded', () => {
+    updateVersionDisplay();
+});
+
