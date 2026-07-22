@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog | Barking Stink</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dossier-container">
+        <header class="dossier-header">
+            <div class="header-top">
+                <span class="classification" id="version-display">STINK LOG // v1.1.0</span>
+                <span class="case-number">CASE: BARKING-RIVERSIDE</span>
+            </div>
+            <h1>Changelog</h1>
+            <p class="subject">A history of updates and fixes.</p>
+        </header>
+
+        <main id="changelog-container">
+            <div style="text-align: center; margin: 2rem;">Loading history...</div>
+        </main>
+        
+        <footer>
+            <nav class="footer-nav">
+                <a href="/">Home</a>
+                <a href="/changelog.html">Changelog</a>
+            </nav>
+        </footer>
+    </div>
+    <script type="module" src="app.js"></script>
+    <script>
+        // Fetch and render changelog
+        async function loadChangelog() {
+            try {
+                const response = await fetch('/changelog.json');
+                const data = await response.json();
+                const container = document.getElementById('changelog-container');
+                container.innerHTML = '';
+                
+                data.forEach(release => {
+                    const section = document.createElement('div');
+                    section.className = 'changelog-entry';
+                    section.innerHTML = `
+                        <h2>${release.version} - <span class="date">${release.date}</span></h2>
+                        <ul>
+                            ${release.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    `;
+                    container.appendChild(section);
+                });
+            } catch (err) {
+                document.getElementById('changelog-container').innerHTML = '<p>Error loading changelog.</p>';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadChangelog);
+    </script>
+</body>
+</html>

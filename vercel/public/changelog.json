@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.3.0",
+    "date": "2026-07-22",
+    "changes": [
+      "Created the dedicated changelog page to view update history."
+    ]
+  },
+  {
     "version": "v1.2.0",
     "date": "2026-07-22",
     "changes": [
