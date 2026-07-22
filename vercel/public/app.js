@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formattedDate = tsDate.toLocaleDateString('en-GB', { timeZone: 'Europe/London', day: 'numeric', month: 'short' });
                 const formattedTime = tsDate.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
                 document.getElementById('active-incident-time').textContent = `${formattedDate} - ${formattedTime}`;
-                document.getElementById('active-incident-location').textContent = `Reported: ${topIncident.business_location}`;
+                document.getElementById('active-incident-location').innerHTML = `Reported:<br>Smell - ${topIncident.smell_type || 'Unknown'}<br>Location - ${topIncident.business_location}`;
                 
                 const joinBtn = document.getElementById('join-incident-btn');
                 if (isReported) {
