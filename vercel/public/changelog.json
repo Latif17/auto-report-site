@@ -1,0 +1,17 @@
+[
+  {
+    "version": "v1.1.0",
+    "date": "2026-07-22",
+    "changes": [
+      "Added a dedicated changelog page to track website updates.",
+      "Improved the design of the footer."
+    ]
+  },
+  {
+    "version": "v1.0.0",
+    "date": "2026-07-01",
+    "changes": [
+      "Initial launch of the Barking Stink incident reporting tool."
+    ]
+  }
+]
