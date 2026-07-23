@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.6.4",
+    "date": "2026-07-23",
+    "changes": [
+      "Fixed smell scraper to correctly map 'Unknown' smell reports to 'You cannot describe it' on GOV.UK form."
+    ]
+  },
+  {
     "version": "v1.6.3",
     "date": "2026-07-23",
     "changes": [

@@ -151,7 +151,7 @@ describe('submitGovForm', () => {
         expect(rubbishCall).toBeDefined();
     }, 10000);
 
-    it('handles Unknown smellType with fallback in clickLabel', async () => {
+    it('handles Unknown smellType with "You cannot describe it" category', async () => {
         const result = await submitGovForm(
             { email: 'test@example.com' }, 
             { smellType: 'Unknown' }
@@ -162,7 +162,7 @@ describe('submitGovForm', () => {
         const mockPage = await browser.newPage.mock.results[0].value;
         
         const evaluateCalls = mockPage.evaluate.mock.calls;
-        const unknownCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'Unknown');
+        const unknownCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'You cannot describe it');
         expect(unknownCall).toBeDefined();
     }, 10000);
 });

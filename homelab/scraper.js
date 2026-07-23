@@ -138,7 +138,7 @@ async function submitGovForm(userData, incidentData) {
         const sType = incidentData.smellType || incidentData.smell_type;
 
         let siteType = 'industrial site';
-        let smellCategory = 'Rubbish or refuse';
+        let smellCategory;
         let smellDescription = '';
         let addressStreet = 'Choats Rd Dagenham';
         let addressPostcode = 'RM9 6LF';
@@ -154,6 +154,8 @@ async function submitGovForm(userData, incidentData) {
             smellDescription = 'chemical/plastic odour';
         } else if (sType === 'Rubbish or refuse') {
             smellCategory = 'Rubbish or refuse';
+        } else if (sType === 'Unknown') {
+            smellCategory = 'You cannot describe it';
         } else if (sType) {
             smellCategory = sType;
         } else {
