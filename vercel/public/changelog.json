@@ -3,7 +3,7 @@
     "version": "v1.6.0",
     "date": "2026-07-23",
     "changes": [
-      "Added 2-hour anti-spam window to prevent duplicate submissions from the same device.",
+      "Added a 2-hour anti-spam window to group active incidents and prevent conflicting reports.",
       "Implemented automatic internal filtering for duplicate and unknown smell reports."
     ]
   },

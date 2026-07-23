@@ -172,7 +172,7 @@ describe('API Endpoints', () => {
                 fullName: 'Unknown User', 
                 timeOfSmell: '00:00',
                 smellType: 'Unknown',
-                businessLocation: 'ReFoods'
+                businessLocation: 'Unknown'
             });
         expect(res.statusCode).toEqual(200);
         expect(incidentsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({ status: 'internal_only', smell_type: 'Unknown' }));
