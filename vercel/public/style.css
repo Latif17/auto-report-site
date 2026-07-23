@@ -969,6 +969,10 @@ footer {
     border-color: var(--border);
 }
 
+.fab-menu-links a.active {
+    color: var(--accent);
+}
+
 .fab-menu-links a.primary-link {
     background: var(--accent);
     color: #ffffff;

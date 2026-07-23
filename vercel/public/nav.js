@@ -65,6 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
             fabBtn.click(); // Trigger the close logic
         }
     });
+
+    // Highlight current page
+    const currentPath = window.location.pathname.replace(/\/index\.html$/, '/');
+    const menuLinks = document.querySelectorAll('.fab-menu-links a');
+    menuLinks.forEach(link => {
+        try {
+            const url = new URL(link.href);
+            if (url.origin === window.location.origin) {
+                const linkPath = url.pathname.replace(/\/index\.html$/, '/');
+                if (linkPath === currentPath) {
+                    link.classList.add('active');
+                }
+            }
+        } catch (e) {}
+    });
 });
 
 // Fetch and display latest version in header
