@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.9.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Overhauled mobile UI & UX across all devices, maintaining the dossier design aesthetic.",
+      "Fixed automatic page zoom on iOS Safari by enforcing a 16px (1rem) minimum font size on all input fields, selects, and textareas.",
+      "Expanded interactive touch targets across forms, buttons, checkboxes, and the navigation menu to a minimum 44–48px height.",
+      "Refined container spacing and margins for smaller viewports (320px–480px), eliminating text clipping and awkward word wrapping in headings.",
+      "Integrated dashboard chart and terminal styling into the global theme design system."
+    ]
+  },
+  {
     "version": "v1.8.0",
     "date": "2026-07-23",
     "changes": [
