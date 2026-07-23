@@ -165,5 +165,35 @@ describe('submitGovForm', () => {
         const unknownCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'You cannot describe it');
         expect(unknownCall).toBeDefined();
     }, 10000);
+
+    it('formats description with both smellType and additional notes', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' },
+            { smellType: 'Sewage', description: 'Strong rotten egg odor near drain' }
+        );
+        expect(result).toBe(true);
+
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const descCall = evaluateCalls.find(call => call[1] === 'Reported as: Sewage. Details: Strong rotten egg odor near drain');
+        expect(descCall).toBeDefined();
+    }, 10000);
+
+    it('formats description with smellType only without trailing Details:', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' },
+            { smellType: 'Sewage', description: '' }
+        );
+        expect(result).toBe(true);
+
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const descCall = evaluateCalls.find(call => call[1] === 'Reported as: Sewage.');
+        expect(descCall).toBeDefined();
+    }, 10000);
 });
 

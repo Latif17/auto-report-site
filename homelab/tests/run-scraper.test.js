@@ -267,7 +267,7 @@ describe('run-scraper', () => {
         // Should have called scraper
         expect(submitGovForm).toHaveBeenCalledWith(
             { email: 'test@example.com', fullName: 'Test', postcode: '123', phone: '12345', address: '123 St' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '10:00', smellType: 'Sewage', businessLocation: 'factory' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '10:00', smellType: 'Sewage', businessLocation: 'factory', description: '' }
         );
 
         // Should log scraper error
@@ -344,11 +344,11 @@ describe('run-scraper', () => {
         expect(submitGovForm).toHaveBeenCalledTimes(2);
         expect(submitGovForm).toHaveBeenNthCalledWith(1,
             { email: 'explicit@example.com', fullName: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump', description: '' }
         );
         expect(submitGovForm).toHaveBeenNthCalledWith(2,
             { email: 'pooled@example.com', fullName: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump', description: '' }
         );
 
         // Verify the atomic cleanup RPC was called for the unpooled user, excluding the current incident
@@ -356,6 +356,66 @@ describe('run-scraper', () => {
             p_emails: ['explicit@example.com'],
             p_exclude_incident_id: 10
         });
+    });
+
+    it('should query additional_notes from opted_in_user_reports and pass it as description to submitGovForm', async () => {
+        let runFunc;
+        jest.isolateModules(() => {
+            process.env.SUPABASE_URL = 'http://localhost';
+            process.env.SUPABASE_KEY = 'test';
+            const module = require('../run-scraper');
+            runFunc = module.run;
+        });
+
+        const pendingIncidents = [
+            { id: 20, smell_timestamp: '2026-06-27 15:00:00', smell_type: 'Sewage', business_location: 'factory' }
+        ];
+
+        const userReports = [{ incident_id: 20, user_email: 'noted@example.com', additional_notes: 'Strong chemical smell near window' }];
+        const users = [
+            { email: 'noted@example.com', full_name: 'Noted User', postcode: 'N1', phone: '333', address: 'Addr 3', pool_data: false }
+        ];
+
+        // 1. Fetch pending incidents
+        mockEqResponses.push({ data: pendingIncidents, error: null });
+        // 2. Fetch opted-in reports (select incident_id, user_email, additional_notes)
+        mockInResponses.push({ data: userReports, error: null });
+        // 3. Fetch pooled users
+        mockEqResponses.push({ data: [], error: null });
+        // 4. Fetch details of users
+        mockInResponses.push({ data: users, error: null });
+        // 5. Update status to processing
+        mockEqResponses.push({ error: null });
+        // Mock completed reports
+        mockEqResponses.push({ data: [], error: null });
+
+        // Mock scraper successful submission
+        submitGovForm.mockResolvedValue(true);
+
+        // Stale sweep RPC and cleanup RPC
+        mockRpcResponses.push({ data: [], error: null });
+        mockRpcResponses.push({ data: [{ email: 'noted@example.com' }], error: null });
+
+        // Update status to completed
+        mockEqResponses.push({ error: null });
+
+        const runPromise = runFunc();
+        if (jest.runAllTimersAsync) {
+            await jest.runAllTimersAsync();
+        } else {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+                jest.runAllTimers();
+            }
+        }
+        await runPromise;
+
+        expect(mockSupabase.from).toHaveBeenCalledWith('opted_in_user_reports');
+        expect(mockSupabase.select).toHaveBeenCalledWith('incident_id, user_email, additional_notes');
+        expect(submitGovForm).toHaveBeenCalledWith(
+            { email: 'noted@example.com', fullName: 'Noted User', postcode: 'N1', phone: '333', address: 'Addr 3' },
+            { dateOfSmell: '2026-06-27', timeOfSmell: '15:00', smellType: 'Sewage', businessLocation: 'factory', description: 'Strong chemical smell near window' }
+        );
     });
 
 
