@@ -9,7 +9,7 @@ describe('API Endpoints', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        mockExistingIncidents = [{ id: 9999, smell_type: 'Industrial Stench' }];
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Sewage' }];
         jest.spyOn(console, 'error').mockImplementation(() => {});
         usersUpsertSpy = jest.fn().mockReturnValue({
             throwOnError: jest.fn().mockReturnThis(),
@@ -103,7 +103,7 @@ describe('API Endpoints', () => {
                 email: 'testfalse@example.com',
                 fullName: 'Test False',
                 timeOfSmell: '00:00',
-                smellType: 'Waste',
+                smellType: 'Sewage',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(200);
@@ -113,7 +113,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit handles shareData correctly and returns success', async () => {
-        mockExistingIncidents = [{ id: 9999, smell_type: 'Waste' }];
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Sewage' }];
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.4')
@@ -122,7 +122,7 @@ describe('API Endpoints', () => {
                 fullName: 'Test User', 
                 shareData: true,
                 timeOfSmell: '00:00',
-                smellType: 'Waste',
+                smellType: 'Sewage',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(200);
@@ -131,7 +131,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit prevents duplicate submissions of same type', async () => {
-        // mockExistingIncidents is already { id: 9999, smell_type: 'Industrial Stench' } by default
+        // mockExistingIncidents is already { id: 9999, smell_type: 'Sewage' } by default
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.9')
@@ -139,7 +139,7 @@ describe('API Endpoints', () => {
                 email: 'duplicate@example.com', 
                 fullName: 'Duplicate User', 
                 timeOfSmell: '00:00',
-                smellType: 'Industrial Stench',
+                smellType: 'Sewage',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(400);
@@ -147,7 +147,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit blocks different smell type within 2-hour window', async () => {
-        // mockExistingIncidents is { id: 9999, smell_type: 'Industrial Stench' }
+        // mockExistingIncidents is { id: 9999, smell_type: 'Sewage' }
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.12')
@@ -159,7 +159,7 @@ describe('API Endpoints', () => {
                 businessLocation: 'Veolia Dagenham'
             });
         expect(res.statusCode).toEqual(400);
-        expect(res.body.error).toContain('A report for Industrial Stench was already logged recently.');
+        expect(res.body.error).toContain('A report for Sewage was already logged recently.');
     });
 
     it('POST /api/submit creates incident with status internal_only when smellType is Unknown', async () => {
@@ -347,7 +347,7 @@ describe('Security Middlewares', () => {
                     email: `test${i}@example.com`,
                     fullName: 'Test User',
                     timeOfSmell: '00:00',
-                    smellType: 'Industrial Stench',
+                    smellType: 'Sewage',
                     businessLocation: 'ReFoods'
                 });
             expect(res.statusCode).toEqual(200);
@@ -361,7 +361,7 @@ describe('Security Middlewares', () => {
                 email: 'test4@example.com',
                 fullName: 'Test User',
                 timeOfSmell: '00:00',
-                smellType: 'Industrial Stench',
+                smellType: 'Sewage',
                 businessLocation: 'ReFoods'
             });
 

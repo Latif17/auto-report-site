@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.6.1",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated backend mock database and test suite to use standardized smell classification types."
+    ]
+  },
+  {
     "version": "v1.6.0",
     "date": "2026-07-23",
     "changes": [

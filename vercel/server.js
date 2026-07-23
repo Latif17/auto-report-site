@@ -76,7 +76,7 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
                                     data: [{
                                         id: 9999,
                                         smell_timestamp: `${defaultDate} ${defaultTime}:00`,
-                                        smell_type: 'Industrial Stench',
+                                        smell_type: 'Sewage',
                                         business_location: 'Multiple (ReFood, Veolia, BioGas)',
                                         status: 'pending',
                                         created_at: mockTime.toISOString()
