@@ -73,7 +73,7 @@ body {
     background: var(--paper);
     border: 2px solid var(--border);
     box-shadow: 8px 8px 0px var(--shadow);
-    padding: 2.5rem;
+    padding: 1.5rem 2.5rem 2.5rem 2.5rem;
     position: relative;
 }
 
@@ -543,7 +543,7 @@ footer {
     }
 
     .dossier-container {
-        padding: 1rem;
+        padding: 0 1rem 1rem 1rem;
         box-shadow: 4px 4px 0px var(--shadow);
     }
     
@@ -875,7 +875,6 @@ footer {
     z-index: 50;
     background: var(--paper);
     padding-top: 1rem;
-    margin-top: -1rem; /* Counteract container padding if needed, or adjust to fit perfectly */
     border-bottom: 2px solid var(--border);
     margin-bottom: 1.5rem;
 }

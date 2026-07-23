@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.4.2",
+    "date": "2026-07-23",
+    "changes": [
+      "Fixed an issue where content could be visible above the sticky header when scrolling."
+    ]
+  },
+  {
     "version": "v1.4.1",
     "date": "2026-07-23",
     "changes": [
