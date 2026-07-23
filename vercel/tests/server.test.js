@@ -113,6 +113,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit handles shareData correctly and returns success', async () => {
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Waste' }];
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.4')
@@ -130,6 +131,7 @@ describe('API Endpoints', () => {
     });
 
     it('POST /api/submit prevents duplicate submissions', async () => {
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Waste' }];
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.9')
@@ -142,6 +144,38 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(400);
         expect(res.body).toHaveProperty('error', 'You have already submitted a report for this exact event.');
+    });
+
+    it('POST /api/submit rejects report when a different smell_type is active within 2-hour window', async () => {
+        mockExistingIncidents = [{ id: 9999, smell_type: 'Industrial Stench' }];
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.12')
+            .send({ 
+                email: 'diffsmell@example.com', 
+                fullName: 'Diff User', 
+                timeOfSmell: '00:00',
+                smellType: 'Chemical',
+                businessLocation: 'ReFoods'
+            });
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.error).toContain('A report for Industrial Stench was already logged recently');
+    });
+
+    it('POST /api/submit creates incident with status internal_only when smellType is Unknown', async () => {
+        mockExistingIncidents = [];
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.13')
+            .send({ 
+                email: 'unknown@example.com', 
+                fullName: 'Unknown User', 
+                timeOfSmell: '00:00',
+                smellType: 'Unknown',
+                businessLocation: 'ReFoods'
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(incidentsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({ status: 'internal_only', smell_type: 'Unknown' }));
     });
 
     it('POST /api/join defaults pool_data to false when shareData is not provided', async () => {
@@ -313,7 +347,7 @@ describe('Security Middlewares', () => {
                     email: `test${i}@example.com`,
                     fullName: 'Test User',
                     timeOfSmell: '00:00',
-                    smellType: 'Waste',
+                    smellType: 'Industrial Stench',
                     businessLocation: 'ReFoods'
                 });
             expect(res.statusCode).toEqual(200);
@@ -327,7 +361,7 @@ describe('Security Middlewares', () => {
                 email: 'test4@example.com',
                 fullName: 'Test User',
                 timeOfSmell: '00:00',
-                smellType: 'Waste',
+                smellType: 'Industrial Stench',
                 businessLocation: 'ReFoods'
             });
 

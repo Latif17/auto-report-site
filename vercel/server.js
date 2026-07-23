@@ -57,6 +57,7 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
                 select: () => {
                     const chain = {
                         eq: (col, val) => { mockState[col] = val; return chain; },
+                        neq: (col, val) => { mockState[col + '_neq'] = val; return chain; },
                         single: () => chain,
                         maybeSingle: () => chain,
                         throwOnError: () => chain,
@@ -312,29 +313,33 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
         // Check for duplicates
         const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00 Europe/London`;
-        const lowerBound = shiftHours(dateOfSmell, timeOfSmell, -3);
-        const upperBound = shiftHours(dateOfSmell, timeOfSmell, 3);
+        const lowerBound = shiftHours(dateOfSmell, timeOfSmell, -2);
+        const upperBound = shiftHours(dateOfSmell, timeOfSmell, 2);
         
         let query = supabase.from('incidents')
-            .select('id')
-            .eq('smell_type', smellType)
+            .select('id, smell_type')
+            .neq('status', 'internal_only')
             .gte('smell_timestamp', lowerBound)
             .lte('smell_timestamp', upperBound)
             .order('smell_timestamp', { ascending: true })
             .limit(1);
-            
-        if (businessLocation == null) {
-            query = query.is('business_location', null);
-        } else {
-            query = query.eq('business_location', businessLocation);
-        }
 
         const { data: existingIncidents } = await query.throwOnError();
 
         let incidentId;
+        const isCantTell = smellType === 'Unknown';
 
         if (existingIncidents && existingIncidents.length > 0) {
-            incidentId = existingIncidents[0].id;
+            const activeIncident = existingIncidents[0];
+            
+            // If the user is trying to report a different smell or "Can't tell" when there's an active one
+            if (activeIncident.smell_type !== smellType) {
+                return res.status(400).json({ 
+                    error: `A report for ${activeIncident.smell_type || 'another smell'} was already logged recently. It is unlikely the smell changed so quickly. To prevent spam, please join the active report instead or wait until the 2-hour restriction is over.` 
+                });
+            }
+
+            incidentId = activeIncident.id;
             if (email) {
                 const { data: userLink } = await supabase.from('opted_in_user_reports')
                     .select('id')
@@ -348,8 +353,9 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             }
             await supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError();
         } else {
+            const initialStatus = isCantTell ? 'internal_only' : 'pending';
             const { data: newIncident } = await supabase.from('incidents')
-                .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: 'pending', reported_by: email || null })
+                .insert({ smell_timestamp: smellTimestamp, smell_type: smellType, business_location: businessLocation, status: initialStatus, reported_by: email || null })
                 .select()
                 .single()
                 .throwOnError();
