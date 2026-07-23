@@ -884,18 +884,17 @@ footer {
     padding-bottom: 5rem;
 }
 
-/* FAB Container pinned to bottom right of .dossier-container */
+/* FAB Container pinned to bottom right of viewport */
 #fab-nav-container {
-    position: absolute;
+    position: fixed;
     bottom: 2rem;
     right: 2rem;
     z-index: 100;
 }
 
-/* Fixed to viewport on mobile screens */
+/* Adjust margins on mobile screens */
 @media (max-width: 600px) {
     #fab-nav-container {
-        position: fixed;
         bottom: 1.5rem;
         right: 1.5rem;
     }
