@@ -1,30 +1,11 @@
 [
   {
-    "version": "v1.6.4",
-    "date": "2026-07-23",
-    "changes": [
-      "Fixed smell scraper to correctly map 'Unknown' smell reports to 'You cannot describe it' on GOV.UK form."
-    ]
-  },
-  {
-    "version": "v1.6.3",
-    "date": "2026-07-23",
-    "changes": [
-      "Updated test suites and local development script to use standardized smell classification types."
-    ]
-  },
-  {
-    "version": "v1.6.2",
-    "date": "2026-07-23",
-    "changes": [
-      "Updated automation scraper logic to map smell categories based on reported smell types."
-    ]
-  },
-  {
     "version": "v1.6.1",
     "date": "2026-07-23",
     "changes": [
-      "Updated backend mock database and test suite to use standardized smell classification types."
+      "Standardised smell classification types across the backend mock database, testing suites, and local development scripts.",
+      "Updated automation scraper logic to map smell categories dynamically based on reported smell types.",
+      "Fixed smell scraper to correctly map 'Unknown' smell reports to 'You cannot describe it' on GOV.UK form."
     ]
   },
   {

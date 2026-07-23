@@ -156,8 +156,6 @@ async function submitGovForm(userData, incidentData) {
             smellCategory = 'Rubbish or refuse';
         } else if (sType === 'Unknown') {
             smellCategory = 'You cannot describe it';
-        } else if (sType) {
-            smellCategory = sType;
         } else {
             smellCategory = 'You cannot describe it';
         }
