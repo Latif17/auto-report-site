@@ -96,4 +96,19 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(() => mapSmellSelection('invalid_option')).toThrow('Invalid smell selection');
         });
     });
+
+    describe('Frontend User Notes (Task 3)', () => {
+        it('index.html contains joinAdditionalNotes and newAdditionalNotes textareas', () => {
+            expect(htmlContent).toContain('id="joinAdditionalNotes"');
+            expect(htmlContent).toContain('id="newAdditionalNotes"');
+            expect(htmlContent).toContain('This personal note is sent directly to the EPA/Gov.UK for this specific report. It is NOT shared with your neighbors.');
+        });
+
+        it('app.js includes additionalNotes in form submission data', () => {
+            expect(appJsContent).toContain("additionalNotes:");
+            expect(appJsContent).toContain("document.getElementById('joinAdditionalNotes').value.trim()");
+            expect(appJsContent).toContain("document.getElementById('newAdditionalNotes').value.trim()");
+        });
+    });
 });
+

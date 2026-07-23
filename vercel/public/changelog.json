@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.9.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Added personal notes fields to report forms allowing users to include optional details directly sent to official authorities."
+    ]
+  },
+  {
     "version": "v1.8.0",
     "date": "2026-07-23",
     "changes": [

@@ -121,6 +121,12 @@
                         <div id="active-incident-location" style="font-size: 0.95rem; margin-top: 0.5rem; color: var(--ink-light); font-weight: 600;">Location</div>
                     </div>
                     
+                    <div class="input-group full-width" style="margin-bottom: 1rem;">
+                        <label for="joinAdditionalNotes" style="text-align: left; display: block;">Is there anything else you'd like to add? (Optional)</label>
+                        <textarea id="joinAdditionalNotes" name="joinAdditionalNotes" rows="2" placeholder="e.g. I have asthma and this smell gives me a headache."></textarea>
+                        <div style="font-size: 0.8rem; color: var(--ink-light); margin-top: 0.25rem; text-align: left;">This personal note is sent directly to the EPA/Gov.UK for this specific report. It is NOT shared with your neighbors.</div>
+                    </div>
+                    
                     <button type="button" class="btn btn-submit" id="join-incident-btn" style="background: var(--ink); color: var(--paper); box-shadow: 4px 4px 0px var(--shadow);">
                         I smell it too
                     </button>
@@ -164,6 +170,12 @@
                             <label for="timeOfSmell">Time</label>
                             <input type="time" id="timeOfSmell" name="timeOfSmell" required>
                             <div class="error-text hidden">MISSING: Time</div>
+                        </div>
+
+                        <div class="input-group full-width">
+                            <label for="newAdditionalNotes">Is there anything else you'd like to add? (Optional)</label>
+                            <textarea id="newAdditionalNotes" name="newAdditionalNotes" rows="2" placeholder="e.g. I have asthma and this smell gives me a headache."></textarea>
+                            <div style="font-size: 0.8rem; color: var(--ink-light); margin-top: 0.25rem; line-height: 1.4;">This personal note is sent directly to the EPA/Gov.UK for this specific report. It is NOT shared with your neighbors.</div>
                         </div>
                     </div>
                     

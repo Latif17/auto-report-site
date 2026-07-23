@@ -177,7 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 smellType: mappedSmellType,
                 businessLocation: mappedBusinessLocation,
                 storeLocally: document.getElementById('storeLocally').checked,
-                shareData: document.getElementById('shareData').checked
+                shareData: document.getElementById('shareData').checked,
+                additionalNotes: joinIncidentId ? document.getElementById('joinAdditionalNotes').value.trim() : document.getElementById('newAdditionalNotes').value.trim()
             };
 
             // 2. Handle Local Storage
@@ -310,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const phone = document.getElementById('phone').value.trim();
         const storeLocally = document.getElementById('storeLocally').checked;
         const shareData = document.getElementById('shareData').checked;
+        const additionalNotes = document.getElementById('joinAdditionalNotes').value.trim();
 
         let hasValidData = false;
         let data = null;
@@ -324,7 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 address,
                 phone,
                 storeLocally,
-                shareData
+                shareData,
+                additionalNotes
             };
         } else {
             // Fallback to localStorage
@@ -341,7 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             address: parsed.address,
                             phone: parsed.phone || '',
                             storeLocally: parsed.storeLocally !== false,
-                            shareData: parsed.shareData === true
+                            shareData: parsed.shareData === true,
+                            additionalNotes
                         };
                     }
                 } catch (e) {}
