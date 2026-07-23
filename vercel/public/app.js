@@ -153,10 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     mappedSmellType = 'Rubbish or refuse';
                 } else if (rawSmellSelection === 'chemical_plastic') {
                     mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
-                    mappedSmellType = 'Something else';
+                    mappedSmellType = 'Plastic';
                 } else if (rawSmellSelection === 'sewage_drain') {
                     mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
                     mappedSmellType = 'Sewage';
+                } else if (rawSmellSelection === 'cant_tell') {
+                    mappedBusinessLocation = 'Unknown';
+                    mappedSmellType = 'Unknown';
                 } else {
                     console.error(`Unexpected smell selection: ${rawSmellSelection}`);
                     throw new Error('Invalid smell selection');
