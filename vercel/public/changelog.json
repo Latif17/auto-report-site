@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.7.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Added support for personal report notes in database schema."
+    ]
+  },
+  {
     "version": "v1.6.1",
     "date": "2026-07-23",
     "changes": [
