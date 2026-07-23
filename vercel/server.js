@@ -215,6 +215,47 @@ app.get('/api/smell-stats-weekly', async (req, res) => {
     }
 });
 
+app.get('/api/history', async (req, res) => {
+    if (!req.query.email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+    const processed = processEmail(req.query.email);
+    if (processed.error) return res.status(400).json({ error: processed.error });
+    const email = processed.email;
+
+    try {
+        const { data, error } = await supabase
+            .from('opted_in_user_reports')
+            .select('id, created_at, additional_notes, incidents(smell_timestamp, smell_type, business_location, status)')
+            .eq('user_email', email)
+            .order('created_at', { ascending: false })
+            .limit(50)
+            .throwOnError();
+
+        if (error) throw error;
+
+        const reports = (data || []).map(row => {
+            const incident = Array.isArray(row.incidents) ? row.incidents[0] : row.incidents;
+            const status = incident ? incident.status : 'unknown';
+            const smellType = incident ? incident.smell_type : 'Unknown';
+            const isNotSubmitted = status === 'internal_only' || smellType === 'Unknown';
+            return {
+                id: row.id,
+                submittedAt: row.created_at,
+                smellType: smellType,
+                businessLocation: incident ? incident.business_location : '—',
+                govUkStatus: isNotSubmitted ? 'not_submitted' : 'submitted',
+                additionalNotes: row.additional_notes || null
+            };
+        });
+
+        res.json({ reports });
+    } catch (err) {
+        console.error('History error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/stats', async (req, res) => {
     try {
         const [

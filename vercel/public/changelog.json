@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.8.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Added a personal submission history log to the dashboard page — see all your past smell reports at a glance.",
+      "Each history entry shows the date, smell type, location, and whether it was submitted to Gov.UK.",
+      "'Can't Tell' submissions are included but clearly marked as not submitted to Gov.UK.",
+      "The history log is mobile-optimised: stacked cards on small screens, a full table on desktop.",
+      "Your additional notes are shown alongside each report where provided."
+    ]
+  },
+  {
     "version": "v1.7.0",
     "date": "2026-07-23",
     "changes": [

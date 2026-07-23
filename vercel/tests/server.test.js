@@ -459,3 +459,36 @@ describe('Security Middlewares', () => {
         expect(res.body).toHaveProperty('error', 'Too many requests from this IP, please try again after 15 minutes');
     }, 15000);
 });
+
+describe('GET /api/history', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    it('returns 400 if no email provided', async () => {
+        const res = await request(app).get('/api/history');
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBeDefined();
+    });
+
+    it('returns reports array for a valid email', async () => {
+        const res = await request(app).get('/api/history?email=test%40example.com');
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.reports)).toBe(true);
+    });
+
+    it('returns valid govUkStatus values for each report', async () => {
+        const res = await request(app).get('/api/history?email=test%40example.com');
+        expect(res.status).toBe(200);
+        res.body.reports.forEach(r => {
+            expect(['submitted', 'not_submitted']).toContain(r.govUkStatus);
+        });
+    });
+
+    it('returns 400 for an invalid email', async () => {
+        const res = await request(app).get('/api/history?email=notanemail');
+        expect(res.status).toBe(400);
+    });
+});
+

@@ -960,3 +960,180 @@ footer {
     margin-bottom: 0.5rem;
 }
 
+/* ─── History Log ──────────────────────────────────────────── */
+
+.history-section {
+    margin-top: 2rem;
+    border: 1px solid var(--border);
+    padding: 1rem;
+}
+
+.history-section h2 {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.history-empty {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+/* Badge */
+.history-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.history-badge--submitted {
+    color: var(--success-text);
+    border-color: var(--success-border);
+    background: var(--success-bg);
+}
+
+.history-badge--not-submitted {
+    color: var(--error-text);
+    border-color: var(--error-border);
+    background: var(--error-bg);
+}
+
+/* ── Cards (mobile-first, default) ───────────────────────────── */
+.history-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.history-card {
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    background: var(--paper);
+    transition: background 0.1s;
+}
+
+.history-card:hover {
+    background: var(--card-hover);
+}
+
+.history-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.history-card__date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-light);
+}
+
+.history-card__body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.82rem;
+    align-items: baseline;
+}
+
+.history-card__label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    white-space: nowrap;
+}
+
+.history-card__value {
+    color: var(--ink);
+    word-break: break-word;
+}
+
+.history-card__notes {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    border-top: 1px dashed var(--border);
+    padding-top: 0.4rem;
+    font-style: italic;
+    word-break: break-word;
+}
+
+/* ── Table (≥640px) ─────────────────────────────────────────── */
+.history-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    display: none; /* hidden on mobile */
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.history-table th {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background: var(--header-bg);
+    border: 1px solid var(--border);
+    color: var(--ink-light);
+    white-space: nowrap;
+}
+
+.history-table td {
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    font-size: 0.82rem;
+    color: var(--ink);
+}
+
+.history-table tr:hover td {
+    background: var(--card-hover);
+    transition: background 0.1s;
+}
+
+.history-table .col-date {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.history-table .col-notes {
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    max-width: 180px;
+    word-break: break-word;
+    font-style: italic;
+}
+
+/* Responsive switch */
+@media (min-width: 640px) {
+    .history-table-wrap { display: block; }
+    .history-cards { display: none; }
+}
