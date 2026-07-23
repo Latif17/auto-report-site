@@ -138,7 +138,7 @@ async function submitGovForm(userData, incidentData) {
         const sType = incidentData.smellType || incidentData.smell_type;
 
         let siteType = 'industrial site';
-        let smellCategory = sType || 'You cannot describe it';
+        let smellCategory = 'Rubbish or refuse';
         let smellDescription = '';
         let addressStreet = 'Choats Rd Dagenham';
         let addressPostcode = 'RM9 6LF';
@@ -146,13 +146,18 @@ async function submitGovForm(userData, incidentData) {
         
         if (sType === 'Sewage') {
             siteType = 'sewage or water treatment works';
+            smellCategory = 'Sewage';
             addressStreet = '';
             addressPostcode = '';
-        } else if (bLoc && bLoc.includes('Veolia')) {
+        } else if (sType === 'Plastic') {
             smellCategory = 'Something else';
             smellDescription = 'chemical/plastic odour';
-        } else {
+        } else if (sType === 'Rubbish or refuse') {
             smellCategory = 'Rubbish or refuse';
+        } else if (sType) {
+            smellCategory = sType;
+        } else {
+            smellCategory = 'You cannot describe it';
         }
 
         debugLog('Launching browser with args: ' + JSON.stringify(launchArgs));

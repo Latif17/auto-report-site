@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.6.2",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated automation scraper logic to map smell categories based on reported smell types."
+    ]
+  },
+  {
     "version": "v1.6.1",
     "date": "2026-07-23",
     "changes": [

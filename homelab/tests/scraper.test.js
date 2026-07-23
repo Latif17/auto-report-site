@@ -97,10 +97,10 @@ describe('submitGovForm', () => {
         expect(mockPage.evaluate.mock.calls.length).toBeGreaterThan(10);
     }, 10000);
 
-    it('handles Veolia business location with "Something else" smell category and description', async () => {
+    it('handles Plastic smellType with "Something else" smell category and description', async () => {
         const result = await submitGovForm(
             { email: 'test@example.com' }, 
-            { businessLocation: 'Veolia Facility' }
+            { smellType: 'Plastic' }
         );
         expect(result).toBe(true);
         
@@ -117,4 +117,35 @@ describe('submitGovForm', () => {
             { timeout: 3000 }
         );
     }, 10000);
+
+    it('handles Sewage smellType with Sewage category and water treatment site type', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' }, 
+            { smellType: 'Sewage' }
+        );
+        expect(result).toBe(true);
+        
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+        
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const siteTypeCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'sewage or water treatment works');
+        expect(siteTypeCall).toBeDefined();
+    }, 10000);
+
+    it('handles Rubbish or refuse smellType with Rubbish or refuse category', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' }, 
+            { smellType: 'Rubbish or refuse' }
+        );
+        expect(result).toBe(true);
+        
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+        
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const rubbishCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'Rubbish or refuse');
+        expect(rubbishCall).toBeDefined();
+    }, 10000);
 });
+
