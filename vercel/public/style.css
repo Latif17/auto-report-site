@@ -866,3 +866,113 @@ footer {
 .changelog-entry li {
     margin-bottom: 0.5rem;
 }
+
+/* Sticky Header */
+.dossier-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    padding-top: 1rem;
+    margin-top: -1rem; /* Counteract container padding if needed, or adjust to fit perfectly */
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure container has padding to prevent FAB overlap */
+.dossier-container {
+    padding-bottom: 5rem;
+}
+
+/* FAB Container pinned to bottom right of .dossier-container */
+#fab-nav-container {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+}
+
+/* Fixed to viewport on mobile screens */
+@media (max-width: 600px) {
+    #fab-nav-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+
+/* The FAB Button */
+#fab-button {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--border);
+    box-shadow: 4px 4px 0px var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    outline: none;
+}
+
+#fab-button:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--shadow);
+}
+
+#fab-button:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px var(--shadow);
+}
+
+/* The Menu Drawer/Sheet */
+#fab-menu {
+    position: absolute;
+    bottom: 4.5rem;
+    right: 0;
+    background: var(--paper);
+    border: 2px solid var(--border);
+    box-shadow: 6px 6px 0px var(--shadow);
+    padding: 1rem;
+    width: max-content;
+    max-width: calc(100vw - 3rem);
+    display: flex;
+    flex-direction: column;
+    transform-origin: bottom right;
+}
+
+#fab-menu.hidden {
+    display: none;
+}
+
+.fab-menu-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fab-menu-links a {
+    padding: 0.75rem 1rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    border: 2px solid transparent;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.fab-menu-links a:hover {
+    background: var(--action-bg);
+    border-color: var(--border);
+}
+
+.fab-menu-links a.primary-link {
+    background: var(--accent);
+    color: #ffffff;
+    border: 2px solid var(--border);
+    box-shadow: 2px 2px 0px var(--shadow);
+    margin-bottom: 0.5rem;
+}
+

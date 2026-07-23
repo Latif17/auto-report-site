@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.4.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Added Floating Action Button (FAB) navigation component and sticky header styles."
+    ]
+  },
+  {
     "version": "v1.3.0",
     "date": "2026-07-22",
     "changes": [
