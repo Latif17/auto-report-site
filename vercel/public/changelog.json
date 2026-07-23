@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.10.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated public submission log feed to query incidents directly while protecting submitter privacy."
+    ]
+  },
+  {
     "version": "v1.9.0",
     "date": "2026-07-23",
     "changes": [
