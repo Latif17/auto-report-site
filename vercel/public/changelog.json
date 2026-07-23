@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.8.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated backend endpoints to capture and store personal report notes."
+    ]
+  },
+  {
     "version": "v1.7.0",
     "date": "2026-07-23",
     "changes": [

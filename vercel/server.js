@@ -288,7 +288,7 @@ const shiftHours = (dateStr, timeStr, offsetHours) => {
 };
 
 app.post('/api/submit', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData } = req.body;
+    let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData, additionalNotes } = req.body;
     if (email) {
         const processed = processEmail(email);
         if (processed.error) return res.status(400).json({ error: processed.error });
@@ -370,7 +370,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 
         // Even if they don't share data with community, we still track they reported it so the script runs for them
         if (email) {
-            insertPromises.push(supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
+            insertPromises.push(supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }));
         }
@@ -385,7 +385,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 });
 
 app.post('/api/join', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, incidentId, shareData } = req.body;
+    let { email, fullName, postcode, phone, address, incidentId, shareData, additionalNotes } = req.body;
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
     const processed = processEmail(email);
     if (processed.error) return res.status(400).json({ error: processed.error });
@@ -394,7 +394,7 @@ app.post('/api/join', strictLimiter, async (req, res) => {
     try {
         await Promise.all([
             supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData === true }).throwOnError(),
-            supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email }).then(({error}) => {
+            supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }),
             supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError()

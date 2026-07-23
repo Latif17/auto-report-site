@@ -5,6 +5,7 @@ describe('API Endpoints', () => {
     let usersUpsertSpy;
     let deleteEqSpy;
     let incidentsInsertSpy;
+    let optedInReportsInsertSpy;
     let mockExistingIncidents;
 
     beforeEach(() => {
@@ -25,9 +26,18 @@ describe('API Endpoints', () => {
             then: jest.fn((cb) => cb({ data: { id: 1 }, error: null }))
         });
 
+        optedInReportsInsertSpy = jest.fn();
+
         const originalFrom = app.supabase.from.bind(app.supabase);
         jest.spyOn(app.supabase, 'from').mockImplementation((table) => {
             const chain = originalFrom(table);
+            if (table === 'opted_in_user_reports') {
+                const originalInsert = chain.insert.bind(chain);
+                chain.insert = (data) => {
+                    optedInReportsInsertSpy(data);
+                    return originalInsert(data);
+                };
+            }
             if (table === 'users') {
                 chain.upsert = usersUpsertSpy;
             }
@@ -203,6 +213,44 @@ describe('API Endpoints', () => {
             });
         expect(res.statusCode).toEqual(200);
         expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
+    });
+
+    it('POST /api/submit passes additionalNotes to opted_in_user_reports', async () => {
+        mockExistingIncidents = [];
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.20')
+            .send({
+                email: 'notes@example.com',
+                fullName: 'Notes User',
+                timeOfSmell: '00:00',
+                smellType: 'Sewage',
+                businessLocation: 'ReFoods',
+                additionalNotes: 'Smelled really strong near the fence'
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(optedInReportsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({
+            user_email: 'notes@example.com',
+            additional_notes: 'Smelled really strong near the fence'
+        }));
+    });
+
+    it('POST /api/join passes additionalNotes to opted_in_user_reports', async () => {
+        const res = await request(app)
+            .post('/api/join')
+            .set('X-Forwarded-For', '10.0.0.21')
+            .send({
+                email: 'joinnotes@example.com',
+                fullName: 'Join Notes User',
+                incidentId: 9999,
+                additionalNotes: 'Window was open when smell started'
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(optedInReportsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({
+            incident_id: 9999,
+            user_email: 'joinnotes@example.com',
+            additional_notes: 'Window was open when smell started'
+        }));
     });
 
     describe('DELETE /api/delete-data', () => {
@@ -402,11 +450,11 @@ describe('Security Middlewares', () => {
     it('should limit requests to 100 per 15 minutes', async () => {
         // We will make 100 requests first.
         for (let i = 0; i < 100; i++) {
-            await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
+            await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.99');
         }
         
         // The 101st request should be rate-limited
-        const res = await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.6');
+        const res = await request(app).get('/api/stats').set('X-Forwarded-For', '10.0.0.99');
         expect(res.statusCode).toEqual(429);
         expect(res.body).toHaveProperty('error', 'Too many requests from this IP, please try again after 15 minutes');
     }, 15000);
