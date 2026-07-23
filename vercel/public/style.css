@@ -874,13 +874,9 @@ footer {
     top: 0;
     z-index: 50;
     background: var(--paper);
-    padding-top: 1.5rem;
+    padding-top: 1rem;
     border-bottom: 2px solid var(--border);
     margin-bottom: 1.5rem;
-    margin-left: -2.5rem;
-    margin-right: -2.5rem;
-    padding-left: 2.5rem;
-    padding-right: 2.5rem;
 }
 
 /* Ensure container has padding to prevent FAB overlap */
@@ -985,12 +981,3 @@ footer {
     margin-bottom: 0.5rem;
 }
 
-
-@media (max-width: 600px) {
-    .dossier-header {
-        margin-left: -1rem;
-        margin-right: -1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-}
