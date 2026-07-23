@@ -53,8 +53,9 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     : { 
         from: (table) => {
             const mockState = {};
-            return { 
-                select: () => {
+            return {
+                select: (cols) => {
+                    mockState.selectCols = cols;
                     const chain = {
                         eq: (col, val) => { mockState[col] = val; return chain; },
                         neq: (col, val) => { mockState[col + '_neq'] = val; return chain; },
@@ -89,6 +90,16 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
                             if (table === 'opted_in_user_reports') {
                                 if (mockState.user_email === 'duplicate@example.com') {
                                     return resolve({ count: 1, data: [{ id: 1, incident_id: 9999 }] });
+                                }
+                                if (mockState.selectCols === 'id, created_at, incidents(smell_timestamp, smell_type, business_location, status)') {
+                                    // Sample rows from two different submitters, simulating the public /api/history feed.
+                                    return resolve({
+                                        count: 2,
+                                        data: [
+                                            { id: 201, created_at: '2026-07-20T10:00:00.000Z', incidents: { smell_timestamp: '2026-07-20 10:00:00', smell_type: 'Sewage', business_location: 'Multiple (ReFood, Veolia, BioGas)', status: 'pending' } },
+                                            { id: 202, created_at: '2026-07-19T09:00:00.000Z', incidents: { smell_timestamp: '2026-07-19 09:00:00', smell_type: 'Unknown', business_location: 'Unknown', status: 'internal_only' } }
+                                        ]
+                                    });
                                 }
                             }
                             return resolve({ count: 0, data: [] });
@@ -216,18 +227,10 @@ app.get('/api/smell-stats-weekly', async (req, res) => {
 });
 
 app.get('/api/history', async (req, res) => {
-    if (!req.query.email) {
-        return res.status(400).json({ error: 'Email is required' });
-    }
-    const processed = processEmail(req.query.email);
-    if (processed.error) return res.status(400).json({ error: processed.error });
-    const email = processed.email;
-
     try {
         const { data, error } = await supabase
             .from('opted_in_user_reports')
             .select('id, created_at, incidents(smell_timestamp, smell_type, business_location, status)')
-            .eq('user_email', email)
             .order('created_at', { ascending: false })
             .limit(50)
             .throwOnError();

@@ -49,9 +49,9 @@
                 [ERR_CONNECTION_FAILED] - RETRYING...
             </div>
 
-            <!-- History Log - only shown to registered users -->
+            <!-- History Log - public submission log, shown once the visitor has data locally -->
             <section class="history-section" id="history-section" style="display:none;">
-                <h2>&gt; MY_SUBMISSION_LOG</h2>
+                <h2>&gt; SUBMISSION_LOG</h2>
                 <!-- Mobile cards (default, <640px) -->
                 <div class="history-cards" id="history-cards" aria-label="Submission history list"></div>
                 <!-- Desktop table (≥640px) -->
@@ -180,20 +180,11 @@
             const dataStr = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
             if (!dataStr) return;
 
-            let email;
-            try {
-                const parsed = JSON.parse(dataStr);
-                email = parsed.email;
-            } catch (e) {
-                return;
-            }
-            if (!email) return;
-
             const section = document.getElementById('history-section');
             section.style.display = '';
 
             try {
-                const res = await fetch('/api/history?email=' + encodeURIComponent(email));
+                const res = await fetch('/api/history');
                 if (!res.ok) throw new Error('Failed to fetch history');
                 const { reports } = await res.json();
 

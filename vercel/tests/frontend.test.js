@@ -101,7 +101,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
         it('index.html contains joinAdditionalNotes and newAdditionalNotes textareas', () => {
             expect(htmlContent).toContain('id="joinAdditionalNotes"');
             expect(htmlContent).toContain('id="newAdditionalNotes"');
-            expect(htmlContent).toContain('This personal note is sent directly to the EPA/Gov.UK for this specific report. It is NOT shared with your neighbors.');
+            expect(htmlContent).toContain('This note is included in <strong>your</strong> official report only. It will not be submitted for other community members, even if they share data.');
         });
 
         it('app.js includes additionalNotes in form submission data', () => {
