@@ -382,6 +382,11 @@ describe('PII Allowlist — GET /api/history', () => {
         expect(keys.has('reports.user_email')).toBe(false);
     });
 
+    it('does not expose reported_by even if present on incidents table', () => {
+        const keys = collectAllKeys(body);
+        expect(keys.has('reports.reported_by')).toBe(false);
+    });
+
     it('is safe for a simulated fully-populated reports response', () => {
         const simulated = {
             reports: [

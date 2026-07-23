@@ -3,7 +3,8 @@
     "version": "v1.10.0",
     "date": "2026-07-23",
     "changes": [
-      "Updated public submission log feed to query incidents directly while protecting submitter privacy."
+      "Updated public submission log feed to query incidents directly while protecting submitter privacy.",
+      "Added automated PII allowlist regression test verifying submitter identity (reported_by) is not exposed."
     ]
   },
   {
