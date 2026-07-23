@@ -130,8 +130,8 @@ describe('API Endpoints', () => {
         expect(usersUpsertSpy).toHaveBeenCalledWith(expect.objectContaining({ pool_data: true }));
     });
 
-    it('POST /api/submit prevents duplicate submissions', async () => {
-        mockExistingIncidents = [{ id: 9999, smell_type: 'Waste' }];
+    it('POST /api/submit prevents duplicate submissions of same type', async () => {
+        // mockExistingIncidents is already { id: 9999, smell_type: 'Industrial Stench' } by default
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.9')
@@ -139,27 +139,27 @@ describe('API Endpoints', () => {
                 email: 'duplicate@example.com', 
                 fullName: 'Duplicate User', 
                 timeOfSmell: '00:00',
-                smellType: 'Waste',
+                smellType: 'Industrial Stench',
                 businessLocation: 'ReFoods'
             });
         expect(res.statusCode).toEqual(400);
         expect(res.body).toHaveProperty('error', 'You have already submitted a report for this exact event.');
     });
 
-    it('POST /api/submit rejects report when a different smell_type is active within 2-hour window', async () => {
-        mockExistingIncidents = [{ id: 9999, smell_type: 'Industrial Stench' }];
+    it('POST /api/submit blocks different smell type within 2-hour window', async () => {
+        // mockExistingIncidents is { id: 9999, smell_type: 'Industrial Stench' }
         const res = await request(app)
             .post('/api/submit')
             .set('X-Forwarded-For', '10.0.0.12')
             .send({ 
-                email: 'diffsmell@example.com', 
-                fullName: 'Diff User', 
+                email: 'new@example.com', 
+                fullName: 'New User', 
                 timeOfSmell: '00:00',
-                smellType: 'Chemical',
-                businessLocation: 'ReFoods'
+                smellType: 'Plastic',
+                businessLocation: 'Veolia Dagenham'
             });
         expect(res.statusCode).toEqual(400);
-        expect(res.body.error).toContain('A report for Industrial Stench was already logged recently');
+        expect(res.body.error).toContain('A report for Industrial Stench was already logged recently.');
     });
 
     it('POST /api/submit creates incident with status internal_only when smellType is Unknown', async () => {
