@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.5.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Replaced traditional footer with floating navigation across all pages and unified header headers."
+    ]
+  },
+  {
     "version": "v1.4.0",
     "date": "2026-07-23",
     "changes": [
