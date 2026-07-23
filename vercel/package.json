@@ -8,7 +8,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "jest tests/server.test.js --runInBand"
+    "test": "jest tests/server.test.js tests/pii-allowlist.test.js --runInBand"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

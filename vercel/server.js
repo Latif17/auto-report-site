@@ -288,8 +288,12 @@ app.get('/api/stats', async (req, res) => {
         }
 
         const formattedIncident = recentIncidents && recentIncidents.length > 0 ? {
-            ...recentIncidents[0],
-            alreadyReported: reportedIncidentIds.includes(recentIncidents[0].id)
+            id:                recentIncidents[0].id,
+            smell_timestamp:   recentIncidents[0].smell_timestamp,
+            smell_type:        recentIncidents[0].smell_type,
+            business_location: recentIncidents[0].business_location,
+            status:            recentIncidents[0].status,
+            alreadyReported:   reportedIncidentIds.includes(recentIncidents[0].id)
         } : null;
 
         res.json({ count: count || 0, recentIncidents: formattedIncident ? [formattedIncident] : [] });
