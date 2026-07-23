@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.10.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Personal notes are now included in the automated GOV.UK submission, ensuring your specific details are sent directly to official authorities only for your report."
+    ]
+  },
+  {
     "version": "v1.9.0",
     "date": "2026-07-23",
     "changes": [

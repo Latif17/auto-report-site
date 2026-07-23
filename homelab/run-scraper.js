@@ -61,7 +61,7 @@ async function processQueue() {
     const incidentIds = pendingIncidents.map(i => i.id);
     const { data: allUserReports, error: reportsError } = await supabase
         .from('opted_in_user_reports')
-        .select('incident_id, user_email')
+        .select('incident_id, user_email, additional_notes')
         .in('incident_id', incidentIds);
 
     if (reportsError) {
@@ -156,12 +156,16 @@ async function processQueue() {
                     const tsDate = new Date(incident.smell_timestamp);
                     const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
                     const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
-                    
+
+                    const userReport = (allUserReports || []).find(r => r.incident_id === incident.id && r.user_email === user.email);
+                    const additionalNotes = userReport && userReport.additional_notes ? userReport.additional_notes : '';
+
                     const incidentData = {
                         dateOfSmell: dateFormatter.format(tsDate),
                         timeOfSmell: timeFormatter.format(tsDate),
                         smellType: incident.smell_type,
-                        businessLocation: incident.business_location
+                        businessLocation: incident.business_location,
+                        description: additionalNotes
                     };
                     console.log(`Submitting report for ${userData.email}...`);
                     

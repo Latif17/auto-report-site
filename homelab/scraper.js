@@ -348,10 +348,20 @@ async function submitGovForm(userData, incidentData) {
 
         // Page 19: Anything else
         debugLog('Navigating to Page 19: Anything else');
+        const buildDescription = () => {
+            if (incidentData.smellType && incidentData.description) {
+                return `Reported as: ${incidentData.smellType}. Details: ${incidentData.description}`;
+            } else if (incidentData.smellType) {
+                return `Reported as: ${incidentData.smellType}.`;
+            } else {
+                return incidentData.description || '';
+            }
+        };
+
         await page.evaluate((desc) => {
             const ta = document.querySelector('textarea');
             if (ta) { ta.value = desc || ''; ta.dispatchEvent(new Event('input', { bubbles: true })); }
-        }, incidentData.smellType ? `Reported as: ${incidentData.smellType}. Details: ${incidentData.description || ''}` : incidentData.description || '');
+        }, buildDescription());
 
         // Proceed to final review page
         await goNext(page);
