@@ -1,5 +1,21 @@
 [
   {
+    "version": "v1.6.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Added 2-hour anti-spam window to prevent duplicate submissions from the same device.",
+      "Implemented automatic internal filtering for duplicate and unknown smell reports."
+    ]
+  },
+  {
+    "version": "v1.5.0",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated smell reporting dropdown options to include 'Can't tell' option.",
+      "Updated smell types guidance text and mapping for odor reports."
+    ]
+  },
+  {
     "version": "v1.4.2",
     "date": "2026-07-23",
     "changes": [
