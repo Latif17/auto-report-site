@@ -220,7 +220,7 @@ describe('run-scraper', () => {
         });
 
         const pendingIncidents = [
-            { id: 1, smell_timestamp: '2026-06-27 10:00:00', smell_type: 'sulfur', business_location: 'factory' }
+            { id: 1, smell_timestamp: '2026-06-27 10:00:00', smell_type: 'Sewage', business_location: 'factory' }
         ];
 
         const userReports = [{ incident_id: 1, user_email: 'test@example.com' }];
@@ -267,7 +267,7 @@ describe('run-scraper', () => {
         // Should have called scraper
         expect(submitGovForm).toHaveBeenCalledWith(
             { email: 'test@example.com', fullName: 'Test', postcode: '123', phone: '12345', address: '123 St' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '10:00', smellType: 'sulfur', businessLocation: 'factory' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '10:00', smellType: 'Sewage', businessLocation: 'factory' }
         );
 
         // Should log scraper error
@@ -290,7 +290,7 @@ describe('run-scraper', () => {
         });
 
         const pendingIncidents = [
-            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
+            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'Plastic', business_location: 'dump' }
         ];
 
         const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
@@ -344,11 +344,11 @@ describe('run-scraper', () => {
         expect(submitGovForm).toHaveBeenCalledTimes(2);
         expect(submitGovForm).toHaveBeenNthCalledWith(1,
             { email: 'explicit@example.com', fullName: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'chemical', businessLocation: 'dump' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump' }
         );
         expect(submitGovForm).toHaveBeenNthCalledWith(2,
             { email: 'pooled@example.com', fullName: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'chemical', businessLocation: 'dump' }
+            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump' }
         );
 
         // Verify the atomic cleanup RPC was called for the unpooled user, excluding the current incident
@@ -435,7 +435,7 @@ describe('run-scraper', () => {
         });
 
         const pendingIncidents = [
-            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'chemical', business_location: 'dump' }
+            { id: 10, smell_timestamp: '2026-06-27 12:00:00', smell_type: 'Plastic', business_location: 'dump' }
         ];
 
         const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];

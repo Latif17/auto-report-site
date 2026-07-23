@@ -107,8 +107,11 @@ describe('submitGovForm', () => {
         const browser = await puppeteer.launch.mock.results[0].value;
         const mockPage = await browser.newPage.mock.results[0].value;
         
-        // Find if evaluate was called with 'chemical/plastic odour'
         const evaluateCalls = mockPage.evaluate.mock.calls;
+        const categoryCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'Something else');
+        expect(categoryCall).toBeDefined();
+
+        // Find if evaluate was called with 'chemical/plastic odour'
         const descCall = evaluateCalls.find(call => call[1] === 'chemical/plastic odour');
         expect(descCall).toBeDefined();
         
@@ -146,6 +149,21 @@ describe('submitGovForm', () => {
         const evaluateCalls = mockPage.evaluate.mock.calls;
         const rubbishCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'Rubbish or refuse');
         expect(rubbishCall).toBeDefined();
+    }, 10000);
+
+    it('handles Unknown smellType with fallback in clickLabel', async () => {
+        const result = await submitGovForm(
+            { email: 'test@example.com' }, 
+            { smellType: 'Unknown' }
+        );
+        expect(result).toBe(true);
+        
+        const browser = await puppeteer.launch.mock.results[0].value;
+        const mockPage = await browser.newPage.mock.results[0].value;
+        
+        const evaluateCalls = mockPage.evaluate.mock.calls;
+        const unknownCall = evaluateCalls.find(call => typeof call[0] === 'function' && call[1] === 'Unknown');
+        expect(unknownCall).toBeDefined();
     }, 10000);
 });
 

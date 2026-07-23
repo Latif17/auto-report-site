@@ -14,7 +14,7 @@ async function runLocalTest() {
     };
 
     // Change these values to test different mapping logic
-    // Options for smell_type: 'Rubbish or refuse', 'Sewage', 'Something else'
+    // Options for smellType: 'Plastic', 'Sewage', 'Rubbish or refuse', 'Unknown'
     // Options for business_location: 
     // - 'Multiple (ReFood, East London Bio Gas)'
     // - 'Multiple (Beckton, Riverside, Crossness)'
@@ -25,7 +25,7 @@ async function runLocalTest() {
     const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
 
     const mockIncidentData = {
-        smellType: "Something else",
+        smellType: "Plastic",
         businessLocation: "Veolia Dagenham (Plastics)",
         dateOfSmell: dateFormatter.format(pastDate),
         timeOfSmell: timeFormatter.format(pastDate)

@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.6.3",
+    "date": "2026-07-23",
+    "changes": [
+      "Updated test suites and local development script to use standardized smell classification types."
+    ]
+  },
+  {
     "version": "v1.6.2",
     "date": "2026-07-23",
     "changes": [
