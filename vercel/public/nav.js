@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fabBtn = document.getElementById('fab-button');
     const fabMenu = document.getElementById('fab-menu');
 
-    fabBtn.addEventListener('click', () => {
+    fabBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const isHidden = fabMenu.classList.contains('hidden');
         if (isHidden) {
             fabMenu.classList.remove('hidden');

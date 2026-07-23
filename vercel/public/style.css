@@ -939,6 +939,8 @@ footer {
     padding: 1rem;
     width: max-content;
     max-width: calc(100vw - 3rem);
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     transform-origin: bottom right;

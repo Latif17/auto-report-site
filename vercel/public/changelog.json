@@ -1,5 +1,16 @@
 [
   {
+    "version": "v1.4.1",
+    "date": "2026-07-23",
+    "changes": [
+      "Fixed issue where the navigation menu couldn't be fully viewed on short screens.",
+      "Fixed a bug causing the menu button to toggle inconsistently.",
+      "Prevented large text blocks from sticking to the top and obscuring the page.",
+      "Updated homepage subject text to better reflect the tool's purpose.",
+      "Standardized sticky headers across all pages to prevent content overlap."
+    ]
+  },
+  {
     "version": "v1.4.0",
     "date": "2026-07-23",
     "changes": [
