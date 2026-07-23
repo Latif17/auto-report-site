@@ -31,4 +31,12 @@ describe('GET /api/history', () => {
             expect(r).not.toHaveProperty('additional_notes');
         });
     });
+
+    it('never includes reported_by column in report objects', async () => {
+        const res = await request(app).get('/api/history');
+        expect(res.status).toBe(200);
+        res.body.reports.forEach(r => {
+            expect(r).not.toHaveProperty('reported_by');
+        });
+    });
 });
