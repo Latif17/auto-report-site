@@ -63,7 +63,6 @@
                                 <th>Smell Type</th>
                                 <th>Location</th>
                                 <th>Gov.UK</th>
-                                <th>Notes</th>
                             </tr>
                         </thead>
                         <tbody id="history-tbody"></tbody>
@@ -215,12 +214,6 @@
                     const isSubmitted = r.govUkStatus === 'submitted';
                     const badgeClass = isSubmitted ? 'history-badge--submitted' : 'history-badge--not-submitted';
                     const badgeText = isSubmitted ? '\u2713 Submitted' : '\u2717 Not Submitted';
-                    const notesCardHtml = r.additionalNotes
-                        ? `<span class="history-card__notes">${escapeHtml(r.additionalNotes)}</span>`
-                        : '';
-                    const notesTdHtml = r.additionalNotes
-                        ? escapeHtml(r.additionalNotes)
-                        : '<span style="color:var(--ink-light)">\u2014</span>';
 
                     // Table row (desktop)
                     const tr = document.createElement('tr');
@@ -229,7 +222,6 @@
                         <td>${escapeHtml(r.smellType)}</td>
                         <td>${escapeHtml(r.businessLocation)}</td>
                         <td><span class="history-badge ${badgeClass}">${badgeText}</span></td>
-                        <td class="col-notes">${notesTdHtml}</td>
                     `;
                     tbody.appendChild(tr);
 
@@ -247,7 +239,6 @@
                             <span class="history-card__label">Location</span>
                             <span class="history-card__value">${escapeHtml(r.businessLocation)}</span>
                         </div>
-                        ${notesCardHtml}
                     `;
                     cards.appendChild(card);
                 });

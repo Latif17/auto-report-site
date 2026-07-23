@@ -226,7 +226,7 @@ app.get('/api/history', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('opted_in_user_reports')
-            .select('id, created_at, additional_notes, incidents(smell_timestamp, smell_type, business_location, status)')
+            .select('id, created_at, incidents(smell_timestamp, smell_type, business_location, status)')
             .eq('user_email', email)
             .order('created_at', { ascending: false })
             .limit(50)
@@ -244,8 +244,7 @@ app.get('/api/history', async (req, res) => {
                 submittedAt: row.created_at,
                 smellType: smellType,
                 businessLocation: incident ? incident.business_location : '—',
-                govUkStatus: isNotSubmitted ? 'not_submitted' : 'submitted',
-                additionalNotes: row.additional_notes || null
+                govUkStatus: isNotSubmitted ? 'not_submitted' : 'submitted'
             };
         });
 
@@ -264,7 +263,7 @@ app.get('/api/stats', async (req, res) => {
         ] = await Promise.all([
             supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
             supabase.from('incidents')
-                .select('*')
+                .select('id, smell_timestamp, smell_type, business_location, status')
                 .order('smell_timestamp', { ascending: false })
                 .limit(1)
                 .throwOnError()
