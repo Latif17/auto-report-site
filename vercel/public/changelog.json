@@ -1,30 +1,14 @@
 [
   {
-    "version": "v1.10.0",
-    "date": "2026-07-23",
-    "changes": [
-      "Personal notes are now included in the automated GOV.UK submission, ensuring your specific details are sent directly to official authorities only for your report."
-    ]
-  },
-  {
-    "version": "v1.9.0",
-    "date": "2026-07-23",
-    "changes": [
-      "Added personal notes fields to report forms allowing users to include optional details directly sent to official authorities."
-    ]
-  },
-  {
-    "version": "v1.8.0",
-    "date": "2026-07-23",
-    "changes": [
-      "Updated backend endpoints to capture and store personal report notes."
-    ]
-  },
-  {
     "version": "v1.7.0",
     "date": "2026-07-23",
     "changes": [
-      "Added support for personal report notes in database schema."
+      "Added a personal notes field to the report form. Anything you add will be sent directly to the Government in your individual submission — it will not be shared with other community members.",
+      "The notes input is now hidden if you have already logged the current event.",
+      "Updated the submission confirmation message to clarify that the Government email may take some time to arrive.",
+      "Fixed text inputs and textareas scrolling sideways on mobile — text now wraps correctly.",
+      "Fixed scrolled page content appearing above the sticky header on mobile.",
+      "Updated the changelog versioning rules to consolidate changes before pushing to main."
     ]
   },
   {

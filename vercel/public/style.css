@@ -75,6 +75,7 @@ body {
     box-shadow: 8px 8px 0px var(--shadow);
     padding: 1.5rem 2.5rem 2.5rem 2.5rem;
     position: relative;
+    overflow-x: hidden;
 }
 
 .dossier-container::before {
@@ -275,9 +276,6 @@ textarea {
     min-width: 0;
     max-width: 100%;
     padding: 0.75rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     border: 1px solid var(--border);
     font-family: var(--font-sans);
     font-size: 0.95rem;
@@ -287,6 +285,28 @@ textarea {
     color-scheme: light dark;
     -webkit-appearance: none;
     appearance: none;
+}
+
+/* Inputs and selects: prevent overflow by truncating */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+select {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Textareas: wrap text, allow vertical resize only */
+textarea {
+    white-space: pre-wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    resize: vertical;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 input:focus,

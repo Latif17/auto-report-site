@@ -54,12 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('active-incident-location').innerHTML = `Reported:<br>Smell - ${topIncident.smell_type || 'Unknown'}<br>Location - ${topIncident.business_location}`;
                 
                 const joinBtn = document.getElementById('join-incident-btn');
+                const joinNotesSection = document.getElementById('join-additional-notes-section');
                 if (isReported) {
                     joinBtn.textContent = 'You Logged This Event';
                     joinBtn.disabled = true;
                     joinBtn.style.opacity = '0.5';
                     joinBtn.style.cursor = 'not-allowed';
                     joinBtn.onclick = null;
+                    if (joinNotesSection) joinNotesSection.style.display = 'none';
                 } else {
                     joinBtn.textContent = 'I smelt this too! (Join)';
                     joinBtn.disabled = false;
@@ -69,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         e.preventDefault();
                         window.joinIncident(topIncident.id);
                     };
+                    if (joinNotesSection) joinNotesSection.style.display = '';
                 }
                 
                 activeSection.classList.remove('hidden');
