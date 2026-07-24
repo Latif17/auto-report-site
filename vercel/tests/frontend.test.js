@@ -133,3 +133,40 @@ describe('Frontend Options and Mappings (Task 1)', () => {
     });
 });
 
+describe('about-the-smell.html info page', () => {
+    const aboutPath = path.join(__dirname, '../public/about-the-smell.html');
+    const navPath = path.join(__dirname, '../public/nav.js');
+    let aboutContent;
+    let navContent;
+
+    beforeAll(() => {
+        aboutContent = fs.readFileSync(aboutPath, 'utf8');
+        navContent = fs.readFileSync(navPath, 'utf8');
+    });
+
+    it('explains the backstory and names the suspected culprits', () => {
+        expect(aboutContent).toContain('Barking Riverside');
+        expect(aboutContent).toContain('ReFoods UK');
+        expect(aboutContent).toContain('East London BioGas');
+        expect(aboutContent).toContain('Veolia');
+    });
+
+    it('embeds the demo clip and links back to the report form', () => {
+        expect(aboutContent).toContain('<source src="/demo-clip.mp4" type="video/mp4">');
+        expect(aboutContent).toContain('href="/"');
+    });
+
+    it('has Open Graph and Twitter Card tags', () => {
+        expect(aboutContent).toContain('<meta property="og:type" content="website">');
+        expect(aboutContent).toContain('<meta property="og:title" content="Why Does Barking Riverside Smell?">');
+        expect(aboutContent).toContain('<meta property="og:description" content="The 20-year history, the suspected industrial culprits, and how residents are reporting it.">');
+        expect(aboutContent).toContain('<meta property="og:url" content="https://barking-riverside-report-smell.vercel.app/about-the-smell.html">');
+        expect(aboutContent).toContain('<meta property="og:image" content="https://barking-riverside-report-smell.vercel.app/og-image.png">');
+        expect(aboutContent).toContain('<meta name="twitter:card" content="summary_large_image">');
+    });
+
+    it('is linked from the navigation menu', () => {
+        expect(navContent).toContain('<a href="/about-the-smell.html">Why Does It Smell?</a>');
+    });
+});
+

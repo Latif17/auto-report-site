@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="fab-nav-container">
             <div id="fab-menu" class="hidden">
                 <nav class="fab-menu-links">
+                    <a href="/about-the-smell.html">Why Does It Smell?</a>
                     <a href="https://github.com/Latif17/auto-report-site" target="_blank" rel="noopener noreferrer">View Source on GitHub</a>
                     <a href="https://report-an-environmental-problem.service.gov.uk/smell/source" target="_blank" rel="noopener noreferrer">Official GOV.UK Form</a>
                     <a href="/promise.html">Data Promise</a>
