@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.11.0",
+    "date": "2026-07-24",
+    "changes": [
+      "Added search-engine-friendly page titles and social link previews (Open Graph / Twitter Card) across the homepage and dashboard.",
+      "Added a new 'Why Does It Smell?' page explaining the suspected causes, with a short demo clip of how fast reporting is.",
+      "Added a 'Share with a neighbour' button after logging a report, so you can forward it straight from your phone's share menu.",
+      "The public dashboard now shows live report counts when its link is shared on social media or messaging apps."
+    ]
+  },
+  {
     "version": "v1.10.0",
     "date": "2026-07-23",
     "changes": [
