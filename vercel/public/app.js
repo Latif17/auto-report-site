@@ -1,9 +1,43 @@
+function buildShareMessage(origin) {
+    return {
+        title: 'Stink Log — Barking Riverside',
+        text: "I just reported the smell in Barking Riverside — if you've smelt it too, you can log it here in under a minute:",
+        url: origin + '/'
+    };
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('report-form');
     const submitBtn = document.getElementById('submit-btn');
     const statusMessage = document.getElementById('status-message');
-    
+    const shareBtn = document.getElementById('share-btn');
+
+    function showShareButton() {
+        shareBtn.classList.remove('hidden');
+    }
+
+    function hideShareButton() {
+        shareBtn.classList.add('hidden');
+        shareBtn.textContent = 'Share with a neighbour';
+    }
+
+    async function shareWithNeighbour() {
+        const shareData = buildShareMessage(window.location.origin);
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (e) {
+                // User dismissed the native share sheet — no action needed.
+            }
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+            shareBtn.textContent = 'Link copied!';
+            setTimeout(() => { shareBtn.textContent = 'Share with a neighbour'; }, 2000);
+        }
+    }
+
+    shareBtn.addEventListener('click', shareWithNeighbour);
+
     // UI Sections
     const pooledUserStatus = document.getElementById('pooled-user-status');
     
@@ -140,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.classList.add('loading');
         statusMessage.classList.add('hidden');
         statusMessage.className = 'status-message'; // Reset classes
+        hideShareButton();
 
         try {
             // 1. Gather Data
@@ -230,6 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             statusMessage.classList.add('success');
             statusMessage.classList.remove('hidden');
+            showShareButton();
 
         } catch (error) {
             // Error
@@ -360,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.classList.add('loading');
             statusMessage.classList.add('hidden');
             statusMessage.className = 'status-message'; // Reset classes
+            hideShareButton();
             try {
                 // Handle Local Storage retention/removal
                 if (data.storeLocally) {
@@ -383,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusMessage.textContent = 'Successfully joined the report. Your details have been added.';
                 statusMessage.className = 'status-message success';
                 statusMessage.classList.remove('hidden');
+                showShareButton();
 
                 // Clear join states
                 document.getElementById('joinIncidentId').value = '';

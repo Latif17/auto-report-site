@@ -170,6 +170,36 @@ describe('about-the-smell.html info page', () => {
     });
 });
 
+describe('Share with a neighbour button', () => {
+    const htmlPath = path.join(__dirname, '../public/index.html');
+    const appJsPath = path.join(__dirname, '../public/app.js');
+    let htmlContent;
+    let appJsContent;
+
+    beforeAll(() => {
+        htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    });
+
+    it('index.html contains a hidden share button after the status message', () => {
+        expect(htmlContent).toContain('<div id="status-message" class="status-message hidden"></div>');
+        expect(htmlContent).toContain('<button type="button" id="share-btn" class="btn btn-secondary hidden"');
+    });
+
+    it('app.js wires navigator.share with a clipboard fallback', () => {
+        expect(appJsContent).toContain('navigator.share(');
+        expect(appJsContent).toContain('navigator.clipboard.writeText(');
+        expect(appJsContent).toContain("getElementById('share-btn')");
+    });
+
+    it('app.js defines buildShareMessage with the expected share copy', () => {
+        expect(appJsContent).toContain('function buildShareMessage(origin)');
+        expect(appJsContent).toContain("title: 'Stink Log — Barking Riverside'");
+        expect(appJsContent).toContain("text: \"I just reported the smell in Barking Riverside — if you've smelt it too, you can log it here in under a minute:\"");
+        expect(appJsContent).toContain("url: origin + '/'");
+    });
+});
+
 describe('dashboard.html SEO & Open Graph metadata', () => {
     const dashboardPath = path.join(__dirname, '../public/dashboard.html');
     let dashboardContent;

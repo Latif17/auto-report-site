@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.11.0",
+    "date": "2026-07-24",
+    "changes": [
+      "Added a 'Share with a neighbour' button after successfully logging a smell report, making it quick to spread the word to others nearby."
+    ]
+  },
+  {
     "version": "v1.10.0",
     "date": "2026-07-23",
     "changes": [
