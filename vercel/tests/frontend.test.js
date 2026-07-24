@@ -110,5 +110,26 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(appJsContent).toContain("document.getElementById('newAdditionalNotes').value.trim()");
         });
     });
+
+    describe('index.html SEO & Open Graph metadata', () => {
+        it('has a search-friendly title and description', () => {
+            expect(htmlContent).toContain('<title>Report the Barking Riverside Smell | Stink Log</title>');
+            expect(htmlContent).toContain('<meta name="description" content="Report the recurring industrial smell in Barking Riverside, London. Log an incident in under a minute and we\'ll submit it to GOV.UK on your behalf.">');
+        });
+
+        it('has Open Graph tags for social link previews', () => {
+            expect(htmlContent).toContain('<meta property="og:type" content="website">');
+            expect(htmlContent).toContain('<meta property="og:title" content="Report the Barking Riverside Smell">');
+            expect(htmlContent).toContain('<meta property="og:description" content="Log the recurring industrial smell in Barking Riverside — takes under a minute, submitted to GOV.UK for you.">');
+            expect(htmlContent).toContain('<meta property="og:url" content="https://barking-riverside-report-smell.vercel.app/">');
+            expect(htmlContent).toContain('<meta property="og:image" content="https://barking-riverside-report-smell.vercel.app/og-image.png">');
+        });
+
+        it('has Twitter Card tags', () => {
+            expect(htmlContent).toContain('<meta name="twitter:card" content="summary_large_image">');
+            expect(htmlContent).toContain('<meta name="twitter:title" content="Report the Barking Riverside Smell">');
+            expect(htmlContent).toContain('<meta name="twitter:image" content="https://barking-riverside-report-smell.vercel.app/og-image.png">');
+        });
+    });
 });
 
