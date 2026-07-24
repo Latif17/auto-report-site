@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    shareBtn.addEventListener('click', shareWithNeighbour);
+    if (shareBtn) shareBtn.addEventListener('click', shareWithNeighbour);
 
     // UI Sections
     const pooledUserStatus = document.getElementById('pooled-user-status');
