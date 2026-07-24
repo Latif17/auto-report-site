@@ -484,6 +484,10 @@ describe('GET /api/history', () => {
 });
 
 describe('GET /dashboard.html (server-rendered live stats)', () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     it('serves HTML with the mock stats injected into og:description', async () => {
         const res = await request(app).get('/dashboard.html');
         expect(res.status).toBe(200);
@@ -496,6 +500,19 @@ describe('GET /dashboard.html (server-rendered live stats)', () => {
     it('still serves the full page markup (not just a fragment)', async () => {
         const res = await request(app).get('/dashboard.html');
         expect(res.text).toContain('<div class="dossier-container">');
+    });
+
+    it('falls back to the default og:description when the stats lookup fails', async () => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        jest.spyOn(app.supabase, 'from').mockImplementationOnce(() => {
+            throw new Error('Supabase down');
+        });
+
+        const res = await request(app).get('/dashboard.html');
+
+        expect(res.status).toBe(200);
+        expect(res.text).toContain('<meta property="og:description" content="Live count of industrial smell reports logged and submitted to GOV.UK by Barking Riverside residents.">');
+        expect(res.text).not.toContain('__OG_STATS_PLACEHOLDER__');
     });
 });
 
