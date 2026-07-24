@@ -1,5 +1,7 @@
 const request = require('supertest');
 const app = require('../server');
+const fs = require('fs');
+const path = require('path');
 
 describe('API Endpoints', () => {
     let usersUpsertSpy;
@@ -478,6 +480,22 @@ describe('GET /api/history', () => {
         res.body.reports.forEach(r => {
             expect(['submitted', 'not_submitted']).toContain(r.govUkStatus);
         });
+    });
+});
+
+describe('GET /dashboard.html (server-rendered live stats)', () => {
+    it('serves HTML with the mock stats injected into og:description', async () => {
+        const res = await request(app).get('/dashboard.html');
+        expect(res.status).toBe(200);
+        expect(res.headers['content-type']).toMatch(/html/);
+        // Mock supabase client returns users: 42, incidents: 1, opted_in_user_reports: 0 for a head-count '*' select.
+        expect(res.text).toContain('<meta property="og:description" content="0 reports submitted to GOV.UK by 42 residents in Barking Riverside.">');
+        expect(res.text).not.toContain('__OG_STATS_PLACEHOLDER__');
+    });
+
+    it('still serves the full page markup (not just a fragment)', async () => {
+        const res = await request(app).get('/dashboard.html');
+        expect(res.text).toContain('<div class="dossier-container">');
     });
 });
 

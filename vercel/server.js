@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -41,6 +42,21 @@ function processEmail(email) {
 }
 
 
+
+const DEFAULT_OG_DESCRIPTION = 'Live count of industrial smell reports logged and submitted to GOV.UK by Barking Riverside residents.';
+
+app.get('/dashboard.html', async (req, res) => {
+    const filePath = path.join(__dirname, 'public', 'dashboard.html');
+    const html = fs.readFileSync(filePath, 'utf8');
+    let description = DEFAULT_OG_DESCRIPTION;
+    try {
+        const { usersCount, formsCount } = await getDashboardStats();
+        description = `${formsCount} reports submitted to GOV.UK by ${usersCount} residents in Barking Riverside.`;
+    } catch (error) {
+        console.error('Dashboard stats lookup error:', error);
+    }
+    res.type('html').send(html.replace('__OG_STATS_PLACEHOLDER__', description));
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -157,22 +173,30 @@ const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
         } 
     };
 
+async function getDashboardStats() {
+    const [
+        { count: usersCount },
+        { count: incidentsCount },
+        { count: formsCount }
+    ] = await Promise.all([
+        supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
+        supabase.from('incidents').select('*', { count: 'exact', head: true }).throwOnError(),
+        supabase.from('opted_in_user_reports').select('*', { count: 'exact', head: true }).throwOnError()
+    ]);
+    return {
+        usersCount: usersCount || 0,
+        incidentsCount: incidentsCount || 0,
+        formsCount: formsCount || 0
+    };
+}
+
 app.get('/api/dashboard-stats', async (req, res) => {
     try {
-        const [
-            { count: usersCount },
-            { count: incidentsCount },
-            { count: formsCount }
-        ] = await Promise.all([
-            supabase.from('users').select('*', { count: 'exact', head: true }).throwOnError(),
-            supabase.from('incidents').select('*', { count: 'exact', head: true }).throwOnError(),
-            supabase.from('opted_in_user_reports').select('*', { count: 'exact', head: true }).throwOnError()
-        ]);
-
+        const { usersCount, incidentsCount, formsCount } = await getDashboardStats();
         res.json({
-            users: usersCount || 0,
-            incidents: incidentsCount || 0,
-            formsSubmitted: formsCount || 0
+            users: usersCount,
+            incidents: incidentsCount,
+            formsSubmitted: formsCount
         });
     } catch (error) {
         console.error('Dashboard stats error:', error);
