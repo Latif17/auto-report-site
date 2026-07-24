@@ -170,3 +170,29 @@ describe('about-the-smell.html info page', () => {
     });
 });
 
+describe('dashboard.html SEO & Open Graph metadata', () => {
+    const dashboardPath = path.join(__dirname, '../public/dashboard.html');
+    let dashboardContent;
+
+    beforeAll(() => {
+        dashboardContent = fs.readFileSync(dashboardPath, 'utf8');
+    });
+
+    it('has a search-friendly title and description', () => {
+        expect(dashboardContent).toContain('<title>Barking Riverside Smell Reports — Live Stats | Stink Log</title>');
+        expect(dashboardContent).toContain('<meta name="description" content="Live count of industrial smell reports logged and submitted to GOV.UK by Barking Riverside residents.">');
+    });
+
+    it('has Open Graph tags including a live-stats placeholder for og:description', () => {
+        expect(dashboardContent).toContain('<meta property="og:type" content="website">');
+        expect(dashboardContent).toContain('<meta property="og:title" content="Barking Riverside Smell Reports — Live Stats">');
+        expect(dashboardContent).toContain('<meta property="og:description" content="__OG_STATS_PLACEHOLDER__">');
+        expect(dashboardContent).toContain('<meta property="og:url" content="https://barking-riverside-report-smell.vercel.app/dashboard.html">');
+        expect(dashboardContent).toContain('<meta property="og:image" content="https://barking-riverside-report-smell.vercel.app/og-image.png">');
+    });
+
+    it('has a Twitter Card', () => {
+        expect(dashboardContent).toContain('<meta name="twitter:card" content="summary_large_image">');
+    });
+});
+
