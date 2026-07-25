@@ -1,19 +1,22 @@
 const culpritSites = [
-    { name: 'ReFood UK (Saria Ltd)', category: 'Rubbish/refuse', lat: 51.514, lng: 0.153 },
-    { name: 'East London BioGas (TEG Biogas)', category: 'Rubbish/refuse', lat: 51.514, lng: 0.155 },
-    { name: 'Veolia Plastics', category: 'Chemical/plastic', lat: 51.521185, lng: 0.136934 },
-    { name: 'Beckton Sewage Treatment Works', category: 'Sewage', lat: 51.524357, lng: 0.078019 },
-    { name: 'Crossness Sewage Treatment Works', category: 'Sewage', lat: 51.506562, lng: 0.135472 },
-    { name: 'Riverside Sewage Treatment Works', category: 'Sewage', lat: 51.518307, lng: 0.185737 }
+    { name: 'ReFood UK (Saria Ltd)', category: 'Rubbish/refuse', lat: 51.5239726, lng: 0.1362742 },
+    { name: 'East London BioGas (TEG Biogas)', category: 'Rubbish/refuse', lat: 51.5210418, lng: 0.1372419 },
+    { name: 'Veolia Plastics', category: 'Chemical/plastic', lat: 51.5225677, lng: 0.1350570 },
+    { name: 'Beckton Sewage Treatment Works', category: 'Sewage', lat: 51.5196809, lng: 0.0836316 },
+    { name: 'Crossness Sewage Treatment Works', category: 'Sewage', lat: 51.5048549, lng: 0.1415753 },
+    { name: 'Riverside Sewage Treatment Works', category: 'Sewage', lat: 51.5183964, lng: 0.1811081 }
 ];
 
-const barkingRiverside = { lat: 51.5203, lng: 0.1017 };
+const barkingRiverside = { lat: 51.5205472, lng: 0.1081363 };
 
 function initCulpritMap() {
     const mapEl = document.getElementById('culprit-map');
     if (!mapEl || typeof L === 'undefined') return;
 
-    const map = L.map('culprit-map').setView([barkingRiverside.lat, barkingRiverside.lng], 12);
+    const map = L.map('culprit-map');
+    const allPoints = culpritSites.map((site) => [site.lat, site.lng]);
+    allPoints.push([barkingRiverside.lat, barkingRiverside.lng]);
+    map.fitBounds(allPoints, { padding: [24, 24] });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
