@@ -146,9 +146,21 @@ describe('about-the-smell.html info page', () => {
 
     it('explains the backstory and names the suspected culprits', () => {
         expect(aboutContent).toContain('Barking Riverside');
-        expect(aboutContent).toContain('ReFoods UK');
+        expect(aboutContent).toContain('ReFood UK');
         expect(aboutContent).toContain('East London BioGas');
         expect(aboutContent).toContain('Veolia');
+    });
+
+    it('names all 6 suspected sites, including the 3 sewage treatment works', () => {
+        expect(aboutContent).toContain('Beckton Sewage Treatment Works');
+        expect(aboutContent).toContain('Crossness Sewage Treatment Works');
+        expect(aboutContent).toContain('Riverside Sewage Treatment Works');
+    });
+
+    it('groups the culprit cards by smell category', () => {
+        expect(aboutContent).toContain('class="culprit-grid"');
+        expect(aboutContent).toContain('class="culprit-card"');
+        expect((aboutContent.match(/class="culprit-card"/g) || []).length).toBe(6);
     });
 
     it('embeds the demo clip and links back to the report form', () => {

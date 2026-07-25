@@ -758,6 +758,66 @@ footer {
     line-height: 1.7;
 }
 
+/* Suspected Culprits (about-the-smell.html) */
+.culprit-group {
+    margin-bottom: 1.75rem;
+}
+
+.culprit-group-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+}
+
+.culprit-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+    .culprit-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.culprit-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    border: 2px solid var(--border);
+    background: var(--paper);
+    padding: 0.875rem;
+}
+
+.culprit-badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.2rem 0.4rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: var(--error-bg);
+}
+
+.culprit-name {
+    font-size: 0.95rem;
+}
+
+.culprit-address {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+}
+
 /* Dashboard Specific Styles */
 .dashboard-main {
     margin: 0 auto;
