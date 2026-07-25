@@ -818,6 +818,23 @@ footer {
     color: var(--ink-light);
 }
 
+#culprit-map {
+    border: 2px solid var(--border);
+    margin: 1rem 0 1.5rem 0;
+}
+
+.map-pin--home {
+    color: var(--accent);
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.map-pin--site {
+    color: var(--ink);
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
 /* Dashboard Specific Styles */
 .dashboard-main {
     margin: 0 auto;

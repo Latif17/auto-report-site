@@ -180,6 +180,13 @@ describe('about-the-smell.html info page', () => {
     it('is linked from the navigation menu', () => {
         expect(navContent).toContain('<a href="/about-the-smell.html">Why Does It Smell?</a>');
     });
+
+    it('embeds an interactive Leaflet map of the suspected sites', () => {
+        expect(aboutContent).toContain('id="culprit-map"');
+        expect(aboutContent).toContain('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+        expect(aboutContent).toContain('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+        expect(aboutContent).toContain('<script defer src="/culprit-map.js"></script>');
+    });
 });
 
 describe('Share with a neighbour button', () => {

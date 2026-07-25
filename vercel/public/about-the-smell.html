@@ -15,6 +15,7 @@
     <meta name="twitter:image" content="https://barking-riverside-report-smell.vercel.app/og-image.png">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
     <div class="dossier-container">
@@ -83,6 +84,10 @@
                     </div>
                 </div>
 
+                <h3>Suspected Sites Near You</h3>
+                <p>The map below shows all 6 suspected sites relative to Barking Riverside.</p>
+                <div id="culprit-map" style="height: 320px; width: 100%;"></div>
+
                 <p>The issue has been reported to Barking Riverside London and Bellway with no resolution.</p>
 
                 <h3>See How Fast Reporting Actually Is</h3>
@@ -96,6 +101,8 @@
         </main>
 
     </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script defer src="/culprit-map.js"></script>
     <script defer src="/nav.js"></script>
 </body>
 </html>
