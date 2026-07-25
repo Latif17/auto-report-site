@@ -14,7 +14,15 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cors());
 
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            'script-src': ["'self'", 'https://unpkg.com'],
+            'img-src': ["'self'", 'data:', 'https://*.tile.openstreetmap.org']
+        }
+    }
+}));
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes

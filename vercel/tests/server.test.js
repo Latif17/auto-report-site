@@ -387,6 +387,14 @@ describe('Security Middlewares', () => {
         expect(res.headers['strict-transport-security']).toBeDefined();
     });
 
+    it('should allow the Leaflet CDN and OpenStreetMap tiles in its Content-Security-Policy', async () => {
+        const res = await request(app).get('/api/stats');
+        const csp = res.headers['content-security-policy'];
+        expect(csp).toBeDefined();
+        expect(csp).toContain('https://unpkg.com');
+        expect(csp).toContain('https://*.tile.openstreetmap.org');
+    });
+
     it('should strict rate limit mutation endpoints to 3 per 15 minutes', async () => {
         // We make 3 requests to /api/submit
         for (let i = 0; i < 3; i++) {
