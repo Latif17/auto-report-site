@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.11.1",
+    "date": "2026-07-25",
+    "changes": [
+      "The 'Why Does It Smell?' page now shows a real recording of a report being filled out and submitted, instead of a placeholder."
+    ]
+  },
+  {
     "version": "v1.11.0",
     "date": "2026-07-24",
     "changes": [
