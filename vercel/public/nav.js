@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="/feedback.html">Feedback</a>
                     <a href="/manage.html">Manage My Data</a>
                     <a href="/dashboard.html">Dashboard</a>
-                    <a href="/about-the-smell.html">Why Does It Smell?</a>
+                    Bark<a href="/about-the-smell.html">Why Does It Smell?</a>
                     <a href="/" class="primary-link">Home (Log Smell)</a>
                 </nav>
             </div>
