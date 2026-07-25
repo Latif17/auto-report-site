@@ -152,7 +152,7 @@ describe('about-the-smell.html info page', () => {
     });
 
     it('embeds the demo clip and links back to the report form', () => {
-        expect(aboutContent).toContain('<source src="/demo-clip.mp4" type="video/mp4">');
+        expect(aboutContent).toContain('<img src="/demo-clip.gif"');
         expect(aboutContent).toContain('href="/"');
     });
 
