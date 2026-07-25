@@ -5,10 +5,10 @@ Live site: [https://barking-riverside-report-smell.vercel.app/](https://barking-
 ## Why this repo exists
 For over 20 years, the Barking area has been plagued by a severe and persistent stench. Residents in the newly developed Barking Riverside (located just 1 mile away from potential culprits) frequently suffer from foul, toxic smells drifting into their homes, often overnight. This environmental hazard has forced residents to keep windows shut, purchase air purifiers, and avoid going outside when the smell is bad.
 
-The main culprits are believed to be businesses operating in the London Sustainable Industries Park off Choats Road, particularly:
-- **ReFoods UK** (Dagenham)
-- **East London BioGas**
-- **Veolia** (Dagenham)
+The main culprits are believed to be businesses and treatment works near Barking Riverside, grouped by the type of smell they're believed to cause:
+- Rotting rubbish, compost, or food waste: **ReFood UK** (Saria Ltd, Dagenham Dock), **East London BioGas** (TEG Biogas, Dagenham Dock)
+- Chemical or plastic odour: **Veolia Plastics** (Dagenham)
+- Sewage or drain smell: **Beckton**, **Crossness**, and **Riverside** Sewage Treatment Works
 
 Neighboring businesses have faced the same uphill challenge for two decades. The issue has been reported to Barking Riverside London and Bellway with no resolution.
 
