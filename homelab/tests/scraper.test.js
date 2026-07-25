@@ -197,35 +197,3 @@ describe('submitGovForm', () => {
     }, 10000);
 });
 
-describe('submitGovForm onStep hook', () => {
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    it('invokes onStep after each page transition when provided', async () => {
-        const onStep = jest.fn().mockResolvedValue();
-        const result = await submitGovForm(
-            { email: 'test@example.com' },
-            { smellType: 'Rubbish or refuse', businessLocation: 'Multiple (ReFood, East London Bio Gas)' },
-            { onStep }
-        );
-
-        expect(result).toBe(true);
-        expect(onStep).toHaveBeenCalledTimes(18);
-        expect(onStep.mock.calls[0][0]).toBe('Page 1: Where is smell coming from?');
-        expect(onStep.mock.calls[17][0]).toBe('Final Review Page');
-
-        const browser = await puppeteer.launch.mock.results[0].value;
-        const mockPage = await browser.newPage.mock.results[0].value;
-        expect(onStep.mock.calls[0][1]).toBe(mockPage);
-    });
-
-    it('does not require onStep and behaves exactly as before when omitted', async () => {
-        const result = await submitGovForm(
-            { email: 'test@example.com' },
-            { smellType: 'Rubbish or refuse' }
-        );
-        expect(result).toBe(true);
-    });
-});
-

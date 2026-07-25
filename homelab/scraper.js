@@ -124,13 +124,12 @@ async function goNext(page) {
     }
 }
 
-async function submitGovForm(userData, incidentData, options = {}) {
+async function submitGovForm(userData, incidentData) {
     let browser;
-    const stepHook = typeof options.onStep === 'function' ? options.onStep : async () => {};
     try {
         console.log(`Starting GOV.UK submission for ${userData.email || 'Anonymous'}`);
         const { isTestMode, launchArgs } = getConfig(userData);
-
+        
         const debugLog = (msg) => {
             if (isTestMode) console.log(`[TEST_DEBUG] ${msg}`);
         };
@@ -144,7 +143,7 @@ async function submitGovForm(userData, incidentData, options = {}) {
         let addressStreet = 'Choats Rd Dagenham';
         let addressPostcode = 'RM9 6LF';
         let addressTown = 'Barking Riverside';
-
+        
         if (sType === 'Sewage') {
             siteType = 'sewage or water treatment works';
             smellCategory = 'Sewage';
@@ -162,7 +161,7 @@ async function submitGovForm(userData, incidentData, options = {}) {
         }
 
         debugLog('Launching browser with args: ' + JSON.stringify(launchArgs));
-
+        
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchArgs.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
         }
@@ -175,7 +174,6 @@ async function submitGovForm(userData, incidentData, options = {}) {
         await page.goto('https://report-an-environmental-problem.service.gov.uk/smell/source', { waitUntil: 'networkidle0' });
         await clickLabel(page, siteType);
         await goNext(page);
-        await stepHook('Page 1: Where is smell coming from?', page);
 
         // Page 2: Can you give details?
         debugLog('Navigating to Page 2: Can you give details?');
@@ -183,7 +181,7 @@ async function submitGovForm(userData, incidentData, options = {}) {
         await page.evaluate((locData) => {
             const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
             if(inputs[0] && locData.name) { inputs[0].value = locData.name; inputs[0].dispatchEvent(new Event('input', { bubbles: true })); }
-
+            
             // Try to find specific address fields, otherwise use standard offsets
             const streetInput = document.querySelector('input[name*="address" i], input[name*="line" i]') || inputs[1];
             const townInput = document.querySelector('input[name*="town" i], input[name*="city" i]') || inputs[2];
@@ -192,16 +190,14 @@ async function submitGovForm(userData, incidentData, options = {}) {
             if(streetInput && locData.street !== undefined) { streetInput.value = locData.street; streetInput.dispatchEvent(new Event('input', { bubbles: true })); }
             if(townInput && locData.town !== undefined) { townInput.value = locData.town; townInput.dispatchEvent(new Event('input', { bubbles: true })); }
             if(postcodeInput && locData.postcode !== undefined) { postcodeInput.value = locData.postcode; postcodeInput.dispatchEvent(new Event('input', { bubbles: true })); }
-
+            
         }, { name: bLoc, street: addressStreet, town: addressTown, postcode: addressPostcode });
         await goNext(page);
-        await stepHook('Page 2: Can you give details?', page);
 
         // Page 3: Affecting you at home?
         debugLog('Navigating to Page 3: Affecting you at home?');
         await clickLabel(page, 'Yes');
         await goNext(page);
-        await stepHook('Page 3: Affecting you at home?', page);
 
         // Page 4 & 5: Find your address (skip lookup, enter manually)
         debugLog('Navigating to Page 4 & 5: Find your address');
@@ -223,14 +219,13 @@ async function submitGovForm(userData, incidentData, options = {}) {
         if (addrFields.aId) await page.type('#' + addrFields.aId, userData.address || '');
         if (addrFields.tId) await page.type('#' + addrFields.tId, 'Barking Riverside');
         if (addrFields.pId) await page.type('#' + addrFields.pId, userData.postcode || '');
-
+        
         await goNext(page);
-        await stepHook('Page 4 & 5: Find your address', page);
 
         // Page 6: Describe smell
         debugLog('Navigating to Page 6: Describe smell');
         await clickLabel(page, smellCategory);
-
+        
         if (smellCategory === 'Something else' && smellDescription) {
             // Wait for the input box to appear
             await page.waitForSelector('input[type="text"]:not([hidden]), textarea:not([hidden])', { timeout: 3000 }).catch(() => {});
@@ -246,20 +241,17 @@ async function submitGovForm(userData, incidentData, options = {}) {
             }, smellDescription);
         }
         await goNext(page);
-        await stepHook('Page 6: Describe smell', page);
 
         // Page 7: Problems before?
         debugLog('Navigating to Page 7: Problems before?');
         await clickLabel(page, 'happens often');
         await goNext(page);
-        await stepHook('Page 7: Problems before?', page);
 
         // Page 8: What date?
         debugLog('Navigating to Page 8: What date?');
         const dateCategory = incidentData.dateOfSmell ? getGovUkDateCategory(incidentData.dateOfSmell) : 'Earlier today';
         await clickLabel(page, dateCategory);
         await goNext(page);
-        await stepHook('Page 8: What date?', page);
 
         // Conditional branch for Before yesterday (Extra Page)
         if (dateCategory === 'Before yesterday') {
@@ -274,17 +266,16 @@ async function submitGovForm(userData, incidentData, options = {}) {
                 });
                 await page.focus('#date-day');
                 await page.keyboard.type(parseInt(d, 10).toString(), { delay: 50 });
-
+                
                 await page.focus('#date-month');
                 await page.keyboard.type(parseInt(m, 10).toString(), { delay: 50 });
-
+                
                 await page.focus('#date-year');
                 await page.keyboard.type(y, { delay: 50 });
             } catch (e) {
                 console.error('[Extra Page] Failed to type date:', e);
             }
             await goNext(page);
-            await stepHook('Extra Page: What date did the smell start?', page);
         }
 
         // Page 9: What time?
@@ -300,31 +291,26 @@ async function submitGovForm(userData, incidentData, options = {}) {
             await page.type('#' + timeId, timeFormatted);
         }
         await goNext(page);
-        await stepHook('Page 9: What time?', page);
 
         // Page 10: Still there?
         debugLog('Navigating to Page 10: Still there?');
         await clickLabel(page, 'Yes');
         await goNext(page);
-        await stepHook('Page 10: Still there?', page);
 
         // Page 11: How strong?
         debugLog('Navigating to Page 11: How strong?');
         await clickLabel(page, 'Extremely strong'); // or map severity
         await goNext(page);
-        await stepHook('Page 11: How strong?', page);
 
         // Page 12: Noticeable indoors?
         debugLog('Navigating to Page 12: Noticeable indoors?');
         await clickLabel(page, 'Yes');
         await goNext(page);
-        await stepHook('Page 12: Noticeable indoors?', page);
 
         // Page 13: Sticks to clothing?
         debugLog('Navigating to Page 13: Sticks to clothing?');
         await clickLabel(page, 'Yes');
         await goNext(page);
-        await stepHook('Page 13: Sticks to clothing?', page);
 
         // Page 14: Because of the smell...
         debugLog('Navigating to Page 14: Because of the smell...');
@@ -332,7 +318,6 @@ async function submitGovForm(userData, incidentData, options = {}) {
         await clickLabel(page, 'Keep windows');
         await clickLabel(page, 'Avoid using parts');
         await goNext(page);
-        await stepHook('Page 14: Because of the smell...', page);
 
         // Page 15: Health problems
         debugLog('Navigating to Page 15: Health problems');
@@ -340,13 +325,11 @@ async function submitGovForm(userData, incidentData, options = {}) {
         await clickLabel(page, 'Watering eyes');
         await clickLabel(page, 'Sickness or nausea');
         await goNext(page);
-        await stepHook('Page 15: Health problems', page);
 
         // Page 16: Medical help
         debugLog('Navigating to Page 16: Medical help');
         await clickLabel(page, 'No');
         await goNext(page);
-        await stepHook('Page 16: Medical help', page);
 
         // Page 17: Contact details
         debugLog('Navigating to Page 17: Contact details');
@@ -357,13 +340,11 @@ async function submitGovForm(userData, incidentData, options = {}) {
             if(inputs[2] && userData.phone) { inputs[2].value = userData.phone; inputs[2].dispatchEvent(new Event('input', { bubbles: true })); }
         }, userData);
         await goNext(page);
-        await stepHook('Page 17: Contact details', page);
 
         // Page 18: Images/videos?
         debugLog('Navigating to Page 18: Images/videos?');
         await clickLabel(page, 'No');
         await goNext(page);
-        await stepHook('Page 18: Images/videos?', page);
 
         // Page 19: Anything else
         debugLog('Navigating to Page 19: Anything else');
@@ -385,7 +366,6 @@ async function submitGovForm(userData, incidentData, options = {}) {
         // Proceed to final review page
         await goNext(page);
         debugLog('Navigating to Final Review Page');
-        await stepHook('Final Review Page', page);
 
         // Final submit
         if (isTestMode) {
@@ -396,17 +376,16 @@ async function submitGovForm(userData, incidentData, options = {}) {
                 // wait 1s instead of 5 minutes
                 await new Promise(r => setTimeout(r, 1000));
             }
-        } else {
+        } else {            
             // Submit
             await goNext(page);
             debugLog('Navigating to Result Page');
-            await stepHook('Result Page', page);
-
+        
             // Verify submission success
             try {
                 // Wait up to 5 seconds for the confirmation panel to appear
                 await page.waitForSelector('.govuk-panel.govuk-panel--confirmation', { timeout: 5000 });
-
+                
                 const successTextExists = await page.evaluate(() => {
                     const panel = document.querySelector('.govuk-panel.govuk-panel--confirmation');
                     if (!panel) return false;
@@ -426,7 +405,7 @@ async function submitGovForm(userData, incidentData, options = {}) {
                 return false;
             }
         }
-
+        
         return true;
     } catch (e) {
         console.error('[FATAL] Puppeteer automation error:', e.stack || e.message);
