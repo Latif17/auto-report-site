@@ -71,6 +71,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" });
 const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
 
+function londonToUTC(dateStr, timeStr, offsetHours = 0) {
+    const [yyyy, mm, dd] = dateStr.split('-').map(Number);
+    const [hh, min] = timeStr.split(':').map(Number);
+    let dt = new Date(Date.UTC(yyyy, mm - 1, dd, hh + offsetHours, min, 0));
+    const formatter = new Intl.DateTimeFormat('en-GB', { 
+        timeZone: 'Europe/London', 
+        year: 'numeric', month: 'numeric', day: 'numeric', 
+        hour: 'numeric', minute: 'numeric', second: 'numeric', 
+        hour12: false 
+    });
+    const parts = formatter.formatToParts(dt);
+    const p = {};
+    for (const part of parts) p[part.type] = part.value;
+    const hour = p.hour === '24' ? '00' : p.hour;
+    const fDt = new Date(Date.UTC(p.year, p.month - 1, p.day, hour, p.minute, p.second));
+    const diff = fDt.getTime() - dt.getTime();
+    return new Date(dt.getTime() - diff).toISOString();
+}
+
 // Mock supabase client for test if env vars are missing
 const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_KEY)
     ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
@@ -214,10 +233,17 @@ app.get('/api/dashboard-stats', async (req, res) => {
 
 app.get('/api/smell-stats-weekly', async (req, res) => {
     try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-        sevenDaysAgo.setHours(0, 0, 0, 0);
-        const lowerBound = sevenDaysAgo.toISOString();
+        const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: 'numeric', day: 'numeric' });
+        const parts = formatter.formatToParts(new Date());
+        const p = {};
+        for (const part of parts) p[part.type] = part.value;
+        const londonNow = new Date(Date.UTC(p.year, p.month - 1, p.day));
+
+        const dt6 = new Date(Date.UTC(p.year, p.month - 1, p.day - 6, 0, 0, 0));
+        const yyyy = dt6.getUTCFullYear();
+        const mm = String(dt6.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(dt6.getUTCDate()).padStart(2, '0');
+        const lowerBound = londonToUTC(`${yyyy}-${mm}-${dd}`, '00:00', 0);
 
         const { data, error } = await supabase.from('opted_in_user_reports')
             .select('incident_id, incidents!inner(smell_timestamp, smell_type)')
@@ -230,19 +256,19 @@ app.get('/api/smell-stats-weekly', async (req, res) => {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const labels = [];
         for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            labels.push(days[d.getDay()]);
+            const d = new Date(londonNow);
+            d.setUTCDate(d.getUTCDate() - i);
+            labels.push(days[d.getUTCDay()]);
         }
 
         const countsBySmellAndDay = {};
         const allSmellTypes = new Set();
+        const londonDayFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short' });
 
         (data || []).forEach(report => {
             const incident = Array.isArray(report.incidents) ? report.incidents[0] : report.incidents;
             if (!incident) return;
-            const date = new Date(incident.smell_timestamp);
-            const dayName = days[date.getDay()];
+            const dayName = londonDayFormatter.format(new Date(incident.smell_timestamp));
             const smell = incident.smell_type || 'Unknown';
             allSmellTypes.add(smell);
 
@@ -363,16 +389,6 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
     }
 });
 
-const shiftHours = (dateStr, timeStr, offsetHours) => {
-    const dt = new Date(`${dateStr}T${timeStr}:00Z`);
-    dt.setUTCHours(dt.getUTCHours() + offsetHours);
-    const yyyy = dt.getUTCFullYear();
-    const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(dt.getUTCDate()).padStart(2, '0');
-    const hh = String(dt.getUTCHours()).padStart(2, '0');
-    const min = String(dt.getUTCMinutes()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd} ${hh}:${min}:00 Europe/London`;
-};
 
 app.post('/api/submit', strictLimiter, async (req, res) => {
     let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData, additionalNotes } = req.body;
@@ -399,9 +415,9 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Check for duplicates
-        const smellTimestamp = `${dateOfSmell} ${timeOfSmell}:00 Europe/London`;
-        const lowerBound = shiftHours(dateOfSmell, timeOfSmell, -2);
-        const upperBound = shiftHours(dateOfSmell, timeOfSmell, 2);
+        const smellTimestamp = londonToUTC(dateOfSmell, timeOfSmell);
+        const lowerBound = londonToUTC(dateOfSmell, timeOfSmell, -2);
+        const upperBound = londonToUTC(dateOfSmell, timeOfSmell, 2);
         
         let query = supabase.from('incidents')
             .select('id, smell_type')
