@@ -4,7 +4,8 @@ CREATE TABLE users (
   postcode text,
   phone text,
   address text,
-  pool_data boolean DEFAULT false
+  pool_data boolean DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 
