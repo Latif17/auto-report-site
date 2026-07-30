@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://barking-riverside-report-smell.vercel.app/sitemap.xml

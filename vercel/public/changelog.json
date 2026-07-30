@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.13.1",
+    "date": "2026-07-30",
+    "changes": [
+      "Improved search engine discoverability by adding a sitemap, robots.txt, and canonical URLs to prevent issues with Vercel domains."
+    ]
+  },
+  {
     "version": "v1.13.0",
     "date": "2026-07-30",
     "changes": [
