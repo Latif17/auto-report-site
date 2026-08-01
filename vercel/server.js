@@ -72,8 +72,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Londo
 const timeFormatter = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false });
 
 function londonToUTC(dateStr, timeStr, offsetHours = 0) {
+    if (typeof dateStr !== 'string' || !dateStr.includes('-')) throw new Error('Invalid date format');
+    if (typeof timeStr !== 'string' || !timeStr.includes(':')) throw new Error('Invalid time format');
     const [yyyy, mm, dd] = dateStr.split('-').map(Number);
     const [hh, min] = timeStr.split(':').map(Number);
+    if (isNaN(yyyy) || isNaN(mm) || isNaN(dd) || isNaN(hh) || isNaN(min)) {
+        throw new Error('Invalid date or time values');
+    }
     let dt = new Date(Date.UTC(yyyy, mm - 1, dd, hh + offsetHours, min, 0));
     const formatter = new Intl.DateTimeFormat('en-GB', { 
         timeZone: 'Europe/London', 
@@ -415,9 +420,17 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
         }
 
         // Check for duplicates
-        const smellTimestamp = londonToUTC(dateOfSmell, timeOfSmell);
-        const lowerBound = londonToUTC(dateOfSmell, timeOfSmell, -2);
-        const upperBound = londonToUTC(dateOfSmell, timeOfSmell, 2);
+        let smellTimestamp;
+        let lowerBound;
+        let upperBound;
+        
+        try {
+            smellTimestamp = londonToUTC(dateOfSmell, timeOfSmell);
+            lowerBound = londonToUTC(dateOfSmell, timeOfSmell, -2);
+            upperBound = londonToUTC(dateOfSmell, timeOfSmell, 2);
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid date or time format. Please ensure they are properly formatted.' });
+        }
         
         let query = supabase.from('incidents')
             .select('id, smell_type')
@@ -466,18 +479,13 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             incidentId = newIncident.id;
         }
 
-        const insertPromises = [];
         if (email) {
-            insertPromises.push(supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData || false }).throwOnError());
+            await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData || false }).throwOnError();
+            
+            // Even if they don't share data with community, we still track they reported it so the script runs for them
+            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes });
+            if (error && error.code !== '23505') throw error;
         }
-
-        // Even if they don't share data with community, we still track they reported it so the script runs for them
-        if (email) {
-            insertPromises.push(supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes }).then(({error}) => {
-                if (error && error.code !== '23505') throw error;
-            }));
-        }
-        await Promise.all(insertPromises);
 
         res.json({ success: true, message: "Report triggered", incidentId });
 
@@ -495,8 +503,9 @@ app.post('/api/join', strictLimiter, async (req, res) => {
     email = processed.email;
 
     try {
+        await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData === true }).throwOnError();
+        
         await Promise.all([
-            supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData === true }).throwOnError(),
             supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }),

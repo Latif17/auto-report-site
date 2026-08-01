@@ -1,5 +1,13 @@
 [
   {
+    "version": "v1.13.2",
+    "date": "2026-08-01",
+    "changes": [
+      "Fixed a bug causing an Internal Server Error when submitting logs with an unsupported date or time format on older browsers.",
+      "Fixed a database race condition causing occasional 500 errors for new users when joining or reporting an active incident."
+    ]
+  },
+  {
     "version": "v1.13.1",
     "date": "2026-07-30",
     "changes": [
