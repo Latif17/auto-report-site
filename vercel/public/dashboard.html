@@ -52,9 +52,9 @@
 
             <section class="chart-section">
                 <div class="tabs-container">
-                    <button class="tab-button active" onclick="switchTab('weekly')">WEEKLY</button>
-                    <button class="tab-button" onclick="switchTab('monthly')">MONTHLY</button>
-                    <button class="tab-button" onclick="switchTab('trends')">TRENDS</button>
+                    <button class="tab-button active" onclick="switchTab(event, 'weekly')">WEEKLY</button>
+                    <button class="tab-button" onclick="switchTab(event, 'monthly')">MONTHLY</button>
+                    <button class="tab-button" onclick="switchTab(event, 'trends')">TRENDS</button>
                 </div>
                 
                 <div id="tab-weekly" class="tab-content active">
@@ -120,16 +120,28 @@
 
         const chartColors = ['#00ff00', '#00cccc', '#cc00cc', '#cccc00', '#0000cc'];
 
-        function switchTab(tabId) {
+        function switchTab(event, tabId) {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
             
             event.currentTarget.classList.add('active');
             document.getElementById(`tab-${tabId}`).style.display = 'block';
             
-            if (tabId === 'weekly' && !chartInstances.weekly) fetchWeeklyChart();
-            if (tabId === 'monthly' && !chartInstances.monthly) renderMonthlyChart();
-            if (tabId === 'trends' && !chartInstances.trendsTotal) renderTrendsCharts();
+            // Destroy all chart instances to prevent memory leaks
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    chartInstances[key] = null;
+                }
+            });
+            if (weeklySmellChartInstance) {
+                weeklySmellChartInstance.destroy();
+                weeklySmellChartInstance = null;
+            }
+            
+            if (tabId === 'weekly') fetchWeeklyChart();
+            if (tabId === 'monthly') renderMonthlyChart();
+            if (tabId === 'trends') renderTrendsCharts();
         }
 
         async function fetchAllData() {
