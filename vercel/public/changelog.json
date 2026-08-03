@@ -4,7 +4,8 @@
     "date": "2026-08-03",
     "changes": [
       "Added backend API endpoint for querying complete historical smell incident stats.",
-      "Added dashboard UI tabs and chart containers for Weekly, Monthly, and Trends views."
+      "Added dashboard UI tabs and chart containers for Weekly, Monthly, and Trends views.",
+      "Added frontend logic and Chart.js integration to process and visualize historical data in Monthly and Trends views."
     ]
   },
   {
