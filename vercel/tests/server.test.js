@@ -378,6 +378,20 @@ describe('GET /api/smell-stats-weekly', () => {
     });
 });
 
+describe('GET /api/smell-stats-all', () => {
+    it('returns all historical incidents with minimal data', async () => {
+        const response = await request(app).get('/api/smell-stats-all');
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('incidents');
+        expect(Array.isArray(response.body.incidents)).toBe(true);
+        if (response.body.incidents.length > 0) {
+            expect(response.body.incidents[0]).toHaveProperty('timestamp');
+            expect(response.body.incidents[0]).toHaveProperty('smellType');
+            expect(response.body.incidents[0]).not.toHaveProperty('reported_by');
+        }
+    });
+});
+
 describe('Security Middlewares', () => {
     it('should have helmet security headers', async () => {
         const res = await request(app).get('/api/stats');

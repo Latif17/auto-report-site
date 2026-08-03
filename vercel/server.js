@@ -298,6 +298,29 @@ app.get('/api/smell-stats-weekly', async (req, res) => {
     }
 });
 
+app.get('/api/smell-stats-all', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('incidents')
+            .select('smell_timestamp, smell_type, status')
+            .neq('status', 'internal_only')
+            .order('smell_timestamp', { ascending: true })
+            .throwOnError();
+
+        if (error) throw error;
+
+        const incidents = (data || []).map(row => ({
+            timestamp: row.smell_timestamp,
+            smellType: row.smell_type || 'Unknown'
+        }));
+
+        res.json({ incidents });
+    } catch (err) {
+        console.error('All stats error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.get('/api/history', async (req, res) => {
     try {
         const { data, error } = await supabase

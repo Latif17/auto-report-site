@@ -65,6 +65,12 @@ const ALLOWLISTS = {
         'datasets.borderWidth',
     ]),
 
+    '/api/smell-stats-all': new Set([
+        'incidents',
+        'incidents.timestamp',
+        'incidents.smellType',
+    ]),
+
     '/api/stats': new Set([
         'count',
         'recentIncidents',
@@ -301,6 +307,41 @@ describe('PII Allowlist — GET /api/smell-stats-weekly', () => {
         };
         assertNoPII(simulated);
         assertOnlyAllowlistedKeys(simulated, '/api/smell-stats-weekly');
+    });
+});
+
+describe('PII Allowlist — GET /api/smell-stats-all', () => {
+    let body;
+
+    beforeAll(async () => {
+        const res = await request(app).get('/api/smell-stats-all');
+        expect(res.status).toBe(200);
+        body = res.body;
+    });
+
+    it('contains no PII fields anywhere in the response', () => {
+        assertNoPII(body);
+    });
+
+    it('contains only allowlisted keys (deny-by-default)', () => {
+        assertOnlyAllowlistedKeys(body, '/api/smell-stats-all');
+    });
+
+    it('is safe for a simulated populated incidents response', () => {
+        const simulated = {
+            incidents: [
+                {
+                    timestamp: '2026-07-20T10:00:00.000Z',
+                    smellType: 'Sewage',
+                },
+                {
+                    timestamp: '2026-07-21T11:00:00.000Z',
+                    smellType: 'Unknown',
+                },
+            ],
+        };
+        assertNoPII(simulated);
+        assertOnlyAllowlistedKeys(simulated, '/api/smell-stats-all');
     });
 });
 
