@@ -51,8 +51,30 @@
             </section>
 
             <section class="chart-section">
-                <h2>> WEEKLY_SMELL_BREAKDOWN</h2>
-                <canvas id="weeklySmellChart" style="max-height: 300px;"></canvas>
+                <div class="tabs-container">
+                    <button class="tab-button active" onclick="switchTab('weekly')">WEEKLY</button>
+                    <button class="tab-button" onclick="switchTab('monthly')">MONTHLY</button>
+                    <button class="tab-button" onclick="switchTab('trends')">TRENDS</button>
+                </div>
+                
+                <div id="tab-weekly" class="tab-content active">
+                    <h2>> WEEKLY_SMELL_BREAKDOWN</h2>
+                    <canvas id="weeklySmellChart" style="max-height: 300px;"></canvas>
+                </div>
+                
+                <div id="tab-monthly" class="tab-content" style="display: none;">
+                    <h2>> MONTHLY_SMELL_BREAKDOWN</h2>
+                    <canvas id="monthlySmellChart" style="max-height: 300px;"></canvas>
+                </div>
+                
+                <div id="tab-trends" class="tab-content" style="display: none;">
+                    <h2>> TOTAL_REPORTS_OVER_TIME</h2>
+                    <canvas id="trendsTotalChart" style="max-height: 250px;"></canvas>
+                    <h2 style="margin-top: 2rem;">> SMELL_TYPES_OVER_TIME</h2>
+                    <canvas id="trendsTypeChart" style="max-height: 250px;"></canvas>
+                    <h2 style="margin-top: 2rem;">> HEATMAP_DAY_TIME</h2>
+                    <canvas id="trendsHeatmapChart" style="max-height: 300px;"></canvas>
+                </div>
             </section>
             
             <div id="dashboard-error" class="error-message terminal-error" style="display: none;">

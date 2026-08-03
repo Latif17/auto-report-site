@@ -1293,3 +1293,33 @@ footer {
     .history-table-wrap { display: block; }
     .history-cards { display: none; }
 }
+
+.tabs-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5rem;
+}
+
+.tab-button {
+    background: transparent;
+    color: #888;
+    border: 1px solid #333;
+    padding: 0.5rem 1rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    color: #00ff00;
+    border-color: #00ff00;
+}
+
+.tab-button.active {
+    color: #000;
+    background-color: #00ff00;
+    border-color: #00ff00;
+}

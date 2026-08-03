@@ -3,7 +3,8 @@
     "version": "v1.14.0",
     "date": "2026-08-03",
     "changes": [
-      "Added backend API endpoint for querying complete historical smell incident stats."
+      "Added backend API endpoint for querying complete historical smell incident stats.",
+      "Added dashboard UI tabs and chart containers for Weekly, Monthly, and Trends views."
     ]
   },
   {
