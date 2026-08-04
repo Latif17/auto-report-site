@@ -31,7 +31,12 @@ This specification outlines a series of usability and visualization tweaks for t
   - Create a distinct Bubble Chart dataset for each smell type.
   - Apply distinct chart colors to each dataset so users can identify *which* smell was prevalent at a given hour/day.
 
+## 5. Backend API Caching (Performance Optimization)
+- **Edge Caching**: Add `Cache-Control: public, s-maxage=300, stale-while-revalidate=600` headers to `/api/smell-stats-all`. This leverages Vercel's Edge CDN to cache the payload for 5 minutes, significantly reducing serverless invocation costs on the free tier and providing instant load times for users.
+
 ## File Changes Required
+- `vercel/server.js`:
+  - Add `res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');` to the `/api/smell-stats-all` endpoint.
 - `vercel/public/dashboard.html`:
   - Add HTML button elements for weekly and monthly navigation.
   - Add state variables for `currentWeekStart` and `currentMonthStart`.
