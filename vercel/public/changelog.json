@@ -8,7 +8,8 @@
       "Rewrote the Weekly chart to use client-side data filtering with a stacked bar chart and added week-to-week navigation.",
       "Added month-to-month navigation controls to the Monthly smell breakdown chart.",
       "Fixed a date rollover edge case when navigating between months on days 29–31.",
-      "Optimized rendering performance for weekly smell reporting charts."
+      "Optimized rendering performance for weekly smell reporting charts.",
+      "Optimized mobile layout and navigation controls for dashboard charts."
     ]
   },
   {

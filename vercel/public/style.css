@@ -1345,3 +1345,24 @@ footer {
     margin: 0 1rem;
     color: #fff;
 }
+
+@media (max-width: 600px) {
+    .nav-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .nav-controls {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+.tab-content canvas {
+    min-height: 300px;
+}
+#trends-content canvas {
+    min-height: 400px;
+}
