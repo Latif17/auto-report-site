@@ -59,11 +59,15 @@
                 
                 <div id="tab-weekly" class="tab-content active">
                     <div class="nav-header">
-                        <h2>> WEEKLY_SMELL_BREAKDOWN</h2>
-                        <div class="nav-controls">
-                            <button onclick="changeWeek(-1)">[ < PREV ]</button>
+                        <div class="nav-title-row">
+                            <h2>> WEEKLY_SMELL_BREAKDOWN</h2>
+                            <div class="nav-controls">
+                                <button onclick="changeWeek(-1)">[ < PREV ]</button>
+                                <button id="next-week-btn" onclick="changeWeek(1)" disabled>[ NEXT > ]</button>
+                            </div>
+                        </div>
+                        <div class="nav-date-row">
                             <span id="week-label">CURRENT WEEK</span>
-                            <button id="next-week-btn" onclick="changeWeek(1)" disabled>[ NEXT > ]</button>
                         </div>
                     </div>
                     <canvas id="weeklySmellChart" style="max-height: 300px;"></canvas>
@@ -71,11 +75,15 @@
                 
                 <div id="tab-monthly" class="tab-content" style="display: none;">
                     <div class="nav-header">
-                        <h2>> MONTHLY_SMELL_BREAKDOWN</h2>
-                        <div class="nav-controls">
-                            <button onclick="changeMonth(-1)">[ < PREV ]</button>
+                        <div class="nav-title-row">
+                            <h2>> MONTHLY_SMELL_BREAKDOWN</h2>
+                            <div class="nav-controls">
+                                <button onclick="changeMonth(-1)">[ < PREV ]</button>
+                                <button id="next-month-btn" onclick="changeMonth(1)" disabled>[ NEXT > ]</button>
+                            </div>
+                        </div>
+                        <div class="nav-date-row">
                             <span id="month-label">CURRENT MONTH</span>
-                            <button id="next-month-btn" onclick="changeMonth(1)" disabled>[ NEXT > ]</button>
                         </div>
                     </div>
                     <canvas id="monthlySmellChart" style="max-height: 300px;"></canvas>

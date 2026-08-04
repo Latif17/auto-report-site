@@ -1326,9 +1326,20 @@ footer {
 
 .nav-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+.nav-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.nav-controls {
+    display: flex;
+    gap: 1rem;
 }
 .nav-controls button {
     background: none;
@@ -1341,23 +1352,10 @@ footer {
     color: #333333;
     cursor: not-allowed;
 }
-.nav-controls span {
-    margin: 0 1rem;
+.nav-date-row {
     color: #fff;
-}
-
-@media (max-width: 600px) {
-    .nav-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .nav-controls {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-    }
+    text-align: right;
+    width: 100%;
 }
 
 .tab-content canvas {

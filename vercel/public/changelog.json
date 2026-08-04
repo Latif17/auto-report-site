@@ -11,7 +11,8 @@
       "Fixed a date rollover edge case when navigating between months on days 29–31.",
       "Optimized rendering performance for weekly smell reporting charts.",
       "Optimized mobile layout and navigation controls for dashboard charts.",
-      "Mapped invalid smell categories to 'Other' with a muted color across all charts, and applied offset to heatmap edges to prevent data clipping."
+      "Mapped invalid smell categories to 'Other' with a muted color across all charts, and applied offset to heatmap edges to prevent data clipping.",
+      "Refined dashboard navigation layout to place dates on a new line and keep controls inline with titles."
     ]
   },
   {
