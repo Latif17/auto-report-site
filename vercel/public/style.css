@@ -1323,3 +1323,25 @@ footer {
     background-color: #00ff00;
     border-color: #00ff00;
 }
+
+.nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.nav-controls button {
+    background: none;
+    border: none;
+    color: #00ff00;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+}
+.nav-controls button:disabled {
+    color: #333333;
+    cursor: not-allowed;
+}
+.nav-controls span {
+    margin: 0 1rem;
+    color: #fff;
+}
