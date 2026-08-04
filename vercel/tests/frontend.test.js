@@ -245,3 +245,30 @@ describe('dashboard.html SEO & Open Graph metadata', () => {
     });
 });
 
+describe('dashboard.html Monthly Chart Navigation (Task 4)', () => {
+    const dashboardPath = path.join(__dirname, '../public/dashboard.html');
+    let dashboardContent;
+
+    beforeAll(() => {
+        dashboardContent = fs.readFileSync(dashboardPath, 'utf8');
+    });
+
+    it('contains navigation header and buttons in tab-monthly', () => {
+        expect(dashboardContent).toContain('<div id="tab-monthly" class="tab-content" style="display: none;">');
+        expect(dashboardContent).toContain('<div class="nav-header">');
+        expect(dashboardContent).toContain('onclick="changeMonth(-1)"');
+        expect(dashboardContent).toContain('id="month-label"');
+        expect(dashboardContent).toContain('id="next-month-btn"');
+        expect(dashboardContent).toContain('onclick="changeMonth(1)"');
+    });
+
+    it('defines currentMonthOffset, changeMonth, and updates renderMonthlyChart to filter by current month and year', () => {
+        expect(dashboardContent).toContain('let currentMonthOffset = 0;');
+        expect(dashboardContent).toContain('function changeMonth(delta)');
+        expect(dashboardContent).toContain('document.getElementById(\'next-month-btn\').disabled = (currentMonthOffset === 0);');
+        expect(dashboardContent).toContain('month-label');
+        expect(dashboardContent).toContain('currentMonthOffset');
+    });
+});
+
+

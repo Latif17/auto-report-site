@@ -5,7 +5,8 @@
     "changes": [
       "Added Edge Caching headers to the historical smell statistics API to improve load speeds and reduce server workload.",
       "Filtered Trends charts to display only valid smell categories and updated the heatmap to show distinct categories with a strict 0-23 hour axis.",
-      "Rewrote the Weekly chart to use client-side data filtering with a stacked bar chart and added week-to-week navigation."
+      "Rewrote the Weekly chart to use client-side data filtering with a stacked bar chart and added week-to-week navigation.",
+      "Added month-to-month navigation controls to the Monthly smell breakdown chart."
     ]
   },
   {

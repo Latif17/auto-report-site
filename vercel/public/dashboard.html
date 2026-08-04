@@ -70,7 +70,14 @@
                 </div>
                 
                 <div id="tab-monthly" class="tab-content" style="display: none;">
-                    <h2>> MONTHLY_SMELL_BREAKDOWN</h2>
+                    <div class="nav-header">
+                        <h2>> MONTHLY_SMELL_BREAKDOWN</h2>
+                        <div class="nav-controls">
+                            <button onclick="changeMonth(-1)">[ < PREV ]</button>
+                            <span id="month-label">CURRENT MONTH</span>
+                            <button id="next-month-btn" onclick="changeMonth(1)" disabled>[ NEXT > ]</button>
+                        </div>
+                    </div>
                     <canvas id="monthlySmellChart" style="max-height: 300px;"></canvas>
                 </div>
                 
@@ -116,6 +123,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let currentWeekOffset = 0;
+        let currentMonthOffset = 0;
         let allHistoricalData = [];
         let chartInstances = {
             weekly: null,
@@ -199,6 +207,13 @@
             renderWeeklyChart();
         }
 
+        function changeMonth(delta) {
+            currentMonthOffset += delta;
+            if (currentMonthOffset > 0) currentMonthOffset = 0;
+            document.getElementById('next-month-btn').disabled = (currentMonthOffset === 0);
+            renderMonthlyChart();
+        }
+
         function renderWeeklyChart() {
             if (allHistoricalData.length === 0) return;
             
@@ -267,9 +282,15 @@
             if (allHistoricalData.length === 0) return;
             
             const now = new Date();
+            now.setMonth(now.getMonth() + currentMonthOffset);
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
             
+            const monthLabel = document.getElementById('month-label');
+            if (monthLabel) {
+                monthLabel.innerText = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+            }
+
             // Group by smell type and day of month
             const counts = {};
             const allTypes = new Set();
