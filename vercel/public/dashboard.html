@@ -306,39 +306,44 @@
         function renderTrendsCharts() {
             if (allHistoricalData.length === 0) return;
             
-            // Group by Month-Year for timeline
+            const validCategories = new Set(["Sewage", "Rubbish or refuse", "Plastic"]);
             const monthlyTotals = {};
             const monthlyByType = {};
             const allTypes = new Set();
-            const heatmapData = [];
+            const heatmapData = {};
             
             allHistoricalData.forEach(inc => {
+                const smell = inc.smellType;
+                if (!validCategories.has(smell)) return; // Filter invalid categories
+                
                 const d = new Date(inc.timestamp);
                 const label = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-                const smell = inc.smellType;
                 allTypes.add(smell);
                 
-                // Total
                 monthlyTotals[label] = (monthlyTotals[label] || 0) + 1;
                 
-                // By Type
                 if (!monthlyByType[smell]) monthlyByType[smell] = {};
                 monthlyByType[smell][label] = (monthlyByType[smell][label] || 0) + 1;
                 
-                // Heatmap: x = hour (0-23), y = day (0-6, Sun-Sat)
-                heatmapData.push({ x: d.getHours(), y: d.getDay(), v: 1 });
+                // Heatmap logic per smell type
+                if (!heatmapData[smell]) heatmapData[smell] = {};
+                const heatKey = `${d.getHours()},${d.getDay()}`;
+                heatmapData[smell][heatKey] = (heatmapData[smell][heatKey] || 0) + 1;
             });
             
-            // Aggregate Heatmap
-            const heatMapAgg = {};
-            heatmapData.forEach(d => {
-                const key = `${d.x},${d.y}`;
-                heatMapAgg[key] = (heatMapAgg[key] || 0) + 1;
-            });
-            const finalHeatmapData = Object.keys(heatMapAgg).map(k => {
-                const [x, y] = k.split(',').map(Number);
-                // Map v to r (radius) for scatter plot visualization
-                return { x, y, r: Math.min(heatMapAgg[k] * 2, 20) }; 
+            // Format heatmap datasets (bubble chart)
+            const heatDatasets = Array.from(allTypes).map((smell, i) => {
+                const color = chartColors[i % chartColors.length];
+                const data = Object.keys(heatmapData[smell]).map(k => {
+                    const [x, y] = k.split(',').map(Number);
+                    return { x, y, r: Math.min(heatmapData[smell][k] * 2, 20) };
+                });
+                return {
+                    label: smell,
+                    data: data,
+                    backgroundColor: color + '99',
+                    borderColor: color
+                };
             });
 
             const labels = Object.keys(monthlyTotals).sort();
@@ -395,26 +400,19 @@
                 }
             });
             
-            // Heatmap (Scatter)
+            // Heatmap (Scatter/Bubble) update
             const heatCtx = document.getElementById('trendsHeatmapChart').getContext('2d');
             if (chartInstances.trendsHeatmap) chartInstances.trendsHeatmap.destroy();
             chartInstances.trendsHeatmap = new Chart(heatCtx, {
                 type: 'bubble',
-                data: {
-                    datasets: [{
-                        label: 'Intensity',
-                        data: finalHeatmapData,
-                        backgroundColor: 'rgba(0, 255, 0, 0.6)',
-                        borderColor: '#00ff00'
-                    }]
-                },
+                data: { datasets: heatDatasets },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
                         x: { 
                             title: { display: true, text: 'Hour of Day (0-23)', color: '#888' },
                             grid: { color: '#333333' }, ticks: { stepSize: 1, color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } },
-                            min: -1, max: 24
+                            min: 0, max: 23
                         },
                         y: { 
                             title: { display: true, text: 'Day of Week', color: '#888' },
@@ -425,7 +423,7 @@
                             min: -1, max: 7
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { labels: { color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } } } }
                 }
             });
         }
