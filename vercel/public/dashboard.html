@@ -282,6 +282,7 @@
             if (allHistoricalData.length === 0) return;
             
             const now = new Date();
+            now.setDate(1);
             now.setMonth(now.getMonth() + currentMonthOffset);
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
