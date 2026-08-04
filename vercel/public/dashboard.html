@@ -237,9 +237,12 @@
                 labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
             }
             
+            const startMs = startOfWeek.setHours(0,0,0,0);
+            const endMs = endOfWeek.setHours(23,59,59,999);
+            
             allHistoricalData.forEach(inc => {
                 const d = new Date(inc.timestamp);
-                if (d >= startOfWeek.setHours(0,0,0,0) && d <= endOfWeek.setHours(23,59,59,999)) {
+                if (d >= startMs && d <= endMs) {
                     const smell = inc.smellType;
                     const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
                     allTypes.add(smell);
