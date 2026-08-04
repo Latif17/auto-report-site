@@ -300,6 +300,7 @@ app.get('/api/smell-stats-weekly', async (req, res) => {
 
 app.get('/api/smell-stats-all', async (req, res) => {
     try {
+        res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
         const { data, error } = await supabase
             .from('incidents')
             .select('smell_timestamp, smell_type, status')

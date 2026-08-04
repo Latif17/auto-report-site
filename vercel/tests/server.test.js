@@ -390,6 +390,11 @@ describe('GET /api/smell-stats-all', () => {
             expect(response.body.incidents[0]).not.toHaveProperty('reported_by');
         }
     });
+
+    it('sets Cache-Control headers for Edge Caching', async () => {
+        const response = await request(app).get('/api/smell-stats-all');
+        expect(response.headers['cache-control']).toBe('public, s-maxage=300, stale-while-revalidate=600');
+    });
 });
 
 describe('Security Middlewares', () => {

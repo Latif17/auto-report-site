@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.15.0",
+    "date": "2026-08-04",
+    "changes": [
+      "Added Edge Caching headers to the historical smell statistics API to improve load speeds and reduce server workload."
+    ]
+  },
+  {
     "version": "v1.14.0",
     "date": "2026-08-03",
     "changes": [
