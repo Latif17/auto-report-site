@@ -167,6 +167,13 @@
                 if (!response.ok) throw new Error('Failed to fetch historical data');
                 const data = await response.json();
                 allHistoricalData = data.incidents || [];
+                
+                if (allHistoricalData.length > 0) {
+                    const minTimestamp = Math.min(...allHistoricalData.map(d => new Date(d.timestamp).getTime()));
+                    window.earliestDataDate = new Date(minTimestamp);
+                } else {
+                    window.earliestDataDate = new Date();
+                }
             } catch (error) {
                 console.error('Error fetching historical data:', error);
             }
@@ -228,6 +235,11 @@
             const endOfWeek = new Date(now);
             const startOfWeek = new Date(now);
             startOfWeek.setDate(now.getDate() - 6); // 7 day window
+            
+            const prevWeekBtn = document.querySelector('button[onclick="changeWeek(-1)"]');
+            if (prevWeekBtn && window.earliestDataDate) {
+                prevWeekBtn.disabled = startOfWeek.getTime() <= window.earliestDataDate.getTime();
+            }
             
             // Format label
             const startStr = startOfWeek.toLocaleDateString();
@@ -296,6 +308,13 @@
             now.setMonth(now.getMonth() + currentMonthOffset);
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
+            
+            const prevMonthBtn = document.querySelector('button[onclick="changeMonth(-1)"]');
+            if (prevMonthBtn && window.earliestDataDate) {
+                const currentViewStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                const earliestMonthStart = new Date(window.earliestDataDate.getFullYear(), window.earliestDataDate.getMonth(), 1);
+                prevMonthBtn.disabled = currentViewStart.getTime() <= earliestMonthStart.getTime();
+            }
             
             const monthLabel = document.getElementById('month-label');
             if (monthLabel) {
