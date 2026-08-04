@@ -133,7 +133,13 @@
             trendsHeatmap: null
         };
 
-        const chartColors = ['#00ff00', '#00cccc', '#cc00cc', '#cccc00', '#0000cc'];
+        const chartColorsMap = {
+            'Sewage': '#00ff00',
+            'Rubbish or refuse': '#00cccc',
+            'Plastic': '#cc00cc',
+            'Other': '#52525b'
+        };
+        const validCategoriesList = new Set(['Sewage', 'Rubbish or refuse', 'Plastic']);
 
         function switchTab(event, tabId) {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -243,7 +249,8 @@
             allHistoricalData.forEach(inc => {
                 const d = new Date(inc.timestamp);
                 if (d >= startMs && d <= endMs) {
-                    const smell = inc.smellType;
+                    let smell = inc.smellType;
+                    if (!validCategoriesList.has(smell)) smell = 'Other';
                     const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
                     allTypes.add(smell);
                     if (!counts[smell]) counts[smell] = {};
@@ -252,7 +259,7 @@
             });
             
             const datasets = Array.from(allTypes).map((smell, i) => {
-                const color = chartColors[i % chartColors.length];
+                const color = chartColorsMap[smell] || '#52525b';
                 return {
                     label: smell,
                     data: labels.map(l => counts[smell][l] || 0),
@@ -305,7 +312,8 @@
                 const d = new Date(inc.timestamp);
                 if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
                     const day = String(d.getDate());
-                    const smell = inc.smellType;
+                    let smell = inc.smellType;
+                    if (!validCategoriesList.has(smell)) smell = 'Other';
                     allTypes.add(smell);
                     if (!counts[smell]) counts[smell] = {};
                     counts[smell][day] = (counts[smell][day] || 0) + 1;
@@ -313,7 +321,7 @@
             });
             
             const datasets = Array.from(allTypes).map((smell, i) => {
-                const color = chartColors[i % chartColors.length];
+                const color = chartColorsMap[smell] || '#52525b';
                 return {
                     label: smell,
                     data: labels.map(day => counts[smell][day] || 0),
@@ -346,15 +354,14 @@
         function renderTrendsCharts() {
             if (allHistoricalData.length === 0) return;
             
-            const validCategories = new Set(["Sewage", "Rubbish or refuse", "Plastic"]);
             const monthlyTotals = {};
             const monthlyByType = {};
             const allTypes = new Set();
             const heatmapData = {};
             
             allHistoricalData.forEach(inc => {
-                const smell = inc.smellType;
-                if (!validCategories.has(smell)) return; // Filter invalid categories
+                let smell = inc.smellType;
+                if (!validCategoriesList.has(smell)) smell = 'Other';
                 
                 const d = new Date(inc.timestamp);
                 const label = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -373,7 +380,7 @@
             
             // Format heatmap datasets (bubble chart)
             const heatDatasets = Array.from(allTypes).map((smell, i) => {
-                const color = chartColors[i % chartColors.length];
+                const color = chartColorsMap[smell] || '#52525b';
                 const data = Object.keys(heatmapData[smell]).map(k => {
                     const [x, y] = k.split(',').map(Number);
                     return { x, y, r: Math.min(heatmapData[smell][k] * 2, 20) };
@@ -416,7 +423,7 @@
 
             // Type Line Chart
             const typeDatasets = Array.from(allTypes).map((smell, i) => {
-                const color = chartColors[i % chartColors.length];
+                const color = chartColorsMap[smell] || '#52525b';
                 return {
                     label: smell,
                     data: labels.map(l => monthlyByType[smell][l] || 0),
@@ -452,7 +459,7 @@
                         x: { 
                             title: { display: true, text: 'Hour of Day (0-23)', color: '#888' },
                             grid: { color: '#333333' }, ticks: { stepSize: 1, color: '#00ff00', font: { family: "'IBM Plex Mono', monospace" } },
-                            min: 0, max: 23
+                            min: 0, max: 23, offset: true
                         },
                         y: { 
                             title: { display: true, text: 'Day of Week', color: '#888' },
