@@ -1359,6 +1359,13 @@ footer {
     width: 100%;
 }
 
+@media (max-width: 600px) {
+    .nav-controls {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
 .tab-content canvas {
     min-height: 300px;
 }
