@@ -1340,6 +1340,7 @@ footer {
 .nav-controls {
     display: flex;
     gap: 1rem;
+    margin-left: auto;
 }
 .nav-controls button {
     background: none;
