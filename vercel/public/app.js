@@ -40,6 +40,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // UI Sections
     const pooledUserStatus = document.getElementById('pooled-user-status');
+    const businessLocationSelect = document.getElementById('businessLocation');
+    const windFeature = document.getElementById('experimental-wind-feature');
+    const windText = document.getElementById('wind-explanation-text');
+    const windCheckbox = document.getElementById('use-wind-location');
+    const windLabel = document.getElementById('use-wind-location-label');
+    
+    let specificWindPlant = null;
+
+    if (businessLocationSelect) {
+        businessLocationSelect.addEventListener('change', async (e) => {
+            if (e.target.value === 'sewage_drain') {
+                try {
+                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true');
+                    if (weatherRes.ok) {
+                        const weatherData = await weatherRes.json();
+                        const windDir = weatherData.current_weather.winddirection;
+                        const windSpeed = weatherData.current_weather.windspeed;
+                        
+                        let plant = null;
+                        let directionName = '';
+                        
+                        if (windDir >= 210 && windDir <= 330) {
+                            plant = 'Beckton Sewage Treatment Works';
+                            directionName = 'West';
+                        } else if (windDir >= 120 && windDir < 210) {
+                            plant = 'Crossness Sewage Treatment Works';
+                            directionName = 'South';
+                        } else if (windDir >= 30 && windDir < 120) {
+                            plant = 'Riverside Sewage Treatment Works';
+                            directionName = 'East';
+                        }
+
+                        if (plant) {
+                            specificWindPlant = plant;
+                            windText.textContent = `Wind is pushing from the ${directionName} towards Barking Riverside at ${windSpeed}km/h, likely meaning the smell is from ${plant}.`;
+                            windLabel.textContent = `Use ${plant} as the specific location for this report`;
+                            windFeature.classList.remove('hidden');
+                        } else {
+                            specificWindPlant = null;
+                            if (windFeature) windFeature.classList.add('hidden');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch wind data', e);
+                    specificWindPlant = null;
+                    if (windFeature) windFeature.classList.add('hidden');
+                }
+            } else {
+                if (windFeature) windFeature.classList.add('hidden');
+            }
+        });
+    }
     
     let isPooledUser = false;
 
@@ -193,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
                     mappedSmellType = 'Plastic';
                 } else if (rawSmellSelection === 'sewage_drain') {
-                    mappedBusinessLocation = 'Multiple (Beckton, Riverside, Crossness)';
+                    const useWind = document.getElementById('use-wind-location')?.checked;
+                    mappedBusinessLocation = (useWind && specificWindPlant) ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)';
                     mappedSmellType = 'Sewage';
                 } else if (rawSmellSelection === 'cant_tell') {
                     mappedBusinessLocation = 'Unknown';
