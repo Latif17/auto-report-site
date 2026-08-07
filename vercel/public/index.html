@@ -152,22 +152,27 @@
                     <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.5rem;">Don't see your detection above? Be the first to start a report.</p>
                     <div class="input-grid" style="margin-bottom: 2rem;">
                         <div class="input-group full-width">
-                            <label for="businessLocation">What does it smell like?</label>
-                            <select id="businessLocation" name="businessLocation">
-                                <option value="" disabled selected>Select an option</option>
-                                <option value="cant_tell">Can't tell (See note below)</option>
-                                <option value="sewage_drain">Sewage or drain smell</option>
-                                <option value="chemical_plastic">Chemical or plastic odour</option>
-                                <option value="rotting_rubbish">Rotting rubbish, compost, or food waste</option>
-                            </select>
-                            <div class="error-text hidden">MISSING: Smell type</div>
-                            <div style="font-size: 0.8rem; color: var(--ink-light); margin-top: 0.5rem; line-height: 1.4;">
-                                <strong>Guidance:</strong><br>
-                                &bull; <strong>Can't tell:</strong> Note: If you select this, your report will only be logged internally to track trends, but will NOT be submitted to the EPA. Ask your neighbors if you aren't sure.<br>
-                                &bull; <strong>Sewage or drain:</strong> Smells like rotten eggs, sulfur, or human waste.<br>
-                                &bull; <strong>Chemical or plastic:</strong> Can smell like burning plastic, sulfur, or industrial chemicals.<br>
-                                &bull; <strong>Rotting rubbish:</strong> Often smells like garbage, sour compost, or old food.<br>
+                            <label>What does it smell like?</label>
+                            <input type="hidden" id="businessLocation" name="businessLocation" required>
+                            <div class="smell-cards-grid">
+                                <div class="smell-card" data-value="sewage_drain">
+                                    <div class="smell-card-title">Sewage or drain</div>
+                                    <div class="smell-card-desc">Human waste, raw sewage, or strong sulfur (rotten eggs).</div>
+                                </div>
+                                <div class="smell-card" data-value="rotting_rubbish">
+                                    <div class="smell-card-title">Rotting rubbish</div>
+                                    <div class="smell-card-desc">Sour compost, old garbage, or rotting food.</div>
+                                </div>
+                                <div class="smell-card" data-value="chemical_plastic">
+                                    <div class="smell-card-title">Chemical or plastic</div>
+                                    <div class="smell-card-desc">Burning plastic, acrid smoke, or industrial chemicals.</div>
+                                </div>
+                                <div class="smell-card" data-value="cant_tell">
+                                    <div class="smell-card-title">Can't tell</div>
+                                    <div class="smell-card-desc">Not sure? Logged internally to track trends, but not submitted to the EPA.</div>
+                                </div>
                             </div>
+                            <div class="error-text hidden">MISSING: Smell type</div>
                             <div id="experimental-wind-feature" class="hidden" style="margin-top: 1rem; padding: 1rem; border: 1px dashed var(--accent); background: var(--paper); border-radius: 4px;">
                                 <strong style="color: var(--accent); font-size: 0.8rem; text-transform: uppercase;">Experimental</strong>
                                 <p id="wind-explanation-text" style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Fetching weather data...</p>

@@ -13,18 +13,24 @@ describe('Frontend Options and Mappings (Task 1)', () => {
     });
 
     describe('index.html structure', () => {
-        it('contains the correct dropdown options in businessLocation select', () => {
-            expect(htmlContent).toContain('<option value="cant_tell">Can\'t tell (See note below)</option>');
-            expect(htmlContent).toContain('<option value="sewage_drain">Sewage or drain smell</option>');
-            expect(htmlContent).toContain('<option value="chemical_plastic">Chemical or plastic odour</option>');
-            expect(htmlContent).toContain('<option value="rotting_rubbish">Rotting rubbish, compost, or food waste</option>');
+        it('contains hidden input for businessLocation and smell cards grid', () => {
+            expect(htmlContent).toContain('<input type="hidden" id="businessLocation" name="businessLocation" required>');
+            expect(htmlContent).toContain('class="smell-cards-grid"');
+            expect(htmlContent).toContain('data-value="sewage_drain"');
+            expect(htmlContent).toContain('data-value="rotting_rubbish"');
+            expect(htmlContent).toContain('data-value="chemical_plastic"');
+            expect(htmlContent).toContain('data-value="cant_tell"');
         });
 
-        it('contains the updated guidance text', () => {
-            expect(htmlContent).toContain('<strong>Can\'t tell:</strong> Note: If you select this, your report will only be logged internally to track trends, but will NOT be submitted to the EPA. Ask your neighbors if you aren\'t sure.');
-            expect(htmlContent).toContain('<strong>Sewage or drain:</strong> Smells like rotten eggs, sulfur, or human waste.');
-            expect(htmlContent).toContain('<strong>Chemical or plastic:</strong> Can smell like burning plastic, sulfur, or industrial chemicals.');
-            expect(htmlContent).toContain('<strong>Rotting rubbish:</strong> Often smells like garbage, sour compost, or old food.');
+        it('contains smell cards content and descriptions', () => {
+            expect(htmlContent).toContain('Sewage or drain');
+            expect(htmlContent).toContain('Human waste, raw sewage, or strong sulfur (rotten eggs).');
+            expect(htmlContent).toContain('Rotting rubbish');
+            expect(htmlContent).toContain('Sour compost, old garbage, or rotting food.');
+            expect(htmlContent).toContain('Chemical or plastic');
+            expect(htmlContent).toContain('Burning plastic, acrid smoke, or industrial chemicals.');
+            expect(htmlContent).toContain('Can\'t tell');
+            expect(htmlContent).toContain('Not sure? Logged internally to track trends, but not submitted to the EPA.');
         });
 
         it('contains the experimental wind feature container', () => {
