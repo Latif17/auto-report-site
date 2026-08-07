@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.16.0",
+    "date": "2026-08-07",
+    "changes": [
+      "Added experimental wind direction feature container to the smell reporting form."
+    ]
+  },
+  {
     "version": "v1.15.0",
     "date": "2026-08-04",
     "changes": [

@@ -26,6 +26,11 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(htmlContent).toContain('<strong>Chemical or plastic:</strong> Can smell like burning plastic, sulfur, or industrial chemicals.');
             expect(htmlContent).toContain('<strong>Rotting rubbish:</strong> Often smells like garbage, sour compost, or old food.');
         });
+
+        it('contains the experimental wind feature container and checkbox', () => {
+            expect(htmlContent).toContain('id="experimental-wind-feature"');
+            expect(htmlContent).toContain('id="use-wind-location"');
+        });
     });
 
     describe('app.js mapping logic', () => {
