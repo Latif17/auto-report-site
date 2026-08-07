@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const businessLocationSelect = document.getElementById('businessLocation');
     const windFeature = document.getElementById('experimental-wind-feature');
     const windText = document.getElementById('wind-explanation-text');
-    const windLabel = document.getElementById('use-wind-location-label');
     
     let specificWindPlant = null;
 
@@ -85,11 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (plant) {
                             specificWindPlant = plant;
                             if (windText) windText.textContent = `Recent wind patterns suggest the smell is blowing from the direction of ${plant}.`;
-                            if (windLabel) windLabel.textContent = `Log ${plant} as the specific source for this report`;
                             if (windFeature) windFeature.classList.remove('hidden');
-                            
-                            const windCheckbox = document.getElementById('use-wind-location');
-                            if (windCheckbox) windCheckbox.checked = true;
                         } else {
                             specificWindPlant = null;
                             if (windFeature) windFeature.classList.add('hidden');
@@ -264,8 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     mappedBusinessLocation = 'Veolia Dagenham (Plastics)';
                     mappedSmellType = 'Plastic';
                 } else if (rawSmellSelection === 'sewage_drain') {
-                    const useWind = document.getElementById('use-wind-location')?.checked;
-                    mappedBusinessLocation = (useWind && specificWindPlant) ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)';
+                    mappedBusinessLocation = specificWindPlant ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)';
                     mappedSmellType = 'Sewage';
                 } else if (rawSmellSelection === 'cant_tell') {
                     mappedBusinessLocation = 'Unknown';

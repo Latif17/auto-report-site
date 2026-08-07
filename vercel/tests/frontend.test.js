@@ -27,9 +27,8 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(htmlContent).toContain('<strong>Rotting rubbish:</strong> Often smells like garbage, sour compost, or old food.');
         });
 
-        it('contains the experimental wind feature container and checkbox', () => {
+        it('contains the experimental wind feature container', () => {
             expect(htmlContent).toContain('id="experimental-wind-feature"');
-            expect(htmlContent).toContain('id="use-wind-location"');
         });
     });
 
@@ -110,9 +109,8 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(appJsContent).toContain("plant = 'Riverside Sewage Treatment Works'");
         });
 
-        it('app.js maps sewage_drain using wind location when checkbox is checked', () => {
-            expect(appJsContent).toContain("document.getElementById('use-wind-location')?.checked");
-            expect(appJsContent).toContain("(useWind && specificWindPlant) ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)'");
+        it('app.js maps sewage_drain using specific wind plant if available', () => {
+            expect(appJsContent).toContain("mappedBusinessLocation = specificWindPlant ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)'");
         });
 
         function determineWindPlant(windDir) {
