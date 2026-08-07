@@ -14,7 +14,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
 
     describe('index.html structure', () => {
         it('contains hidden input for businessLocation and smell cards grid', () => {
-            expect(htmlContent).toContain('<input type="hidden" id="businessLocation" name="businessLocation" required>');
+            expect(htmlContent).toContain('<input type="hidden" id="businessLocation" name="businessLocation">');
             expect(htmlContent).toContain('class="smell-cards-grid"');
             expect(htmlContent).toContain('data-value="sewage_drain"');
             expect(htmlContent).toContain('data-value="rotting_rubbish"');
@@ -177,6 +177,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
                     onclick: null,
                     dataset: extra.dataset || {},
                     getAttribute: (attr) => (attr === 'data-value' ? extra.dataset?.value : null),
+                    setAttribute: jest.fn(),
                     classList: {
                         add: (...cls) => cls.forEach(c => classListSet.add(c)),
                         remove: (...cls) => cls.forEach(c => classListSet.delete(c)),

@@ -48,19 +48,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const smellCards = document.querySelectorAll('.smell-card');
     const businessLocationInput = document.getElementById('businessLocation');
     
+    function selectSmellCard(card) {
+        // Remove selected class and set aria-checked false on all
+        smellCards.forEach(c => {
+            c.classList.remove('selected');
+            c.setAttribute('aria-checked', 'false');
+        });
+        // Add selected to clicked and set aria-checked true
+        card.classList.add('selected');
+        card.setAttribute('aria-checked', 'true');
+        // Update hidden input
+        if (businessLocationInput) {
+            businessLocationInput.value = card.getAttribute('data-value');
+            
+            // Dispatch change event to clear errors or trigger experimental wind feature
+            const event = new Event('change', { bubbles: true });
+            businessLocationInput.dispatchEvent(event);
+        }
+    }
+
     smellCards.forEach(card => {
-        card.addEventListener('click', () => {
-            // Remove selected class from all
-            smellCards.forEach(c => c.classList.remove('selected'));
-            // Add selected to clicked
-            card.classList.add('selected');
-            // Update hidden input
-            if (businessLocationInput) {
-                businessLocationInput.value = card.getAttribute('data-value');
-                
-                // Dispatch change event to clear errors or trigger experimental wind feature
-                const event = new Event('change', { bubbles: true });
-                businessLocationInput.dispatchEvent(event);
+        card.addEventListener('click', () => selectSmellCard(card));
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectSmellCard(card);
             }
         });
     });

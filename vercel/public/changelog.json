@@ -6,7 +6,10 @@
       "Replaced smell type dropdown menu with interactive selection cards.",
       "Fixed hover background styling for smell selection cards.",
       "Added interactive click handlers and selection state for smell type cards.",
-      "Updated frontend test suite to execute app.js directly for smell card selection interactions."
+      "Updated frontend test suite to execute app.js directly for smell card selection interactions.",
+      "Fixed hidden input native validation breakage by removing required attribute.",
+      "Fixed accessibility regression on smell cards by adding keyboard support and ARIA roles.",
+      "Optimized CSS Grid responsiveness for smell cards on small screens."
     ]
   },
   {
