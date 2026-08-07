@@ -1393,7 +1393,7 @@ footer {
 
 .smell-card:hover {
     border-color: var(--accent);
-    background: var(--surface);
+    background: var(--card-hover);
 }
 
 .smell-card.selected {

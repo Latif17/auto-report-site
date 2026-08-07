@@ -3,7 +3,8 @@
     "version": "v1.17.0",
     "date": "2026-08-07",
     "changes": [
-      "Replaced smell type dropdown menu with interactive selection cards."
+      "Replaced smell type dropdown menu with interactive selection cards.",
+      "Fixed hover background styling for smell selection cards."
     ]
   },
   {

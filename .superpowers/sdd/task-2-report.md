@@ -46,3 +46,19 @@ The `@supports not (background: rgba(var(--accent-rgb), 0.1))` block would never
   - Tests: 68 passed, 68 total
   - Output: Pristine, all tests passing.
 
+### Fix Report (Hover Surface Variable Fix)
+
+#### Reviewer Issue
+`.smell-card:hover` set `background: var(--surface);`, but `--surface` was not defined in `style.css`, causing the hover background to resolve to initial (transparent).
+
+#### Applied Fix
+1. Updated `.smell-card:hover` background property in `vercel/public/style.css` from `var(--surface)` to `var(--card-hover)`.
+2. Updated `vercel/public/changelog.json` under `v1.17.0` to consolidate the fix bullet point into the unpushed release entry per project versioning rules.
+
+#### Test Results
+- Ran `npx jest` in `vercel/`:
+  - Test Suites: 4 passed, 4 total
+  - Tests: 105 passed, 105 total
+  - Output: All tests passing cleanly.
+
+
