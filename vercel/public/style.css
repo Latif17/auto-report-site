@@ -5,6 +5,7 @@
     --ink-light: #52525b;
     --accent: #dc2626;
     --accent-hover: #b91c1c;
+    --accent-rgb: 220, 38, 38;
     --border: #18181b;
     --focus: #fca5a5;
     
@@ -32,6 +33,7 @@
         --ink-light: #a1a1aa;
         --accent: #ef4444;
         --accent-hover: #dc2626;
+        --accent-rgb: 239, 68, 68;
         --border: #52525b;
         --focus: #7f1d1d;
         
@@ -1396,15 +1398,8 @@ footer {
 
 .smell-card.selected {
     border-color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.1); /* fallback to solid if var undefined */
+    background: rgba(var(--accent-rgb), 0.1);
     box-shadow: 0 0 0 1px var(--accent);
-}
-
-/* If --accent-rgb doesn't exist, we use a simple background change */
-@supports not (background: rgba(var(--accent-rgb), 0.1)) {
-    .smell-card.selected {
-        background: #f0f7ff; /* Assuming accent is bluish, adapt as needed */
-    }
 }
 
 .smell-card-title {
