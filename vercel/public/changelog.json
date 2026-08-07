@@ -4,7 +4,8 @@
     "date": "2026-08-07",
     "changes": [
       "Added experimental wind direction feature container to the smell reporting form.",
-      "Integrated Open-Meteo wind data fetching to auto-detect likely sewage treatment plant sources based on wind direction."
+      "Integrated Open-Meteo wind data fetching to auto-detect likely sewage treatment plant sources based on wind direction.",
+      "Improved error handling and DOM element checks for wind-based sewage plant location detection."
     ]
   },
   {

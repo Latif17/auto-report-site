@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const businessLocationSelect = document.getElementById('businessLocation');
     const windFeature = document.getElementById('experimental-wind-feature');
     const windText = document.getElementById('wind-explanation-text');
-    const windCheckbox = document.getElementById('use-wind-location');
     const windLabel = document.getElementById('use-wind-location-label');
     
     let specificWindPlant = null;
@@ -74,13 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (plant) {
                             specificWindPlant = plant;
-                            windText.textContent = `Wind is pushing from the ${directionName} towards Barking Riverside at ${windSpeed}km/h, likely meaning the smell is from ${plant}.`;
-                            windLabel.textContent = `Use ${plant} as the specific location for this report`;
-                            windFeature.classList.remove('hidden');
+                            if (windText) windText.textContent = `Wind is pushing from the ${directionName} towards Barking Riverside at ${windSpeed}km/h, likely meaning the smell is from ${plant}.`;
+                            if (windLabel) windLabel.textContent = `Use ${plant} as the specific location for this report`;
+                            if (windFeature) windFeature.classList.remove('hidden');
                         } else {
                             specificWindPlant = null;
                             if (windFeature) windFeature.classList.add('hidden');
                         }
+                    } else {
+                        specificWindPlant = null;
+                        if (windFeature) windFeature.classList.add('hidden');
                     }
                 } catch (e) {
                     console.error('Failed to fetch wind data', e);
