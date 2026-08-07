@@ -1372,3 +1372,51 @@ footer {
 #trends-content canvas {
     min-height: 400px;
 }
+
+.smell-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.smell-card {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    background: var(--paper);
+    transition: all 0.2s ease;
+}
+
+.smell-card:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+}
+
+.smell-card.selected {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1); /* fallback to solid if var undefined */
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* If --accent-rgb doesn't exist, we use a simple background change */
+@supports not (background: rgba(var(--accent-rgb), 0.1)) {
+    .smell-card.selected {
+        background: #f0f7ff; /* Assuming accent is bluish, adapt as needed */
+    }
+}
+
+.smell-card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+}
+
+.smell-card-desc {
+    font-size: 0.85rem;
+    color: var(--ink-light);
+    line-height: 1.4;
+}
+
