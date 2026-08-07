@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (weatherRes.ok) {
                         const weatherData = await weatherRes.json();
                         const currentWindDir = weatherData.current_weather.winddirection;
-                        const pastWindDir = weatherData.hourly.winddirection_10m[0];
+                        const currentTime = weatherData.current_weather.time;
+                        const timeIndex = weatherData.hourly.time.indexOf(currentTime);
+                        const pastWindDir = timeIndex > 0 ? weatherData.hourly.winddirection_10m[timeIndex - 1] : currentWindDir;
                         
                         // Calculate angular average of the last hour
                         const u = Math.sin(currentWindDir * Math.PI / 180) + Math.sin(pastWindDir * Math.PI / 180);
@@ -85,6 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (windText) windText.textContent = `Recent wind patterns suggest the smell is blowing from the direction of ${plant}.`;
                             if (windLabel) windLabel.textContent = `Log ${plant} as the specific source for this report`;
                             if (windFeature) windFeature.classList.remove('hidden');
+                            
+                            const windCheckbox = document.getElementById('use-wind-location');
+                            if (windCheckbox) windCheckbox.checked = true;
                         } else {
                             specificWindPlant = null;
                             if (windFeature) windFeature.classList.add('hidden');
