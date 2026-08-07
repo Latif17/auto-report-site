@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.17.1",
+    "date": "2026-08-07",
+    "changes": [
+      "Added a 3-second timeout to the wind data fetch request to prevent users from getting stuck while submitting a smell log."
+    ]
+  },
+  {
     "version": "v1.17.0",
     "date": "2026-08-07",
     "changes": [

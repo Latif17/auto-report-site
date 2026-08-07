@@ -88,7 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('submit-btn-text').textContent = 'Fetching wind data...';
 
                 try {
-                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1');
+                    const controller = new AbortController();
+                    // Timeout after 5 seconds to prevent user from getting stuck
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1', { signal: controller.signal });
+                    clearTimeout(timeoutId);
+
                     if (weatherRes.ok) {
                         const weatherData = await weatherRes.json();
                         const currentWindDir = weatherData.current_weather.winddirection;
