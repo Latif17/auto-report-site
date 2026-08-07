@@ -50,31 +50,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (businessLocationSelect) {
         businessLocationSelect.addEventListener('change', async (e) => {
             if (e.target.value === 'sewage_drain') {
+                // Prevent race condition: disable submit while fetching
+                submitBtn.disabled = true;
+                const originalBtnText = document.getElementById('submit-btn-text').textContent;
+                document.getElementById('submit-btn-text').textContent = 'Fetching wind data...';
+
                 try {
-                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true');
+                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1');
                     if (weatherRes.ok) {
                         const weatherData = await weatherRes.json();
-                        const windDir = weatherData.current_weather.winddirection;
-                        const windSpeed = weatherData.current_weather.windspeed;
+                        const currentWindDir = weatherData.current_weather.winddirection;
+                        const pastWindDir = weatherData.hourly.winddirection_10m[0];
+                        
+                        // Calculate angular average of the last hour
+                        const u = Math.sin(currentWindDir * Math.PI / 180) + Math.sin(pastWindDir * Math.PI / 180);
+                        const v = Math.cos(currentWindDir * Math.PI / 180) + Math.cos(pastWindDir * Math.PI / 180);
+                        let avgWindDir = Math.atan2(u, v) * 180 / Math.PI;
+                        if (avgWindDir < 0) avgWindDir += 360;
+
+                        const windDir = avgWindDir;
                         
                         let plant = null;
-                        let directionName = '';
                         
                         if (windDir >= 210 && windDir <= 330) {
                             plant = 'Beckton Sewage Treatment Works';
-                            directionName = 'West';
                         } else if (windDir >= 120 && windDir < 210) {
                             plant = 'Crossness Sewage Treatment Works';
-                            directionName = 'South';
                         } else if (windDir >= 30 && windDir < 120) {
                             plant = 'Riverside Sewage Treatment Works';
-                            directionName = 'East';
                         }
 
                         if (plant) {
                             specificWindPlant = plant;
-                            if (windText) windText.textContent = `Wind is pushing from the ${directionName} towards Barking Riverside at ${windSpeed}km/h, likely meaning the smell is from ${plant}.`;
-                            if (windLabel) windLabel.textContent = `Use ${plant} as the specific location for this report`;
+                            if (windText) windText.textContent = `Recent wind patterns suggest the smell is blowing from the direction of ${plant}.`;
+                            if (windLabel) windLabel.textContent = `Log ${plant} as the specific source for this report`;
                             if (windFeature) windFeature.classList.remove('hidden');
                         } else {
                             specificWindPlant = null;
@@ -88,6 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Failed to fetch wind data', e);
                     specificWindPlant = null;
                     if (windFeature) windFeature.classList.add('hidden');
+                } finally {
+                    submitBtn.disabled = false;
+                    document.getElementById('submit-btn-text').textContent = originalBtnText;
                 }
             } else {
                 if (windFeature) windFeature.classList.add('hidden');

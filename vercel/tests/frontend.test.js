@@ -104,7 +104,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
 
     describe('Wind-Based Sewage Plant Identification (Task 2)', () => {
         it('app.js contains open-meteo wind fetch and direction mapping logic', () => {
-            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true')");
+            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1')");
             expect(appJsContent).toContain("plant = 'Beckton Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Crossness Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Riverside Sewage Treatment Works'");
@@ -117,26 +117,22 @@ describe('Frontend Options and Mappings (Task 1)', () => {
 
         function determineWindPlant(windDir) {
             let plant = null;
-            let directionName = '';
             
             if (windDir >= 210 && windDir <= 330) {
                 plant = 'Beckton Sewage Treatment Works';
-                directionName = 'West';
             } else if (windDir >= 120 && windDir < 210) {
                 plant = 'Crossness Sewage Treatment Works';
-                directionName = 'South';
             } else if (windDir >= 30 && windDir < 120) {
                 plant = 'Riverside Sewage Treatment Works';
-                directionName = 'East';
             }
-            return { plant, directionName };
+            return plant;
         }
 
         it('determines plant correctly based on wind direction degree ranges', () => {
-            expect(determineWindPlant(270)).toEqual({ plant: 'Beckton Sewage Treatment Works', directionName: 'West' });
-            expect(determineWindPlant(150)).toEqual({ plant: 'Crossness Sewage Treatment Works', directionName: 'South' });
-            expect(determineWindPlant(45)).toEqual({ plant: 'Riverside Sewage Treatment Works', directionName: 'East' });
-            expect(determineWindPlant(10)).toEqual({ plant: null, directionName: '' });
+            expect(determineWindPlant(270)).toEqual('Beckton Sewage Treatment Works');
+            expect(determineWindPlant(150)).toEqual('Crossness Sewage Treatment Works');
+            expect(determineWindPlant(45)).toEqual('Riverside Sewage Treatment Works');
+            expect(determineWindPlant(10)).toEqual(null);
         });
     });
 
