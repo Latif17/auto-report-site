@@ -4,7 +4,8 @@
     "date": "2026-08-07",
     "changes": [
       "Replaced smell type dropdown menu with interactive selection cards.",
-      "Fixed hover background styling for smell selection cards."
+      "Fixed hover background styling for smell selection cards.",
+      "Added interactive click handlers and selection state for smell type cards."
     ]
   },
   {

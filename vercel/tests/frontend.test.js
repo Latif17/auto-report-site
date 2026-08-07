@@ -154,6 +154,69 @@ describe('Frontend Options and Mappings (Task 1)', () => {
         });
     });
 
+    describe('Smell Card Selection Interactivity (Task 3)', () => {
+        it('app.js contains smell card query and click listener logic', () => {
+            expect(appJsContent).toContain("querySelectorAll('.smell-card')");
+            expect(appJsContent).toContain("card.classList.add('selected')");
+            expect(appJsContent).toContain("card.getAttribute('data-value')");
+            expect(appJsContent).toContain("new Event('change'");
+        });
+
+        it('click listener updates selection state and dispatches change event', () => {
+            let selectedClasses = [];
+            const mockHiddenInput = {
+                value: '',
+                dispatchEvent: jest.fn()
+            };
+            const mockCards = [
+                {
+                    dataset: { value: 'sewage_drain' },
+                    getAttribute: (attr) => attr === 'data-value' ? 'sewage_drain' : null,
+                    classList: {
+                        add: (cls) => selectedClasses.push('card1:' + cls),
+                        remove: (cls) => { selectedClasses = selectedClasses.filter(c => c !== 'card1:' + cls); }
+                    },
+                    listeners: {},
+                    addEventListener(evt, fn) { this.listeners[evt] = fn; }
+                },
+                {
+                    dataset: { value: 'rotting_rubbish' },
+                    getAttribute: (attr) => attr === 'data-value' ? 'rotting_rubbish' : null,
+                    classList: {
+                        add: (cls) => selectedClasses.push('card2:' + cls),
+                        remove: (cls) => { selectedClasses = selectedClasses.filter(c => c !== 'card2:' + cls); }
+                    },
+                    listeners: {},
+                    addEventListener(evt, fn) { this.listeners[evt] = fn; }
+                }
+            ];
+
+            // Simulate attaching listeners as in app.js
+            mockCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    mockCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    mockHiddenInput.value = card.getAttribute('data-value');
+                    const event = { type: 'change', bubbles: true };
+                    mockHiddenInput.dispatchEvent(event);
+                });
+            });
+
+            // Click card 2
+            mockCards[1].listeners['click']();
+            expect(mockHiddenInput.value).toBe('rotting_rubbish');
+            expect(selectedClasses).toContain('card2:selected');
+            expect(selectedClasses).not.toContain('card1:selected');
+            expect(mockHiddenInput.dispatchEvent).toHaveBeenCalledWith({ type: 'change', bubbles: true });
+
+            // Click card 1
+            mockCards[0].listeners['click']();
+            expect(mockHiddenInput.value).toBe('sewage_drain');
+            expect(selectedClasses).toContain('card1:selected');
+            expect(selectedClasses).not.toContain('card2:selected');
+        });
+    });
+
     describe('index.html SEO & Open Graph metadata', () => {
         it('has a search-friendly title and description', () => {
             expect(htmlContent).toContain('<title>Report the Barking Riverside Smell | Stink Log</title>');

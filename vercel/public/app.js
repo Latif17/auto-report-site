@@ -44,6 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const windFeature = document.getElementById('experimental-wind-feature');
     const windText = document.getElementById('wind-explanation-text');
     
+    // Smell Card Selection Logic
+    const smellCards = document.querySelectorAll('.smell-card');
+    const businessLocationInput = document.getElementById('businessLocation');
+    
+    smellCards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Remove selected class from all
+            smellCards.forEach(c => c.classList.remove('selected'));
+            // Add selected to clicked
+            card.classList.add('selected');
+            // Update hidden input
+            if (businessLocationInput) {
+                businessLocationInput.value = card.getAttribute('data-value');
+                
+                // Dispatch change event to clear errors or trigger experimental wind feature
+                const event = new Event('change', { bubbles: true });
+                businessLocationInput.dispatchEvent(event);
+            }
+        });
+    });
+
     let specificWindPlant = null;
 
     if (businessLocationSelect) {
