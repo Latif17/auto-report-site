@@ -5,7 +5,8 @@
     "changes": [
       "Replaced smell type dropdown menu with interactive selection cards.",
       "Fixed hover background styling for smell selection cards.",
-      "Added interactive click handlers and selection state for smell type cards."
+      "Added interactive click handlers and selection state for smell type cards.",
+      "Updated frontend test suite to execute app.js directly for smell card selection interactions."
     ]
   },
   {

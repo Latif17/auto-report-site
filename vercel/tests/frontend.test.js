@@ -163,57 +163,134 @@ describe('Frontend Options and Mappings (Task 1)', () => {
         });
 
         it('click listener updates selection state and dispatches change event', () => {
-            let selectedClasses = [];
-            const mockHiddenInput = {
-                value: '',
-                dispatchEvent: jest.fn()
-            };
-            const mockCards = [
-                {
-                    dataset: { value: 'sewage_drain' },
-                    getAttribute: (attr) => attr === 'data-value' ? 'sewage_drain' : null,
+            function createMockElement(id, extra = {}) {
+                const classListSet = new Set();
+                const listeners = {};
+                return {
+                    id,
+                    value: '',
+                    checked: false,
+                    textContent: '',
+                    innerHTML: '',
+                    disabled: false,
+                    style: {},
+                    onclick: null,
+                    dataset: extra.dataset || {},
+                    getAttribute: (attr) => (attr === 'data-value' ? extra.dataset?.value : null),
                     classList: {
-                        add: (cls) => selectedClasses.push('card1:' + cls),
-                        remove: (cls) => { selectedClasses = selectedClasses.filter(c => c !== 'card1:' + cls); }
+                        add: (...cls) => cls.forEach(c => classListSet.add(c)),
+                        remove: (...cls) => cls.forEach(c => classListSet.delete(c)),
+                        contains: (c) => classListSet.has(c),
+                        toggle: (c) => classListSet.has(c) ? classListSet.delete(c) : classListSet.add(c)
                     },
-                    listeners: {},
-                    addEventListener(evt, fn) { this.listeners[evt] = fn; }
-                },
-                {
-                    dataset: { value: 'rotting_rubbish' },
-                    getAttribute: (attr) => attr === 'data-value' ? 'rotting_rubbish' : null,
-                    classList: {
-                        add: (cls) => selectedClasses.push('card2:' + cls),
-                        remove: (cls) => { selectedClasses = selectedClasses.filter(c => c !== 'card2:' + cls); }
+                    addEventListener: (event, fn) => {
+                        if (!listeners[event]) listeners[event] = [];
+                        listeners[event].push(fn);
                     },
-                    listeners: {},
-                    addEventListener(evt, fn) { this.listeners[evt] = fn; }
-                }
+                    dispatchEvent: jest.fn(function(evt) {
+                        evt.target = evt.target || this;
+                        if (listeners[evt.type]) {
+                            listeners[evt.type].forEach(fn => fn(evt));
+                        }
+                    }),
+                    click: function() {
+                        if (listeners['click']) {
+                            listeners['click'].forEach(fn => fn({ type: 'click' }));
+                        }
+                    },
+                    ...extra
+                };
+            }
+
+            const cards = [
+                createMockElement('card1', { dataset: { value: 'sewage_drain' } }),
+                createMockElement('card2', { dataset: { value: 'rotting_rubbish' } })
             ];
 
-            // Simulate attaching listeners as in app.js
-            mockCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    mockCards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    mockHiddenInput.value = card.getAttribute('data-value');
-                    const event = { type: 'change', bubbles: true };
-                    mockHiddenInput.dispatchEvent(event);
+            const domListeners = {};
+            const elementsById = {};
+
+            const mockDocument = {
+                addEventListener: (event, fn) => {
+                    if (!domListeners[event]) domListeners[event] = [];
+                    domListeners[event].push(fn);
+                },
+                getElementById: (id) => {
+                    if (!elementsById[id]) {
+                        elementsById[id] = createMockElement(id);
+                    }
+                    return elementsById[id];
+                },
+                querySelectorAll: (selector) => {
+                    if (selector === '.smell-card') {
+                        return cards;
+                    }
+                    return [];
+                }
+            };
+
+            const mockWindow = {
+                location: { origin: 'http://localhost' }
+            };
+
+            const mockLocalStorage = {
+                getItem: jest.fn(() => null),
+                setItem: jest.fn(),
+                removeItem: jest.fn()
+            };
+
+            const mockFetch = jest.fn().mockImplementation((url) => {
+                if (typeof url === 'string' && url.includes('open-meteo.com')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => ({
+                            current_weather: { winddirection: 270, time: '2026-08-07T20:00' },
+                            hourly: { time: ['2026-08-07T20:00'], winddirection_10m: [270] }
+                        })
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({ recentIncidents: [] })
                 });
             });
 
-            // Click card 2
-            mockCards[1].listeners['click']();
-            expect(mockHiddenInput.value).toBe('rotting_rubbish');
-            expect(selectedClasses).toContain('card2:selected');
-            expect(selectedClasses).not.toContain('card1:selected');
-            expect(mockHiddenInput.dispatchEvent).toHaveBeenCalledWith({ type: 'change', bubbles: true });
+            class MockEvent {
+                constructor(type, options = {}) {
+                    this.type = type;
+                    this.bubbles = options.bubbles || false;
+                }
+            }
 
-            // Click card 1
-            mockCards[0].listeners['click']();
-            expect(mockHiddenInput.value).toBe('sewage_drain');
-            expect(selectedClasses).toContain('card1:selected');
-            expect(selectedClasses).not.toContain('card2:selected');
+            // Execute app.js in context
+            const runScript = new Function(
+                'document', 'window', 'Event', 'localStorage', 'fetch', 'Intl', 'setTimeout',
+                appJsContent
+            );
+            runScript(mockDocument, mockWindow, MockEvent, mockLocalStorage, mockFetch, Intl, setTimeout);
+
+            // Trigger DOMContentLoaded so app.js attaches its click handlers
+            expect(domListeners['DOMContentLoaded']).toBeDefined();
+            domListeners['DOMContentLoaded'].forEach(fn => fn());
+
+            const businessLocationInput = elementsById['businessLocation'];
+
+            // Click card 2 (rotting_rubbish)
+            cards[1].click();
+
+            expect(businessLocationInput.value).toBe('rotting_rubbish');
+            expect(cards[1].classList.contains('selected')).toBe(true);
+            expect(cards[0].classList.contains('selected')).toBe(false);
+            expect(businessLocationInput.dispatchEvent).toHaveBeenCalledWith(
+                expect.objectContaining({ type: 'change', bubbles: true })
+            );
+
+            // Click card 1 (sewage_drain)
+            cards[0].click();
+
+            expect(businessLocationInput.value).toBe('sewage_drain');
+            expect(cards[0].classList.contains('selected')).toBe(true);
+            expect(cards[1].classList.contains('selected')).toBe(false);
         });
     });
 
