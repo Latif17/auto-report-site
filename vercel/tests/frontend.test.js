@@ -109,7 +109,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
 
     describe('Wind-Based Sewage Plant Identification (Task 2)', () => {
         it('app.js contains open-meteo wind fetch and direction mapping logic', () => {
-            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=windspeed_10m,winddirection_10m&past_hours=3')");
+            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=windspeed_10m,winddirection_10m&past_hours=3', { signal: controller.signal })");
             expect(appJsContent).toContain("plant = 'Beckton Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Crossness Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Riverside Sewage Treatment Works'");

@@ -92,19 +92,66 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Timeout after 5 seconds to prevent user from getting stuck
                     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1', { signal: controller.signal });
+                    const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=windspeed_10m,winddirection_10m&past_hours=3', { signal: controller.signal });
                     clearTimeout(timeoutId);
 
                     if (weatherRes.ok) {
                         const weatherData = await weatherRes.json();
-                        const currentWindDir = weatherData.current_weather.winddirection;
+                        const currentWindSpeed = weatherData.current_weather.windspeed;
+                        
+                        if (currentWindSpeed < 2.0) {
+                            specificWindPlant = null;
+                            if (windFeature) windFeature.classList.add('hidden');
+                            return;
+                        }
+
                         const currentTime = weatherData.current_weather.time;
                         const timeIndex = weatherData.hourly.time.indexOf(currentTime);
-                        const pastWindDir = timeIndex > 0 ? weatherData.hourly.winddirection_10m[timeIndex - 1] : currentWindDir;
                         
-                        // Calculate angular average of the last hour
-                        const u = Math.sin(currentWindDir * Math.PI / 180) + Math.sin(pastWindDir * Math.PI / 180);
-                        const v = Math.cos(currentWindDir * Math.PI / 180) + Math.cos(pastWindDir * Math.PI / 180);
+                        let totalSpeed = 0;
+                        let hoursData = [];
+                        
+                        // Collect available data for up to past 3 hours + current hour
+                        for (let i = 0; i < 4; i++) {
+                            const idx = timeIndex - i;
+                            if (idx >= 0) {
+                                const spd = weatherData.hourly.windspeed_10m[idx];
+                                const dir = weatherData.hourly.winddirection_10m[idx];
+                                hoursData.push({ speed: spd, direction: dir });
+                                totalSpeed += spd;
+                            }
+                        }
+
+                        if (hoursData.length === 0 || totalSpeed === 0) {
+                            specificWindPlant = null;
+                            if (windFeature) windFeature.classList.add('hidden');
+                            return;
+                        }
+
+                        const averageWindSpeed = totalSpeed / hoursData.length;
+                        let hoursNeeded = Math.ceil(3.5 / averageWindSpeed);
+                        if (hoursNeeded < 1) hoursNeeded = 1;
+                        if (hoursNeeded > hoursData.length) hoursNeeded = hoursData.length;
+
+                        let u = 0;
+                        let v = 0;
+                        let maxMagnitude = 0;
+
+                        for (let i = 0; i < hoursNeeded; i++) {
+                            const data = hoursData[i];
+                            u += data.speed * Math.sin(data.direction * Math.PI / 180);
+                            v += data.speed * Math.cos(data.direction * Math.PI / 180);
+                            maxMagnitude += data.speed;
+                        }
+
+                        const magnitude = Math.sqrt(u * u + v * v);
+                        if (magnitude < (maxMagnitude * 0.3)) {
+                            // Winds are too variable
+                            specificWindPlant = null;
+                            if (windFeature) windFeature.classList.add('hidden');
+                            return;
+                        }
+
                         let avgWindDir = Math.atan2(u, v) * 180 / Math.PI;
                         if (avgWindDir < 0) avgWindDir += 360;
 

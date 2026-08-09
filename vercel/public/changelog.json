@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.18.0",
+    "date": "2026-08-09",
+    "changes": [
+      "Updated wind calculation logic using speed-weighted vector averaging over dynamic lookback windows to accurately identify sewage treatment plant sources."
+    ]
+  },
+  {
     "version": "v1.17.1",
     "date": "2026-08-07",
     "changes": [
