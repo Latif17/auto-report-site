@@ -109,7 +109,7 @@ describe('Frontend Options and Mappings (Task 1)', () => {
 
     describe('Wind-Based Sewage Plant Identification (Task 2)', () => {
         it('app.js contains open-meteo wind fetch and direction mapping logic', () => {
-            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=winddirection_10m&past_hours=1')");
+            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=windspeed_10m,winddirection_10m&past_hours=3')");
             expect(appJsContent).toContain("plant = 'Beckton Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Crossness Sewage Treatment Works'");
             expect(appJsContent).toContain("plant = 'Riverside Sewage Treatment Works'");
@@ -245,8 +245,12 @@ describe('Frontend Options and Mappings (Task 1)', () => {
                     return Promise.resolve({
                         ok: true,
                         json: async () => ({
-                            current_weather: { winddirection: 270, time: '2026-08-07T20:00' },
-                            hourly: { time: ['2026-08-07T20:00'], winddirection_10m: [270] }
+                            current_weather: { winddirection: 270, windspeed: 10, time: '2026-08-07T20:00' },
+                            hourly: { 
+                                time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'], 
+                                winddirection_10m: [270, 270, 270, 270],
+                                windspeed_10m: [10, 10, 10, 10]
+                            }
                         })
                     });
                 }
