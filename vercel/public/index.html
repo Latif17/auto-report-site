@@ -36,17 +36,7 @@
                 <p>The government requires systematic proof of environmental impact to intervene. Instead of navigating the 19+ pages and numerous options of the official form, this tool automates the process—making it much quicker and easier to submit a smell event. This log also aggregates community detections into actionable evidence.</p>
             </div>
 
-            <div class="context-box" style="background: var(--error-bg); border-color: var(--error-border); border-width: 2px; border-style: solid; margin-bottom: 2rem;">
-                <h2 style="color: var(--error-text); margin-top: 0; font-family: var(--font-mono); text-transform: uppercase; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                    Submissions Temporarily Paused
-                </h2>
-                <p style="margin-bottom: 1rem; color: var(--error-text);">We have received feedback from the Environment Agency that identical or duplicated reports make it more challenging for them to investigate the full impact of odour pollution.</p>
-                <p style="margin-bottom: 1rem; color: var(--error-text);">The EA values personal, first-hand accounts with specific details (e.g., exact smell, location details like inside/outside or on a balcony, and personal impact such as having to change your routine). Because this tool currently automates and standardises responses, it is creating identical reports that the Agency is unable to record.</p>
-                <p style="margin-bottom: 0; font-weight: 600; color: var(--error-text);">We are temporarily pausing submissions while we re-design the tool to ensure all reports meet the Environment Agency's requirements. In the meantime, please report directly via the Environment Agency's official channels.</p>
-            </div>
-
-            <form id="report-form" class="report-form hidden" style="display: none;">
+            <form id="report-form" class="report-form">
                 <input type="hidden" id="joinIncidentId">
                 
                 <!-- Personal Details (Dossier File) -->
@@ -123,6 +113,83 @@
                     </div>
                 </div>
 
+                <div id="individual-observations" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--paper); border: 1px solid var(--border); border-radius: 8px;">
+                    <h2 style="font-family: var(--font-mono); font-size: 1.25rem; text-transform: uppercase; margin-top: 0; margin-bottom: 0.5rem; color: var(--ink);">Your Observation (Required)</h2>
+                    <p style="font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.5rem;">
+                        The Environment Agency requires individual, first-hand accounts to investigate effectively.
+                    </p>
+                    
+                    <div class="input-grid">
+                        <div class="input-group full-width">
+                            <label for="smellDescription">What exactly did it smell like?</label>
+                            <input type="text" id="smellDescription" name="smellDescription" required placeholder="e.g. sweet, gassy, bin lorry, sewage, rotten eggs...">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="frequency">Have you had problems with this smell before?</label>
+                            <select id="frequency" name="frequency" required>
+                                <option value="" disabled selected>Select an option</option>
+                                <option value="happens often">It happens often</option>
+                                <option value="happens sometimes">It happens sometimes</option>
+                                <option value="happened once before">It has happened once before</option>
+                                <option value="first time">This is the first time</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Is the smell still there?</label>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="duration" value="yes" required> Yes</label>
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="duration" value="no"> No</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="intensity">How strong is the smell?</label>
+                            <select id="intensity" name="intensity" required>
+                                <option value="" disabled selected>Select an option</option>
+                                <option value="Extremely strong">Extremely strong</option>
+                                <option value="Strong">Strong</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Faint">Faint</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Noticeable indoors?</label>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="environment" value="yes" required> Yes</label>
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="environment" value="no"> No</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Sticks to clothing?</label>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="sticksToClothing" value="yes" required> Yes</label>
+                                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="sticksToClothing" value="no"> No</label>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group full-width">
+                            <label style="margin-bottom: 0.5rem; display: block;">Because of the smell, did you have to:</label>
+                            <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="impacts" value="Leave the area"> Leave the area</label>
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="impacts" value="Keep windows"> Keep windows closed</label>
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="impacts" value="Avoid using parts"> Avoid using parts of my home or garden</label>
+                            </div>
+                        </div>
+
+                        <div class="input-group full-width" style="margin-top: 0.5rem;">
+                            <label style="margin-bottom: 0.5rem; display: block;">Did it cause any of these health problems?</label>
+                            <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="healthProblems" value="Headache"> Headache</label>
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="healthProblems" value="Watering eyes"> Watering eyes</label>
+                                <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" name="healthProblems" value="Sickness or nausea"> Sickness or nausea</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Loading State for Incidents -->
                 <div id="incident-loading-section" class="primary-action-section" style="text-align: center; color: var(--ink-light); margin-bottom: 2rem;">

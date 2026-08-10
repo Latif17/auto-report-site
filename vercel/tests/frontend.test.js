@@ -36,6 +36,24 @@ describe('Frontend Options and Mappings (Task 1)', () => {
         it('contains the experimental wind feature container', () => {
             expect(htmlContent).toContain('id="experimental-wind-feature"');
         });
+
+        it('has unpaused report form and removed pause notice', () => {
+            expect(htmlContent).not.toContain('Submissions Temporarily Paused');
+            expect(htmlContent).toContain('<form id="report-form" class="report-form">');
+            expect(htmlContent).not.toContain('<form id="report-form" class="report-form hidden" style="display: none;">');
+        });
+
+        it('contains individual observations section with all required input fields', () => {
+            expect(htmlContent).toContain('id="individual-observations"');
+            expect(htmlContent).toContain('id="smellDescription"');
+            expect(htmlContent).toContain('id="frequency"');
+            expect(htmlContent).toContain('name="duration"');
+            expect(htmlContent).toContain('id="intensity"');
+            expect(htmlContent).toContain('name="environment"');
+            expect(htmlContent).toContain('name="sticksToClothing"');
+            expect(htmlContent).toContain('name="impacts"');
+            expect(htmlContent).toContain('name="healthProblems"');
+        });
     });
 
     describe('app.js mapping logic', () => {
