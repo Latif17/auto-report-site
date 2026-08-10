@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.19.0",
+    "date": "2026-08-10",
+    "changes": [
+      "Temporarily paused form submissions following guidance from the Environment Agency to prevent automated, identical reports."
+    ]
+  },
+  {
     "version": "v1.18.0",
     "date": "2026-08-10",
     "changes": [

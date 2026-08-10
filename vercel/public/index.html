@@ -35,7 +35,18 @@
             <div class="context-box">
                 <p>The government requires systematic proof of environmental impact to intervene. Instead of navigating the 19+ pages and numerous options of the official form, this tool automates the process—making it much quicker and easier to submit a smell event. This log also aggregates community detections into actionable evidence.</p>
             </div>
-            <form id="report-form" class="report-form">
+
+            <div class="context-box" style="background: var(--error-bg); border-color: var(--error-border); border-width: 2px; border-style: solid; margin-bottom: 2rem;">
+                <h2 style="color: var(--error-text); margin-top: 0; font-family: var(--font-mono); text-transform: uppercase; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Submissions Temporarily Paused
+                </h2>
+                <p style="margin-bottom: 1rem; color: var(--error-text);">We have received feedback from the Environment Agency that identical or duplicated reports make it more challenging for them to investigate the full impact of odour pollution.</p>
+                <p style="margin-bottom: 1rem; color: var(--error-text);">The EA values personal, first-hand accounts with specific details (e.g., exact smell, location details like inside/outside or on a balcony, and personal impact such as having to change your routine). Because this tool currently automates and standardises responses, it is creating identical reports that the Agency is unable to record.</p>
+                <p style="margin-bottom: 0; font-weight: 600; color: var(--error-text);">We are temporarily pausing submissions while we re-design the tool to ensure all reports meet the Environment Agency's requirements. In the meantime, please report directly via the Environment Agency's official channels.</p>
+            </div>
+
+            <form id="report-form" class="report-form hidden" style="display: none;">
                 <input type="hidden" id="joinIncidentId">
                 
                 <!-- Personal Details (Dossier File) -->
