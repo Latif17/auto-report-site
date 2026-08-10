@@ -38,6 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (shareBtn) shareBtn.addEventListener('click', shareWithNeighbour);
 
+    function getObservationFields() {
+        return {
+            smellDescription: document.getElementById('smellDescription')?.value || '',
+            frequency: document.getElementById('frequency')?.value || '',
+            duration: document.querySelector('input[name="duration"]:checked')?.value || '',
+            intensity: document.getElementById('intensity')?.value || '',
+            environment: document.querySelector('input[name="environment"]:checked')?.value || '',
+            sticksToClothing: document.querySelector('input[name="sticksToClothing"]:checked')?.value || '',
+            impacts: Array.from(document.querySelectorAll('input[name="impacts"]:checked')).map(el => el.value).join(', '),
+            healthProblems: Array.from(document.querySelectorAll('input[name="healthProblems"]:checked')).map(el => el.value).join(', ')
+        };
+    }
+
     // UI Sections
     const pooledUserStatus = document.getElementById('pooled-user-status');
     const businessLocationSelect = document.getElementById('businessLocation');
@@ -369,7 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 businessLocation: mappedBusinessLocation,
                 storeLocally: document.getElementById('storeLocally').checked,
                 shareData: document.getElementById('shareData').checked,
-                additionalNotes: joinIncidentId ? document.getElementById('joinAdditionalNotes').value.trim() : document.getElementById('newAdditionalNotes').value.trim()
+                additionalNotes: joinIncidentId ? document.getElementById('joinAdditionalNotes').value.trim() : document.getElementById('newAdditionalNotes').value.trim(),
+                ...getObservationFields()
             };
 
             // 2. Handle Local Storage
@@ -519,7 +533,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone,
                 storeLocally,
                 shareData,
-                additionalNotes
+                additionalNotes,
+                ...getObservationFields()
             };
         } else {
             // Fallback to localStorage
@@ -537,7 +552,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             phone: parsed.phone || '',
                             storeLocally: parsed.storeLocally !== false,
                             shareData: parsed.shareData === true,
-                            additionalNotes
+                            additionalNotes,
+                            ...getObservationFields()
                         };
                     }
                 } catch (e) {}

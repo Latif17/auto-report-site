@@ -662,4 +662,180 @@ describe('dashboard.html Monthly Chart Navigation (Task 4)', () => {
     });
 });
 
+describe('Frontend Observation Payload (Task 3)', () => {
+    const appJsPath = path.join(__dirname, '../public/app.js');
+    let appJsContent;
+
+    beforeAll(() => {
+        appJsContent = fs.readFileSync(appJsPath, 'utf8');
+    });
+
+    it('app.js includes all 8 observation fields in form submission payload', () => {
+        expect(appJsContent).toContain('smellDescription:');
+        expect(appJsContent).toContain('frequency:');
+        expect(appJsContent).toContain('duration:');
+        expect(appJsContent).toContain('intensity:');
+        expect(appJsContent).toContain('environment:');
+        expect(appJsContent).toContain('sticksToClothing:');
+        expect(appJsContent).toContain('impacts:');
+        expect(appJsContent).toContain('healthProblems:');
+    });
+
+    it('extracts observation values from DOM elements on form submission', async () => {
+        const domListeners = {};
+        const elementsById = {};
+        const radioButtons = {
+            duration: [
+                { name: 'duration', value: 'yes', checked: true },
+                { name: 'duration', value: 'no', checked: false }
+            ],
+            environment: [
+                { name: 'environment', value: 'yes', checked: true },
+                { name: 'environment', value: 'no', checked: false }
+            ],
+            sticksToClothing: [
+                { name: 'sticksToClothing', value: 'yes', checked: true },
+                { name: 'sticksToClothing', value: 'no', checked: false }
+            ]
+        };
+        const checkboxes = {
+            impacts: [
+                { name: 'impacts', value: 'Leave the area', checked: true },
+                { name: 'impacts', value: 'Keep windows', checked: true },
+                { name: 'impacts', value: 'Avoid using parts', checked: false }
+            ],
+            healthProblems: [
+                { name: 'healthProblems', value: 'Headache', checked: true },
+                { name: 'healthProblems', value: 'Watering eyes', checked: false }
+            ]
+        };
+
+        function createMockElement(id, value = '') {
+            const classListSet = new Set();
+            const listeners = {};
+            return {
+                id,
+                value,
+                checked: false,
+                textContent: '',
+                innerHTML: '',
+                disabled: false,
+                style: {},
+                classList: {
+                    add: (...cls) => cls.forEach(c => classListSet.add(c)),
+                    remove: (...cls) => cls.forEach(c => classListSet.delete(c)),
+                    contains: (c) => classListSet.has(c),
+                },
+                addEventListener: (event, fn) => {
+                    if (!listeners[event]) listeners[event] = [];
+                    listeners[event].push(fn);
+                },
+                dispatchEvent: jest.fn(function(evt) {
+                    evt.target = evt.target || this;
+                    if (listeners[evt.type]) {
+                        listeners[evt.type].forEach(fn => fn(evt));
+                    }
+                })
+            };
+        }
+
+        const mockForm = createMockElement('report-form');
+        const mockSubmitBtn = createMockElement('submit-btn');
+        elementsById['report-form'] = mockForm;
+        elementsById['submit-btn'] = mockSubmitBtn;
+        elementsById['submit-btn-text'] = createMockElement('submit-btn-text');
+        elementsById['status-message'] = createMockElement('status-message');
+        elementsById['share-btn'] = createMockElement('share-btn');
+        elementsById['pooled-user-status'] = createMockElement('pooled-user-status');
+        elementsById['businessLocation'] = createMockElement('businessLocation', 'sewage_drain');
+        elementsById['fullName'] = createMockElement('fullName', 'John Doe');
+        elementsById['email'] = createMockElement('email', 'john@example.com');
+        elementsById['postcode'] = createMockElement('postcode', 'IG11 0YP');
+        elementsById['phone'] = createMockElement('phone', '07700900000');
+        elementsById['address'] = createMockElement('address', '123 Test St');
+        elementsById['dateOfSmell'] = createMockElement('dateOfSmell', '2026-08-11');
+        elementsById['timeOfSmell'] = createMockElement('timeOfSmell', '12:00');
+        elementsById['storeLocally'] = createMockElement('storeLocally');
+        elementsById['shareData'] = createMockElement('shareData');
+        elementsById['joinIncidentId'] = createMockElement('joinIncidentId', '');
+        elementsById['newAdditionalNotes'] = createMockElement('newAdditionalNotes', 'Note');
+        elementsById['joinAdditionalNotes'] = createMockElement('joinAdditionalNotes', '');
+
+        // Observation fields
+        elementsById['smellDescription'] = createMockElement('smellDescription', 'Rotten eggs and sulfur');
+        elementsById['frequency'] = createMockElement('frequency', 'happens often');
+        elementsById['intensity'] = createMockElement('intensity', 'Extremely strong');
+
+        let capturedPayload = null;
+
+        const mockFetch = jest.fn().mockImplementation((url, options) => {
+            if (url === '/api/submit' || url === '/api/join') {
+                capturedPayload = JSON.parse(options.body);
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({ success: true, incidentId: '123' })
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                json: async () => ({ recentIncidents: [] })
+            });
+        });
+
+        const mockDocument = {
+            addEventListener: (event, fn) => {
+                if (!domListeners[event]) domListeners[event] = [];
+                domListeners[event].push(fn);
+            },
+            getElementById: (id) => elementsById[id] || createMockElement(id),
+            querySelector: (selector) => {
+                const match = selector.match(/input\[name="([^"]+)"\]:checked/);
+                if (match) {
+                    const name = match[1];
+                    return radioButtons[name]?.find(r => r.checked) || null;
+                }
+                return null;
+            },
+            querySelectorAll: (selector) => {
+                const match = selector.match(/input\[name="([^"]+)"\]:checked/);
+                if (match) {
+                    const name = match[1];
+                    return checkboxes[name]?.filter(c => c.checked) || radioButtons[name]?.filter(r => r.checked) || [];
+                }
+                return [];
+            }
+        };
+
+        const mockWindow = { location: { origin: 'http://localhost' } };
+        const mockLocalStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+        class MockEvent { constructor(type) { this.type = type; this.preventDefault = jest.fn(); } }
+
+        const runScript = new Function(
+            'document', 'window', 'Event', 'localStorage', 'fetch', 'Intl', 'setTimeout',
+            appJsContent
+        );
+        runScript(mockDocument, mockWindow, MockEvent, mockLocalStorage, mockFetch, Intl, setTimeout);
+
+        if (domListeners['DOMContentLoaded']) domListeners['DOMContentLoaded'].forEach(fn => fn());
+
+        const evt = new MockEvent('submit');
+        mockForm.dispatchEvent(evt);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(capturedPayload).not.toBeNull();
+        expect(capturedPayload).toEqual(expect.objectContaining({
+            smellDescription: 'Rotten eggs and sulfur',
+            frequency: 'happens often',
+            duration: 'yes',
+            intensity: 'Extremely strong',
+            environment: 'yes',
+            sticksToClothing: 'yes',
+            impacts: 'Leave the area, Keep windows',
+            healthProblems: 'Headache'
+        }));
+    });
+});
+
+
 

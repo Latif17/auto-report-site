@@ -4,7 +4,8 @@
     "date": "2026-08-11",
     "changes": [
       "Updated database schema and server API to store detailed, individualized smell reports (description, duration, frequency, intensity, environment, clothing impact, daily impact, and health problems).",
-      "Re-enabled the report submission form and added individual observation input fields to HTML."
+      "Re-enabled the report submission form and added individual observation input fields to HTML.",
+      "Updated frontend payload generation to include detailed observation fields when reporting or joining a smell incident."
     ]
   },
   {
