@@ -5,7 +5,8 @@
     "changes": [
       "Updated database schema and server API to store detailed, individualized smell reports (description, duration, frequency, intensity, environment, clothing impact, daily impact, and health problems).",
       "Re-enabled the report submission form and added individual observation input fields to HTML.",
-      "Updated frontend payload generation to include detailed observation fields when reporting or joining a smell incident."
+      "Updated frontend payload generation to include detailed observation fields when reporting or joining a smell incident.",
+      "Added Environment Agency guidance text above observation fields explaining why first-hand descriptions are required for complaint investigation."
     ]
   },
   {

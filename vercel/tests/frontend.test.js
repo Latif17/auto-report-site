@@ -54,6 +54,10 @@ describe('Frontend Options and Mappings (Task 1)', () => {
             expect(htmlContent).toContain('name="impacts"');
             expect(htmlContent).toContain('name="healthProblems"');
         });
+
+        it('contains EA explanatory text above observation fields', () => {
+            expect(htmlContent).toContain('The Environment Agency requires individual, first-hand accounts to investigate effectively. Please provide your own description to ensure this report is accepted.');
+        });
     });
 
     describe('app.js mapping logic', () => {
