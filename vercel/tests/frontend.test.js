@@ -108,35 +108,220 @@ describe('Frontend Options and Mappings (Task 1)', () => {
     });
 
     describe('Wind-Based Sewage Plant Identification (Task 2)', () => {
-        it('app.js contains open-meteo wind fetch and direction mapping logic', () => {
-            expect(appJsContent).toContain("fetch('https://api.open-meteo.com/v1/forecast?latitude=51.52&longitude=0.12&current_weather=true&hourly=windspeed_10m,winddirection_10m&past_hours=3', { signal: controller.signal })");
-            expect(appJsContent).toContain("plant = 'Beckton Sewage Treatment Works'");
-            expect(appJsContent).toContain("plant = 'Crossness Sewage Treatment Works'");
-            expect(appJsContent).toContain("plant = 'Riverside Sewage Treatment Works'");
-        });
+        async function setupWindTest(weatherData) {
+            const domListeners = {};
+            const elementsById = {};
+            const cards = [];
 
-        it('app.js maps sewage_drain using specific wind plant if available', () => {
-            expect(appJsContent).toContain("mappedBusinessLocation = specificWindPlant ? specificWindPlant : 'Multiple (Beckton, Riverside, Crossness)'");
-        });
-
-        function determineWindPlant(windDir) {
-            let plant = null;
-            
-            if (windDir >= 210 && windDir <= 330) {
-                plant = 'Beckton Sewage Treatment Works';
-            } else if (windDir >= 120 && windDir < 210) {
-                plant = 'Crossness Sewage Treatment Works';
-            } else if (windDir >= 30 && windDir < 120) {
-                plant = 'Riverside Sewage Treatment Works';
+            function getMockElement(id) {
+                if (!elementsById[id]) {
+                    const classListSet = new Set();
+                    if (id === 'experimental-wind-feature') {
+                        classListSet.add('hidden');
+                    }
+                    const listeners = {};
+                    elementsById[id] = {
+                        id,
+                        value: '',
+                        checked: false,
+                        textContent: '',
+                        innerHTML: '',
+                        disabled: false,
+                        style: {},
+                        classList: {
+                            add: (...cls) => cls.forEach(c => setAdd(classListSet, c)),
+                            remove: (...cls) => cls.forEach(c => classListSet.delete(c)),
+                            contains: (c) => classListSet.has(c),
+                            toggle: (c) => classListSet.has(c) ? classListSet.delete(c) : setAdd(classListSet, c)
+                        },
+                        addEventListener: (event, fn) => {
+                            if (!listeners[event]) listeners[event] = [];
+                            listeners[event].push(fn);
+                        },
+                        dispatchEvent: jest.fn(function(evt) {
+                            evt.target = evt.target || this;
+                            if (listeners[evt.type]) {
+                                listeners[evt.type].forEach(fn => fn(evt));
+                            }
+                        })
+                    };
+                }
+                return elementsById[id];
             }
-            return plant;
+
+            function setAdd(set, val) {
+                set.add(val);
+            }
+
+            const requiredIds = [
+                'report-form', 'submit-btn', 'submit-btn-text', 'status-message',
+                'share-btn', 'pooled-user-status', 'businessLocation',
+                'experimental-wind-feature', 'wind-explanation-text',
+                'dateOfSmell', 'timeOfSmell', 'edit-details-btn',
+                'verified-summary', 'details-content', 'fullName', 'email',
+                'postcode', 'houseNumber', 'joinIncidentId',
+                'joinAdditionalNotes', 'newAdditionalNotes'
+            ];
+            requiredIds.forEach(getMockElement);
+
+            const mockDocument = {
+                addEventListener: (event, fn) => {
+                    if (!domListeners[event]) domListeners[event] = [];
+                    domListeners[event].push(fn);
+                },
+                getElementById: getMockElement,
+                querySelectorAll: (selector) => {
+                    if (selector === '.smell-card') return cards;
+                    return [];
+                }
+            };
+
+            const mockWindow = {
+                location: { origin: 'http://localhost' }
+            };
+
+            const mockLocalStorage = {
+                getItem: jest.fn(() => null),
+                setItem: jest.fn(),
+                removeItem: jest.fn()
+            };
+
+            const mockFetch = jest.fn().mockImplementation((url) => {
+                if (typeof url === 'string' && url.includes('open-meteo.com')) {
+                    return Promise.resolve({
+                        ok: true,
+                        json: async () => weatherData
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({ recentIncidents: [] })
+                });
+            });
+
+            class MockEvent {
+                constructor(type, options = {}) {
+                    this.type = type;
+                    this.bubbles = options.bubbles || false;
+                }
+            }
+
+            const runScript = new Function(
+                'document', 'window', 'Event', 'localStorage', 'fetch', 'Intl', 'setTimeout',
+                appJsContent
+            );
+            runScript(mockDocument, mockWindow, MockEvent, mockLocalStorage, mockFetch, Intl, setTimeout);
+
+            if (domListeners['DOMContentLoaded']) {
+                domListeners['DOMContentLoaded'].forEach(fn => fn());
+            }
+
+            const businessLocationSelect = getMockElement('businessLocation');
+            businessLocationSelect.value = 'sewage_drain';
+
+            businessLocationSelect.dispatchEvent(new MockEvent('change'));
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            return {
+                windFeature: getMockElement('experimental-wind-feature'),
+                windText: getMockElement('wind-explanation-text')
+            };
         }
 
-        it('determines plant correctly based on wind direction degree ranges', () => {
-            expect(determineWindPlant(270)).toEqual('Beckton Sewage Treatment Works');
-            expect(determineWindPlant(150)).toEqual('Crossness Sewage Treatment Works');
-            expect(determineWindPlant(45)).toEqual('Riverside Sewage Treatment Works');
-            expect(determineWindPlant(10)).toEqual(null);
+        it('identifies Beckton Sewage Treatment Works for westerly/northwesterly winds (210° - 330°)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 10, winddirection: 270, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [10, 10, 10, 10],
+                    winddirection_10m: [270, 270, 270, 270]
+                }
+            };
+            const { windFeature, windText } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(false);
+            expect(windText.textContent).toContain('Beckton Sewage Treatment Works');
+        });
+
+        it('identifies Crossness Sewage Treatment Works for southerly/southeasterly winds (120° - 210°)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 10, winddirection: 150, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [10, 10, 10, 10],
+                    winddirection_10m: [150, 150, 150, 150]
+                }
+            };
+            const { windFeature, windText } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(false);
+            expect(windText.textContent).toContain('Crossness Sewage Treatment Works');
+        });
+
+        it('identifies Riverside Sewage Treatment Works for easterly/northeasterly winds (30° - 120°)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 10, winddirection: 45, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [45, 45, 45, 45],
+                    winddirection_10m: [45, 45, 45, 45]
+                }
+            };
+            const { windFeature, windText } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(false);
+            expect(windText.textContent).toContain('Riverside Sewage Treatment Works');
+        });
+
+        it('hides wind feature when wind direction falls out of plant ranges (e.g., 10°)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 10, winddirection: 10, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [10, 10, 10, 10],
+                    winddirection_10m: [10, 10, 10, 10]
+                }
+            };
+            const { windFeature } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(true);
+        });
+
+        it('hides feature and clears specific plant on calm winds (< 2.0 km/h)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 1.5, winddirection: 270, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [1.5, 1.5, 1.5, 1.5],
+                    winddirection_10m: [270, 270, 270, 270]
+                }
+            };
+            const { windFeature } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(true);
+        });
+
+        it('hides feature and clears plant when wind variance is high (magnitude < 0.3 * maxMagnitude)', async () => {
+            const weatherData = {
+                current_weather: { windspeed: 2.0, winddirection: 0, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [2.0, 2.0, 2.0, 2.0],
+                    winddirection_10m: [0, 180, 0, 180]
+                }
+            };
+            const { windFeature } = await setupWindTest(weatherData);
+            expect(windFeature.classList.contains('hidden')).toBe(true);
+        });
+
+        it('dynamically calculates lookback window based on average wind speed (faster winds use shorter lookback window)', async () => {
+            const weatherDataFast = {
+                current_weather: { windspeed: 7.0, winddirection: 270, time: '2026-08-07T20:00' },
+                hourly: {
+                    time: ['2026-08-07T17:00', '2026-08-07T18:00', '2026-08-07T19:00', '2026-08-07T20:00'],
+                    windspeed_10m: [7.0, 7.0, 7.0, 7.0],
+                    winddirection_10m: [10, 10, 10, 270]
+                }
+            };
+            const { windFeature, windText } = await setupWindTest(weatherDataFast);
+            expect(windFeature.classList.contains('hidden')).toBe(false);
+            expect(windText.textContent).toContain('Beckton Sewage Treatment Works');
         });
     });
 

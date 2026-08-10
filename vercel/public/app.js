@@ -128,8 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
 
+                        const NOMINAL_PLANT_DISTANCE_KM = 3.5; // Estimated distance in km to nearby sewage treatment plants
                         const averageWindSpeed = totalSpeed / hoursData.length;
-                        let hoursNeeded = Math.ceil(3.5 / averageWindSpeed);
+                        let hoursNeeded = Math.ceil(NOMINAL_PLANT_DISTANCE_KM / averageWindSpeed);
                         if (hoursNeeded < 1) hoursNeeded = 1;
                         if (hoursNeeded > hoursData.length) hoursNeeded = hoursData.length;
 
