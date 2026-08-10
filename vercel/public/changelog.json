@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.20.0",
+    "date": "2026-08-11",
+    "changes": [
+      "Updated database schema and server API to store detailed, individualized smell reports (description, duration, frequency, intensity, environment, clothing impact, daily impact, and health problems)."
+    ]
+  },
+  {
     "version": "v1.19.0",
     "date": "2026-08-10",
     "changes": [

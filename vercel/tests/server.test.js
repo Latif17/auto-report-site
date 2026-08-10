@@ -255,6 +255,76 @@ describe('API Endpoints', () => {
         }));
     });
 
+    it('POST /api/submit passes individualised smell details to opted_in_user_reports', async () => {
+        mockExistingIncidents = [];
+        const res = await request(app)
+            .post('/api/submit')
+            .set('X-Forwarded-For', '10.0.0.30')
+            .send({
+                email: 'details@example.com',
+                fullName: 'Details User',
+                timeOfSmell: '00:00',
+                smellType: 'Sewage',
+                businessLocation: 'ReFoods',
+                additionalNotes: 'Strong stench',
+                smellDescription: 'Rotten eggs',
+                frequency: 'Continuous',
+                duration: '1-2 hours',
+                intensity: 'Strong',
+                environment: 'Outdoors',
+                sticksToClothing: 'Yes',
+                impacts: 'Cannot open windows',
+                healthProblems: 'Nausea'
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(optedInReportsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({
+            user_email: 'details@example.com',
+            additional_notes: 'Strong stench',
+            smell_description: 'Rotten eggs',
+            frequency: 'Continuous',
+            duration: '1-2 hours',
+            intensity: 'Strong',
+            environment: 'Outdoors',
+            sticks_to_clothing: 'Yes',
+            impacts: 'Cannot open windows',
+            health_problems: 'Nausea'
+        }));
+    });
+
+    it('POST /api/join passes individualised smell details to opted_in_user_reports', async () => {
+        const res = await request(app)
+            .post('/api/join')
+            .set('X-Forwarded-For', '10.0.0.31')
+            .send({
+                email: 'joindetails@example.com',
+                fullName: 'Join Details User',
+                incidentId: 9999,
+                additionalNotes: 'Window open',
+                smellDescription: 'Chemical burning',
+                frequency: 'Intermittent',
+                duration: '30 mins',
+                intensity: 'Very Strong',
+                environment: 'Indoors',
+                sticksToClothing: 'No',
+                impacts: 'Headache caused',
+                healthProblems: 'Eye irritation'
+            });
+        expect(res.statusCode).toEqual(200);
+        expect(optedInReportsInsertSpy).toHaveBeenCalledWith(expect.objectContaining({
+            user_email: 'joindetails@example.com',
+            additional_notes: 'Window open',
+            smell_description: 'Chemical burning',
+            frequency: 'Intermittent',
+            duration: '30 mins',
+            intensity: 'Very Strong',
+            environment: 'Indoors',
+            sticks_to_clothing: 'No',
+            impacts: 'Headache caused',
+            health_problems: 'Eye irritation'
+        }));
+    });
+
+
     describe('DELETE /api/delete-data', () => {
         it('deletes user and returns success', async () => {
             const res = await request(app)

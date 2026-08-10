@@ -25,6 +25,14 @@ CREATE TABLE opted_in_user_reports (
   user_email TEXT,
   status TEXT DEFAULT 'pending',
   additional_notes TEXT,
+  smell_description TEXT,
+  frequency TEXT,
+  duration TEXT,
+  intensity TEXT,
+  environment TEXT,
+  sticks_to_clothing TEXT,
+  impacts TEXT,
+  health_problems TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   submitted_at TIMESTAMP WITH TIME ZONE
 );

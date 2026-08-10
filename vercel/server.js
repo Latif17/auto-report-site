@@ -420,7 +420,7 @@ app.post('/api/opt-in', strictLimiter, async (req, res) => {
 
 
 app.post('/api/submit', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData, additionalNotes } = req.body;
+    let { email, fullName, postcode, phone, address, dateOfSmell, timeOfSmell, smellType, businessLocation, shareData, additionalNotes, smellDescription, frequency, duration, intensity, environment, sticksToClothing, impacts, healthProblems } = req.body;
     if (email) {
         const processed = processEmail(email);
         if (processed.error) return res.status(400).json({ error: processed.error });
@@ -507,7 +507,19 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
             await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData || false }).throwOnError();
             
             // Even if they don't share data with community, we still track they reported it so the script runs for them
-            const { error } = await supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes });
+            const { error } = await supabase.from('opted_in_user_reports').insert({ 
+                incident_id: incidentId, 
+                user_email: email, 
+                additional_notes: additionalNotes,
+                smell_description: smellDescription,
+                frequency: frequency,
+                duration: duration,
+                intensity: intensity,
+                environment: environment,
+                sticks_to_clothing: sticksToClothing,
+                impacts: impacts,
+                health_problems: healthProblems
+            });
             if (error && error.code !== '23505') throw error;
         }
 
@@ -520,7 +532,7 @@ app.post('/api/submit', strictLimiter, async (req, res) => {
 });
 
 app.post('/api/join', strictLimiter, async (req, res) => {
-    let { email, fullName, postcode, phone, address, incidentId, shareData, additionalNotes } = req.body;
+    let { email, fullName, postcode, phone, address, incidentId, shareData, additionalNotes, smellDescription, frequency, duration, intensity, environment, sticksToClothing, impacts, healthProblems } = req.body;
     if (!email || !incidentId) return res.status(400).json({ error: 'Missing required fields' });
     const processed = processEmail(email);
     if (processed.error) return res.status(400).json({ error: processed.error });
@@ -530,7 +542,19 @@ app.post('/api/join', strictLimiter, async (req, res) => {
         await supabase.from('users').upsert({ email, full_name: fullName, postcode, phone, address, pool_data: shareData === true }).throwOnError();
         
         await Promise.all([
-            supabase.from('opted_in_user_reports').insert({ incident_id: incidentId, user_email: email, additional_notes: additionalNotes }).then(({error}) => {
+            supabase.from('opted_in_user_reports').insert({ 
+                incident_id: incidentId, 
+                user_email: email, 
+                additional_notes: additionalNotes,
+                smell_description: smellDescription,
+                frequency: frequency,
+                duration: duration,
+                intensity: intensity,
+                environment: environment,
+                sticks_to_clothing: sticksToClothing,
+                impacts: impacts,
+                health_problems: healthProblems
+            }).then(({error}) => {
                 if (error && error.code !== '23505') throw error;
             }),
             supabase.from('incidents').update({ status: 'pending' }).eq('id', incidentId).throwOnError()

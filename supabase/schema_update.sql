@@ -39,3 +39,15 @@ ALTER TABLE opted_in_user_reports ADD COLUMN IF NOT EXISTS status TEXT DEFAULT '
 CREATE INDEX IF NOT EXISTS idx_user_reports_status ON opted_in_user_reports(status);
 
 ALTER TABLE opted_in_user_reports ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP WITH TIME ZONE;
+
+-- add detailed odour report fields to opted_in_user_reports
+ALTER TABLE opted_in_user_reports
+ADD COLUMN IF NOT EXISTS smell_description TEXT,
+ADD COLUMN IF NOT EXISTS frequency TEXT,
+ADD COLUMN IF NOT EXISTS duration TEXT,
+ADD COLUMN IF NOT EXISTS intensity TEXT,
+ADD COLUMN IF NOT EXISTS environment TEXT,
+ADD COLUMN IF NOT EXISTS sticks_to_clothing TEXT,
+ADD COLUMN IF NOT EXISTS impacts TEXT,
+ADD COLUMN IF NOT EXISTS health_problems TEXT;
+
