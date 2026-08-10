@@ -388,7 +388,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Handle Local Storage
             if (formData.storeLocally) {
-                const { dateOfSmell, timeOfSmell, smellType, businessLocation, ...dataToStore } = formData;
+                const { fullName, email, postcode, address, phone, storeLocally, shareData } = formData;
+                const dataToStore = { fullName, email, postcode, address, phone, storeLocally, shareData };
                 localStorage.setItem('freshAirWatchData_v2', JSON.stringify(dataToStore));
                 localStorage.removeItem('freshAirWatchData');
             } else {
@@ -508,119 +509,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Join Incident Logic
-    window.joinIncident = async function(incidentId) {
-        // Read DOM inputs
-        const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const postcode = document.getElementById('postcode').value.trim();
-        const address = document.getElementById('address').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const storeLocally = document.getElementById('storeLocally').checked;
-        const shareData = document.getElementById('shareData').checked;
-        const additionalNotes = document.getElementById('joinAdditionalNotes').value.trim();
+    window.joinIncident = function(incidentId) {
+        // Pre-fill / load saved user data into form
+        loadSavedData();
 
-        let hasValidData = false;
-        let data = null;
+        // Set join incident target ID
+        const joinInput = document.getElementById('joinIncidentId');
+        if (joinInput) joinInput.value = incidentId;
 
-        // Check if DOM inputs are complete
-        if (fullName && email && postcode && address) {
-            hasValidData = true;
-            data = {
-                fullName,
-                email,
-                postcode,
-                address,
-                phone,
-                storeLocally,
-                shareData,
-                additionalNotes,
-                ...getObservationFields()
-            };
-        } else {
-            // Fallback to localStorage
-            const savedDataJson = localStorage.getItem('freshAirWatchData_v2') || localStorage.getItem('freshAirWatchData');
-            if (savedDataJson) {
-                try {
-                    const parsed = JSON.parse(savedDataJson);
-                    if (parsed.email && parsed.fullName && parsed.postcode && parsed.address) {
-                        hasValidData = true;
-                        data = {
-                            fullName: parsed.fullName,
-                            email: parsed.email,
-                            postcode: parsed.postcode,
-                            address: parsed.address,
-                            phone: parsed.phone || '',
-                            storeLocally: parsed.storeLocally !== false,
-                            shareData: parsed.shareData === true,
-                            additionalNotes,
-                            ...getObservationFields()
-                        };
-                    }
-                } catch (e) {}
-            }
-        }
+        // Update submit button text
+        const btnText = document.getElementById('submit-btn-text');
+        if (btnText) btnText.textContent = 'Join this report';
 
-        if (hasValidData && data) {
-            // Auto join
-            submitBtn.classList.add('loading');
-            statusMessage.classList.add('hidden');
-            statusMessage.className = 'status-message'; // Reset classes
-            hideShareButton();
-            try {
-                // Handle Local Storage retention/removal
-                if (data.storeLocally) {
-                    const { shareData, ...dataToStore } = data;
-                    localStorage.setItem('freshAirWatchData_v2', JSON.stringify({ ...dataToStore, storeLocally: true, shareData: data.shareData }));
-                    localStorage.removeItem('freshAirWatchData');
-                } else {
-                    localStorage.removeItem('freshAirWatchData_v2');
-                    localStorage.removeItem('freshAirWatchData');
-                }
-
-                await simulateSubmission({ ...data, incidentId }, '/api/join');
-                
-                let reported = JSON.parse(localStorage.getItem('reported_incidents') || '[]');
-                if (!reported.includes(incidentId)) {
-                    reported.push(incidentId);
-                    localStorage.setItem('reported_incidents', JSON.stringify(reported));
-                }
-                
-                // Show success status message
-                statusMessage.textContent = 'Successfully joined the report. Your details have been added.';
-                statusMessage.className = 'status-message success';
-                statusMessage.classList.remove('hidden');
-                showShareButton();
-
-                // Clear join states
-                document.getElementById('joinIncidentId').value = '';
-                document.getElementById('submit-btn-text').textContent = 'Log this smell';
-
-                fetchStats();
-            } catch (e) {
-                statusMessage.textContent = e.message || 'Failed to join report. Please try again.';
-                statusMessage.className = 'status-message error';
-                statusMessage.classList.remove('hidden');
-            } finally {
-                submitBtn.classList.remove('loading');
-            }
-        } else {
-            // Need to fill out form to join
-            document.getElementById('joinIncidentId').value = incidentId;
-            document.getElementById('submit-btn-text').textContent = 'Join this report';
-            
-            // Show message and scroll
-            statusMessage.textContent = 'Please fill out your personal details below to join this report.';
+        // Update status message instructing user to complete observations
+        const statusMessage = document.getElementById('status-message');
+        if (statusMessage) {
+            statusMessage.textContent = 'Please fill out your observation details below to join this report.';
             statusMessage.className = 'status-message alert-info';
             statusMessage.classList.remove('hidden');
-            
-            const detailsContent = document.getElementById('details-content');
-            const editDetailsBtn = document.getElementById('edit-details-btn');
-            if (detailsContent) {
-                detailsContent.classList.remove('hidden');
-                if (editDetailsBtn) editDetailsBtn.textContent = 'Cancel Edit';
-            }
-            
-            document.getElementById('reporter-details').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // If personal details aren't present in input fields, expand details section
+        const fullName = document.getElementById('fullName')?.value.trim();
+        const detailsContent = document.getElementById('details-content');
+        const editDetailsBtn = document.getElementById('edit-details-btn');
+        if (detailsContent && !fullName) {
+            detailsContent.classList.remove('hidden');
+            if (editDetailsBtn) editDetailsBtn.textContent = 'Cancel Edit';
+        }
+
+        // Scroll to form / individual observations section
+        const targetElement = document.getElementById('individual-observations') || document.getElementById('report-form');
+        if (targetElement && typeof targetElement.scrollIntoView === 'function') {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
         }
     };
 });

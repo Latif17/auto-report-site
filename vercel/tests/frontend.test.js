@@ -839,6 +839,226 @@ describe('Frontend Observation Payload (Task 3)', () => {
             healthProblems: 'Headache'
         }));
     });
+
+    it('joinIncident never auto-submits, pre-fills saved details, sets joinIncidentId, and prompts for observations', () => {
+        const domListeners = {};
+        const elementsById = {};
+
+        function createMockElement(id, value = '') {
+            const classListSet = new Set();
+            const listeners = {};
+            return {
+                id,
+                value,
+                checked: false,
+                textContent: '',
+                innerHTML: '',
+                disabled: false,
+                style: {},
+                scrollIntoView: jest.fn(),
+                classList: {
+                    add: (...cls) => cls.forEach(c => classListSet.add(c)),
+                    remove: (...cls) => cls.forEach(c => classListSet.delete(c)),
+                    contains: (c) => classListSet.has(c),
+                },
+                addEventListener: (event, fn) => {
+                    if (!listeners[event]) listeners[event] = [];
+                    listeners[event].push(fn);
+                },
+                dispatchEvent: jest.fn(function(evt) {
+                    evt.target = evt.target || this;
+                    if (listeners[evt.type]) {
+                        listeners[evt.type].forEach(fn => fn(evt));
+                    }
+                })
+            };
+        }
+
+        const requiredIds = [
+            'report-form', 'submit-btn', 'submit-btn-text', 'status-message',
+            'share-btn', 'pooled-user-status', 'businessLocation',
+            'dateOfSmell', 'timeOfSmell', 'edit-details-btn',
+            'verified-summary', 'details-content', 'default-header', 'summary-details',
+            'fullName', 'email', 'postcode', 'address', 'phone', 'storeLocally', 'shareData',
+            'joinIncidentId', 'joinAdditionalNotes', 'newAdditionalNotes', 'individual-observations'
+        ];
+        requiredIds.forEach(id => { elementsById[id] = createMockElement(id); });
+
+        const savedUser = {
+            fullName: 'Alice Smith',
+            email: 'alice@example.com',
+            postcode: 'IG11 0YP',
+            address: '456 Docklands Rd',
+            phone: '07712345678',
+            storeLocally: true,
+            shareData: true
+        };
+
+        const mockLocalStorage = {
+            getItem: jest.fn((key) => key === 'freshAirWatchData_v2' ? JSON.stringify(savedUser) : null),
+            setItem: jest.fn(),
+            removeItem: jest.fn()
+        };
+
+        const mockFetch = jest.fn();
+
+        const mockDocument = {
+            addEventListener: (event, fn) => {
+                if (!domListeners[event]) domListeners[event] = [];
+                domListeners[event].push(fn);
+            },
+            getElementById: (id) => elementsById[id] || createMockElement(id),
+            querySelector: () => null,
+            querySelectorAll: () => []
+        };
+
+        const mockWindow = { location: { origin: 'http://localhost' } };
+        class MockEvent { constructor(type) { this.type = type; } }
+
+        const runScript = new Function(
+            'document', 'window', 'Event', 'localStorage', 'fetch', 'Intl', 'setTimeout',
+            appJsContent
+        );
+        runScript(mockDocument, mockWindow, MockEvent, mockLocalStorage, mockFetch, Intl, setTimeout);
+
+        if (domListeners['DOMContentLoaded']) domListeners['DOMContentLoaded'].forEach(fn => fn());
+
+        // Invoke window.joinIncident
+        mockWindow.joinIncident('target-incident-999');
+
+        // Check fetch was NEVER called for submission (no auto submit)
+        expect(mockFetch).not.toHaveBeenCalledWith('/api/join', expect.anything());
+        expect(mockFetch).not.toHaveBeenCalledWith('/api/submit', expect.anything());
+
+        // Check joinIncidentId is set
+        expect(elementsById['joinIncidentId'].value).toBe('target-incident-999');
+
+        // Check button text updated
+        expect(elementsById['submit-btn-text'].textContent).toBe('Join this report');
+
+        // Check status message prompts user for observations
+        expect(elementsById['status-message'].textContent).toContain('Please fill out your observation details below to join this report');
+        expect(elementsById['status-message'].classList.contains('hidden')).toBe(false);
+
+        // Check saved personal details were populated by loadSavedData
+        expect(elementsById['fullName'].value).toBe('Alice Smith');
+        expect(elementsById['postcode'].value).toBe('IG11 0YP');
+        expect(elementsById['verified-summary'].classList.contains('hidden')).toBe(false);
+    });
+
+    it('form submit excludes observation fields when saving to localStorage', async () => {
+        const domListeners = {};
+        const elementsById = {};
+
+        function createMockElement(id, value = '') {
+            const classListSet = new Set();
+            const listeners = {};
+            return {
+                id,
+                value,
+                checked: false,
+                textContent: '',
+                innerHTML: '',
+                disabled: false,
+                style: {},
+                classList: {
+                    add: (...cls) => cls.forEach(c => classListSet.add(c)),
+                    remove: (...cls) => cls.forEach(c => classListSet.delete(c)),
+                    contains: (c) => classListSet.has(c),
+                },
+                addEventListener: (event, fn) => {
+                    if (!listeners[event]) listeners[event] = [];
+                    listeners[event].push(fn);
+                },
+                dispatchEvent: jest.fn(function(evt) {
+                    evt.target = evt.target || this;
+                    if (listeners[evt.type]) {
+                        listeners[evt.type].forEach(fn => fn(evt));
+                    }
+                })
+            };
+        }
+
+        const requiredIds = [
+            'report-form', 'submit-btn', 'submit-btn-text', 'status-message',
+            'share-btn', 'pooled-user-status', 'businessLocation',
+            'dateOfSmell', 'timeOfSmell', 'edit-details-btn',
+            'fullName', 'email', 'postcode', 'address', 'phone',
+            'storeLocally', 'shareData', 'joinIncidentId',
+            'joinAdditionalNotes', 'newAdditionalNotes',
+            'smellDescription', 'frequency', 'intensity'
+        ];
+        requiredIds.forEach(id => { elementsById[id] = createMockElement(id); });
+
+        elementsById['businessLocation'].value = 'sewage_drain';
+        elementsById['fullName'].value = 'Bob Jones';
+        elementsById['email'].value = 'bob@example.com';
+        elementsById['postcode'].value = 'IG11 0YP';
+        elementsById['address'].value = '101 Park Ave';
+        elementsById['phone'].value = '07700000000';
+        elementsById['storeLocally'].checked = true;
+        elementsById['shareData'].checked = true;
+
+        elementsById['smellDescription'].value = 'Acrid chemical smell';
+        elementsById['frequency'].value = 'happens often';
+        elementsById['intensity'].value = 'Strong';
+
+        const setItemCalls = {};
+
+        const mockLocalStorage = {
+            getItem: () => null,
+            setItem: jest.fn((k, v) => { setItemCalls[k] = v; }),
+            removeItem: jest.fn()
+        };
+
+        const mockFetch = jest.fn().mockImplementation(() => Promise.resolve({
+            ok: true,
+            json: async () => ({ success: true, incidentId: '456' })
+        }));
+
+        const mockDocument = {
+            addEventListener: (event, fn) => {
+                if (!domListeners[event]) domListeners[event] = [];
+                domListeners[event].push(fn);
+            },
+            getElementById: (id) => elementsById[id] || createMockElement(id),
+            querySelector: () => null,
+            querySelectorAll: () => []
+        };
+
+        const mockWindow = { location: { origin: 'http://localhost' } };
+        class MockEvent { constructor(type) { this.type = type; this.preventDefault = jest.fn(); } }
+
+        const runScript = new Function(
+            'document', 'window', 'Event', 'localStorage', 'fetch', 'Intl', 'setTimeout',
+            appJsContent
+        );
+        runScript(mockDocument, mockWindow, MockEvent, mockLocalStorage, mockFetch, Intl, setTimeout);
+
+        if (domListeners['DOMContentLoaded']) domListeners['DOMContentLoaded'].forEach(fn => fn());
+
+        const evt = new MockEvent('submit');
+        elementsById['report-form'].dispatchEvent(evt);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        expect(setItemCalls['freshAirWatchData_v2']).toBeDefined();
+        const storedItemVal = JSON.parse(setItemCalls['freshAirWatchData_v2']);
+        expect(storedItemVal).toEqual({
+            fullName: 'Bob Jones',
+            email: 'bob@example.com',
+            postcode: 'IG11 0YP',
+            address: '101 Park Ave',
+            phone: '07700000000',
+            storeLocally: true,
+            shareData: true
+        });
+        expect(storedItemVal.smellDescription).toBeUndefined();
+        expect(storedItemVal.frequency).toBeUndefined();
+        expect(storedItemVal.intensity).toBeUndefined();
+        expect(storedItemVal.duration).toBeUndefined();
+        expect(storedItemVal.additionalNotes).toBeUndefined();
+    });
 });
 
 
