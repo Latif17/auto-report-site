@@ -1,5 +1,12 @@
 [
   {
+    "version": "v1.20.1",
+    "date": "2026-08-12",
+    "changes": [
+      "Fixed a bug where the backend scraper continued to submit identical reports for legacy pooled users despite the community pooling feature being disabled."
+    ]
+  },
+  {
     "version": "v1.20.0",
     "date": "2026-08-11",
     "changes": [

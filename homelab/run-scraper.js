@@ -74,22 +74,7 @@ async function processQueue() {
 
     const explicitEmails = (allUserReports || []).map(r => r.user_email);
     
-    const { data: pooledUsersRecord, error: pooledError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('pool_data', true);
-        
-    if (pooledError) {
-        console.error("Error fetching pooled users:", pooledError);
-        if (process.env.DAEMON_MODE !== 'true') {
-            process.exit(1);
-        }
-        return;
-    }
-    
-    const pooledEmails = (pooledUsersRecord || []).map(u => u.email);
-    
-    const allEmails = [...new Set([...explicitEmails, ...pooledEmails])];
+    const allEmails = [...new Set([...explicitEmails])];
     
     let allUsers = [];
     if (allEmails.length > 0) {
@@ -112,7 +97,7 @@ async function processQueue() {
     const emailsByIncidentId = {};
     for (const incident of pendingIncidents) {
         const explicitForIncident = (allUserReports || []).filter(r => r.incident_id === incident.id).map(r => r.user_email);
-        emailsByIncidentId[incident.id] = [...new Set([...explicitForIncident, ...pooledEmails])];
+        emailsByIncidentId[incident.id] = [...new Set([...explicitForIncident])];
     }
     // --- END BATCH FETCH ---
 

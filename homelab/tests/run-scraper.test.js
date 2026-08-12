@@ -232,10 +232,7 @@ describe('run-scraper', () => {
         // 2. Mock fetch opted-in user reports (in)
         mockInResponses.push({ data: userReports, error: null });
 
-        // 3. Mock fetch pooled users (eq)
-        mockEqResponses.push({ data: [], error: null });
-
-        // 4. Mock fetch users (in)
+        // 3. Mock fetch users (in)
         mockInResponses.push({ data: users, error: null });
 
         // 5. Mock update to processing (eq)
@@ -280,7 +277,7 @@ describe('run-scraper', () => {
         expect(mockSupabase.update).toHaveBeenCalledWith({ status: 'pending' });
     });
 
-    it('should process both opted_in and pooled users, and cleanup unpooled users via RPC', async () => {
+    it('should process opted_in users, and cleanup unpooled users via RPC', async () => {
         let runFunc;
         jest.isolateModules(() => {
             process.env.SUPABASE_URL = 'http://localhost';
@@ -294,10 +291,8 @@ describe('run-scraper', () => {
         ];
 
         const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
-        const pooledUsers = [{ email: 'pooled@example.com' }];
         const users = [
-            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false },
-            { email: 'pooled@example.com', full_name: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2', pool_data: true }
+            { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false }
         ];
 
         // 1. Fetch pending incidents (eq)
@@ -306,10 +301,7 @@ describe('run-scraper', () => {
         // 2. Fetch opted-in reports (in)
         mockInResponses.push({ data: userReports, error: null });
 
-        // 3. Fetch pooled users record (eq)
-        mockEqResponses.push({ data: pooledUsers, error: null });
-
-        // 4. Fetch details of all users (in)
+        // 3. Fetch details of all users (in)
         mockInResponses.push({ data: users, error: null });
 
         // 5. Update status to processing (eq)
@@ -340,14 +332,10 @@ describe('run-scraper', () => {
         }
         await runPromise;
 
-        // Verify submitGovForm called for BOTH users
-        expect(submitGovForm).toHaveBeenCalledTimes(2);
+        // Verify submitGovForm called for explicitly opted in users
+        expect(submitGovForm).toHaveBeenCalledTimes(1);
         expect(submitGovForm).toHaveBeenNthCalledWith(1,
             { email: 'explicit@example.com', fullName: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1' },
-            { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump', description: '' }
-        );
-        expect(submitGovForm).toHaveBeenNthCalledWith(2,
-            { email: 'pooled@example.com', fullName: 'Pooled User', postcode: 'P2', phone: '222', address: 'Addr 2' },
             { dateOfSmell: '2026-06-27', timeOfSmell: '12:00', smellType: 'Plastic', businessLocation: 'dump', description: '' }
         );
 
@@ -380,9 +368,7 @@ describe('run-scraper', () => {
         mockEqResponses.push({ data: pendingIncidents, error: null });
         // 2. Fetch opted-in reports (select incident_id, user_email, additional_notes)
         mockInResponses.push({ data: userReports, error: null });
-        // 3. Fetch pooled users
-        mockEqResponses.push({ data: [], error: null });
-        // 4. Fetch details of users
+        // 3. Fetch details of users
         mockInResponses.push({ data: users, error: null });
         // 5. Update status to processing
         mockEqResponses.push({ error: null });
@@ -439,27 +425,7 @@ describe('run-scraper', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it('should exit if fetching pooled users fails', async () => {
-        let runFunc;
-        jest.isolateModules(() => {
-            process.env.SUPABASE_URL = 'http://localhost';
-            process.env.SUPABASE_KEY = 'test';
-            const module = require('../run-scraper');
-            runFunc = module.run;
-        });
 
-        // 1. Fetch pending incidents (eq)
-        mockEqResponses.push({ data: [{ id: 1 }], error: null });
-        // 2. Fetch opted-in reports (in)
-        mockInResponses.push({ data: [], error: null });
-        // 3. Fetch pooled users (eq) -> fail
-        mockEqResponses.push({ data: null, error: { message: 'pooled users query failed' } });
-
-        await runFunc();
-
-        expect(mockConsoleError).toHaveBeenCalledWith("Error fetching pooled users:", { message: 'pooled users query failed' });
-        expect(mockExit).toHaveBeenCalledWith(1);
-    });
 
     it('should exit if fetching user details by emails fails', async () => {
         let runFunc;
@@ -474,9 +440,7 @@ describe('run-scraper', () => {
         mockEqResponses.push({ data: [{ id: 1 }], error: null });
         // 2. Fetch opted-in reports (in)
         mockInResponses.push({ data: [{ incident_id: 1, user_email: 'test@example.com' }], error: null });
-        // 3. Fetch pooled users (eq)
-        mockEqResponses.push({ data: [], error: null });
-        // 4. Fetch details of all users (in) -> fail
+        // 3. Fetch details of all users (in) -> fail
         mockInResponses.push({ data: null, error: { message: 'user details query failed' } });
 
         await runFunc();
@@ -499,7 +463,6 @@ describe('run-scraper', () => {
         ];
 
         const userReports = [{ incident_id: 10, user_email: 'explicit@example.com' }];
-        const pooledUsers = [];
         const users = [
             { email: 'explicit@example.com', full_name: 'Explicit User', postcode: 'E1', phone: '111', address: 'Addr 1', pool_data: false }
         ];
@@ -508,9 +471,7 @@ describe('run-scraper', () => {
         mockEqResponses.push({ data: pendingIncidents, error: null });
         // 2. Fetch opted-in reports (in)
         mockInResponses.push({ data: userReports, error: null });
-        // 3. Fetch pooled users record (eq)
-        mockEqResponses.push({ data: pooledUsers, error: null });
-        // 4. Fetch details of all users (in)
+        // 3. Fetch details of all users (in)
         mockInResponses.push({ data: users, error: null });
         // 5. Update status to processing (eq)
         mockEqResponses.push({ error: null });
